@@ -9,14 +9,14 @@ import 'package:emergency_room/custom_widget/custom_handasah_assign_user.dart';
 // import 'package:emergency_room/custom_widget/custom_landing_body.dart';
 // import 'package:emergency_room/screens/integration_with_stores_get_all_qty.dart';
 // import 'package:emergency_room/screens/request_tool_for_address_screen.dart';
-import 'package:emergency_room/utils/dio_http_constants.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 import 'package:emergency_room/custom_widget/custom_web_view_iframe.dart';
 import 'package:audioplayers/audioplayers.dart'; // Add this import
 
 import '../custom_widget/custom_bottom_sheet.dart';
 import '../custom_widget/custom_reusable_alert_dailog.dart';
 import '../custom_widget/cutom_texts_alert_dailog.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class HandasahScreen extends StatefulWidget {
   const HandasahScreen({super.key});
@@ -28,7 +28,7 @@ class HandasahScreen extends StatefulWidget {
 class _HandasahScreenState extends State<HandasahScreen> {
   late Future getLocsByHandasahNameAndIsFinished;
   late Future getLocByHandasahAndTechnician;
-  String handasahName = DataStatic.handasahName;
+  String handasahName = StaticVariables.handasahName;
   String gisHandasahUrl = "";
   late Future getHandasatUsersItemsDropdownMenu;
   List<String> handasatUsersItemsDropdownMenu = [];
@@ -157,7 +157,7 @@ class _HandasahScreenState extends State<HandasahScreen> {
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.indigo, size: 17),
         title: Text(
-          DataStatic.handasahName,
+          StaticVariables.handasahName,
           style: const TextStyle(color: Colors.indigo),
         ),
         actions: [

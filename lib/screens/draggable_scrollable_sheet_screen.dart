@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../custom_widget/custom_browser_redirect.dart';
 import '../custom_widget/custom_draggable_scrollable_sheet.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class DraggableScrollableSheetScreen extends StatefulWidget {
   final Future getLocs;

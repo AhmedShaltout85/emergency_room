@@ -4,7 +4,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import '../custom_widget/custom_text_field.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class RequestToolForAddressScreen extends StatefulWidget {
   final String address;

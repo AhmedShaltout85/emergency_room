@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:emergency_room/network/remote/dio_network_repos.dart';
+import 'package:emergency_room/network/remote/remote_network_repos.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import '../../utils/dio_http_constants.dart';
+import '../../utils/app_constants.dart';
 
 class LabTestPieChart extends StatelessWidget {
   final List<Map<String, dynamic>> labData;
@@ -588,7 +588,7 @@ class _LabTestScreenState extends State<LabTestScreenPie> {
                 child: SingleChildScrollView(
                   child: LabTestPieChart(
                     labData: labData,
-                    chartTitle: DataStatic.labName,
+                    chartTitle: StaticVariables.labName,
                     valueKey: _findValueKey(labData),
                     labelKey: _findDateKey(labData),
                   ),

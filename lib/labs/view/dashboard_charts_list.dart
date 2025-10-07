@@ -7,7 +7,7 @@ import 'package:emergency_room/labs/charts/line_chart.dart';
 import 'package:emergency_room/labs/charts/pie_chart.dart';
 import 'package:emergency_room/labs/charts/radial_chart.dart';
 import 'package:emergency_room/labs/charts/rose_chart.dart';
-import 'package:emergency_room/utils/dio_http_constants.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 
 import '../model/grid_view_items.dart';
 import '../widget/custom_reusable_grid_view.dart';
@@ -68,7 +68,7 @@ class DashboardChartsList extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          DataStatic.labName,
+          StaticVariables.labName,
           style: const TextStyle(color: Colors.indigo),
         ),
         centerTitle: true,
@@ -89,7 +89,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenBar(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -100,7 +100,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenDoughnut(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -111,7 +111,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenLine(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -122,7 +122,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenPie(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -133,7 +133,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenRadial(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -144,7 +144,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenRose(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -155,7 +155,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenBar(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -166,7 +166,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenDoughnut(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),
@@ -177,7 +177,7 @@ class DashboardChartsList extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) => LabTestScreenRose(
-                  labCode: DataStatic.labCode,
+                  labCode: StaticVariables.labCode,
                   testCode: item.testCode,
                   testName: item.title,
                 ),

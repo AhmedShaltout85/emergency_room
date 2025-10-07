@@ -29,8 +29,8 @@ import '../custom_widget/cutom_texts_alert_dailog.dart';
 import '../labs/view/dashboard_charts_list.dart';
 import '../labs/widget/convert_handasah_to_lab_code.dart';
 import '../labs/widget/convert_lab_code_to_lab_name.dart';
-import '../network/remote/dio_network_repos.dart';
-import '../utils/dio_http_constants.dart';
+import '../network/remote/remote_network_repos.dart';
+import '../utils/app_constants.dart';
 /////////////
 // import '../labs/charts/rose_chart.dart';
 // import '../labs/charts/radial_chart.dart';
@@ -1471,14 +1471,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 hoverColor: Colors.yellow,
                                                 onPressed: () {
                                                   //TODO:07-09-2025
-                                                  DataStatic.labCode =
+                                                  StaticVariables.labCode =
                                                       convertHandasahToLabCode(
                                                           snapshot.data![index][
                                                               'handasah_name']);
                                                   //
-                                                  DataStatic.labName =
+                                                  StaticVariables.labName =
                                                       convertLabCodeToLabName(
-                                                          DataStatic.labCode);
+                                                          StaticVariables.labCode);
                                                   //
                                                   log(snapshot.data![index]
                                                           ['handasah_name'] +
@@ -1487,8 +1487,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                           ['handasah_name'] +
                                                       " ==========> before charts");
 
-                                                  log("LAB_CODE: ${DataStatic.labCode}");
-                                                  log("LAB_NAME: ${DataStatic.labName}");
+                                                  log("LAB_CODE: ${StaticVariables.labCode}");
+                                                  log("LAB_NAME: ${StaticVariables.labName}");
 
                                                   Navigator.push(
                                                       context,
@@ -1675,31 +1675,31 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         onTap: (itemData) {
           try {
             // Set the static values here
-            DataStatic.hotlineAddress = itemData['address'];
-            DataStatic.hotlineId = itemData['id'];
-            DataStatic.hotlineX = itemData['x'];
-            DataStatic.hotlineY = itemData['y'];
-            DataStatic.hotlinecaseReportDateTime =
+            StaticVariables.hotlineAddress = itemData['address'];
+            StaticVariables.hotlineId = itemData['id'];
+            StaticVariables.hotlineX = itemData['x'];
+            StaticVariables.hotlineY = itemData['y'];
+            StaticVariables.hotlinecaseReportDateTime =
                 itemData['caseReportDateTime'];
-            DataStatic.hotlinefinalClosed = itemData['finalClosed'];
-            DataStatic.hotlinereporterName = itemData['reporterName'];
-            DataStatic.hotlinemainStreet = itemData['mainStreet'];
-            DataStatic.hotlineStreet = itemData['street'];
-            DataStatic.hotlinecaseType = itemData['caseType'];
+            StaticVariables.hotlinefinalClosed = itemData['finalClosed'];
+            StaticVariables.hotlinereporterName = itemData['reporterName'];
+            StaticVariables.hotlinemainStreet = itemData['mainStreet'];
+            StaticVariables.hotlineStreet = itemData['street'];
+            StaticVariables.hotlinecaseType = itemData['caseType'];
             //
             DioNetworkRepos().postHotLineDataList(
-              id: DataStatic.hotlineId,
-              caseReportDateTime: DataStatic.hotlinecaseReportDateTime,
-              caseType: DataStatic.hotlinecaseType,
-              finalClosed: DataStatic.hotlinefinalClosed,
-              mainStreet: DataStatic.hotlinemainStreet,
-              reporterName: DataStatic.hotlinereporterName,
-              street: DataStatic.hotlineStreet,
-              x: DataStatic.hotlineX,
-              y: DataStatic.hotlineY,
-              address: DataStatic.hotlineAddress,
+              id: StaticVariables.hotlineId,
+              caseReportDateTime: StaticVariables.hotlinecaseReportDateTime,
+              caseType: StaticVariables.hotlinecaseType,
+              finalClosed: StaticVariables.hotlinefinalClosed,
+              mainStreet: StaticVariables.hotlinemainStreet,
+              reporterName: StaticVariables.hotlinereporterName,
+              street: StaticVariables.hotlineStreet,
+              x: StaticVariables.hotlineX,
+              y: StaticVariables.hotlineY,
+              address: StaticVariables.hotlineAddress,
             );
-            _getCoordinatesFromAddress(DataStatic.hotlineAddress);
+            _getCoordinatesFromAddress(StaticVariables.hotlineAddress);
 
             //update locations after getting coordinates and gis link
             getLocsAfterGetCoordinatesAndGis =

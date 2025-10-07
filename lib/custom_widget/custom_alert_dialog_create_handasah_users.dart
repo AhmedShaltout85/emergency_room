@@ -4,8 +4,8 @@ import 'package:emergency_room/custom_widget/custom_radio_button.dart';
 import 'package:emergency_room/custom_widget/custom_text_field.dart';
 import 'package:flutter/material.dart';
 
-import '../network/remote/dio_network_repos.dart';
-import '../utils/dio_http_constants.dart';
+import '../network/remote/remote_network_repos.dart';
+import '../utils/app_constants.dart';
 
 class CustomAlertDialogCreateHandasahUsers extends StatefulWidget {
   final String title;
@@ -160,7 +160,7 @@ class _CustomAlertDailogCreateHandasahUsersState
                 usernameController.text.trim(),
                 passwordController.text.trim(),
                 int.parse(selectedOption),
-                DataStatic.handasahName,
+                StaticVariables.handasahName,
               );
 
               // Show success message

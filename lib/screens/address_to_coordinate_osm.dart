@@ -9,7 +9,7 @@ import 'package:latlong2/latlong.dart';
 
 // import '../custom_widget/custom_drawer.dart';
 import '../custom_widget/custom_end_drawer.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class AddressToCoordinatesOSM extends StatefulWidget {
   const AddressToCoordinatesOSM({super.key});

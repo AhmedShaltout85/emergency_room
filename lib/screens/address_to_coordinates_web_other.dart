@@ -9,7 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 
 // import '../custom_widget/custom_drawer.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class AddressToCoordinatesOther extends StatefulWidget {
   const AddressToCoordinatesOther({super.key});

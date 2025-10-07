@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import '../../utils/dio_http_constants.dart';
+import '../../utils/app_constants.dart';
 import '../models/station_data.dart';
 
 class ApiService {

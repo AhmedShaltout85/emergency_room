@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 
-import '../utils/dio_http_constants.dart';
+import '../utils/app_constants.dart';
 
 class CallerScreen extends StatefulWidget {
   const CallerScreen({super.key});

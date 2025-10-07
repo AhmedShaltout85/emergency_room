@@ -15,10 +15,10 @@ import 'package:emergency_room/custom_widget/custom_text_field.dart';
 // import 'package:emergency_room/screens/mobile_emergency_room_screen.dart';
 // import 'package:emergency_room/screens/system_admin_screen.dart';
 // import 'package:emergency_room/screens/user_screen.dart';
-import 'package:emergency_room/utils/dio_http_constants.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 // import '../screens/address_to_coordinates_web.dart';
 // import '../screens/address_to_coordinates_web_other.dart';
 
@@ -175,7 +175,7 @@ class _CustomizLoginScreenBodyState extends State<CustomizLoginScreenBody> {
   void handleSuccessfulLogin(BuildContext context) {
     showSnackBar('تم تسجيل الدخول بنجاح');
 
-    switch (DataStatic.userRole) {
+    switch (StaticVariables.userRole) {
       case 0:
         // Navigator.push(context,
         //     MaterialPageRoute(builder: (context) => const SystemAdminScreen()));

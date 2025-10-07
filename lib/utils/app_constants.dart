@@ -81,7 +81,7 @@ const HotLinePassword = "it2020";
 const String skadaStationsReportbaseUrl =
     'http://41.33.226.211:8070/api/data/stations-report';
 
-class DataStatic {
+class StaticVariables {
 //Assign HandasahName
   static String handasahName = '';
   static int setectedIndax = 0;

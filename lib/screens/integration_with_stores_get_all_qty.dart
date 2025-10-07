@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 // import '../model/store_item_model.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class IntegrationWithStoresGetAllQty extends StatefulWidget {
   final String storeName;

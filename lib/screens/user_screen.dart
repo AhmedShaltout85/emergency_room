@@ -19,11 +19,11 @@ import 'package:emergency_room/custom_widget/custom_browser_redirect.dart';
 import 'package:emergency_room/screens/integration_with_stores_get_all_qty.dart';
 // import 'package:emergency_room/screens/receiver_mobile_screen.dart';
 import 'package:emergency_room/screens/user_request_tools.dart';
-import 'package:emergency_room/utils/dio_http_constants.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 // import '../common_services/video_call_service.dart';
 import '../custom_widget/custom_alert_dialog_with_sound.dart';
 // import '../custom_widget/custom_web_view.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -76,7 +76,7 @@ class _UserScreenState extends State<UserScreen> {
 
     try {
       final data = await DioNetworkRepos().fetchHandasatUsersItemsBroken(
-          DataStatic.handasahName, DataStatic.username, 0);
+          StaticVariables.handasahName, StaticVariables.username, 0);
 
       if (_isDisposed) return;
 
@@ -298,7 +298,7 @@ class _UserScreenState extends State<UserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('الاعطال المخصصة للمستخدم : ${DataStatic.username}',
+        title: Text('الاعطال المخصصة للمستخدم : ${StaticVariables.username}',
             style: const TextStyle(color: Colors.indigo, fontSize: 15)),
         centerTitle: true,
         elevation: 7.0,
@@ -573,14 +573,14 @@ class _UserScreenState extends State<UserScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => UserRequestTools(
-          handasahName: item['handasah_name'] ?? DataStatic.handasahName,
+          handasahName: item['handasah_name'] ?? StaticVariables.handasahName,
           address: item['address'],
           technicianName: item['technical_name'],
         ),
       ),
     );
     // context.push(
-    //     '/user-request-tool/${item['handasah_name'] ?? DataStatic.handasahName}/${item['address']}/${item['technical_name']}');
+    //     '/user-request-tool/${item['handasah_name'] ?? StaticVariables.handasahName}/${item['address']}/${item['technical_name']}');
   }
 
   Future<void> _handleInventory(Map<String, dynamic> item) async {

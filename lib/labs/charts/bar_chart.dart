@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mrx_charts/mrx_charts.dart';
-import 'package:emergency_room/network/remote/dio_network_repos.dart';
-import 'package:emergency_room/utils/dio_http_constants.dart';
+import 'package:emergency_room/network/remote/remote_network_repos.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 
 // Helper class to store chart data
 class ChartBarData {
@@ -397,7 +397,7 @@ class _LabTestScreenState extends State<LabTestScreenBar> {
                 flex: 2,
                 child: LabTestBarChart(
                   labData: labData,
-                  chartTitle: DataStatic.labName,
+                  chartTitle: StaticVariables.labName,
                   valueKey: _findValueKey(labData),
                   labelKey: _findDateKey(labData),
                 ),

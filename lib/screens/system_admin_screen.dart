@@ -5,7 +5,7 @@ import '../custom_widget/custom_dropdown_menu.dart';
 import '../custom_widget/custom_elevated_button.dart';
 import '../custom_widget/custom_radio_button.dart';
 import '../custom_widget/custom_text_field.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class SystemAdminScreen extends StatefulWidget {
   const SystemAdminScreen({super.key});

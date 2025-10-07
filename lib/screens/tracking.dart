@@ -5,7 +5,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:emergency_room/network/remote/dio_network_repos.dart';
+import 'package:emergency_room/network/remote/remote_network_repos.dart';
 
 class Tracking extends StatefulWidget {
   final String latitude;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:emergency_room/network/remote/dio_network_repos.dart';
+import 'package:emergency_room/network/remote/remote_network_repos.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import '../../utils/dio_http_constants.dart';
+import '../../utils/app_constants.dart';
 
 class LabTestRadialChart extends StatelessWidget {
   final List<Map<String, dynamic>> labData;
@@ -454,7 +454,7 @@ class _LabTestScreenState extends State<LabTestScreenRadial> {
               Expanded(
                 child: LabTestRadialChart(
                   labData: labData,
-                  chartTitle: DataStatic.labName,
+                  chartTitle: StaticVariables.labName,
                   valueKey: _findValueKey(labData),
                   labelKey: _findDateKey(labData),
                 ),

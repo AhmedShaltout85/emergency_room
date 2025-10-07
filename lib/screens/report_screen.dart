@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 
 import '../model/custom_data_table_source.dart';
-import '../network/remote/dio_network_repos.dart';
+import '../network/remote/remote_network_repos.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});

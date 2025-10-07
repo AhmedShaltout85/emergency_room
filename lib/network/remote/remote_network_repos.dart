@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
-import '../../utils/dio_http_constants.dart';
+import '../../utils/app_constants.dart';
 
 class DioNetworkRepos {
   // Singleton
@@ -231,9 +231,9 @@ class DioNetworkRepos {
         log("${response.data} from loginByUsernameAndPassword");
         final usernameResponse = response.data['username'];
         final passwordResponse = response.data['password'];
-        DataStatic.userRole = response.data['role'];
-        DataStatic.handasahName = response.data['handasah_name'];
-        log('Login successful! Username: $usernameResponse, Password: $passwordResponse , ID: $DataStatic.userRole');
+        StaticVariables.userRole = response.data['role'];
+        StaticVariables.handasahName = response.data['handasah_name'];
+        log('Login successful! Username: $usernameResponse, Password: $passwordResponse , ID: $StaticVariables.userRole');
         return true;
       } else {
         log('Login failed: ${response.data}');
@@ -259,9 +259,9 @@ class DioNetworkRepos {
 
       if (response.statusCode == 200) {
         // Assuming the API returns JSON data
-        DataStatic.userRole = response.data['role'];
-        DataStatic.handasahName = response.data['controlUnit'];
-        DataStatic.username = response.data['username'];
+        StaticVariables.userRole = response.data['role'];
+        StaticVariables.handasahName = response.data['controlUnit'];
+        StaticVariables.username = response.data['username'];
         // handasahName = response.data['controlUnit'];
         // userName = response.data['username'];
         log("PRINTED DATA FROM API: ${response.data['role']}");
@@ -1334,10 +1334,10 @@ class DioNetworkRepos {
 //         log("$data from loginByUsernameAndPassword");
 //         final usernameResponse = data['username'];
 //         final passwordResponse = data['password'];
-//         DataStatic.userRole = data['role'];
-//         DataStatic.handasahName = data['handasah_name'];
+//         StaticVariables.userRole = data['role'];
+//         StaticVariables.handasahName = data['handasah_name'];
 //         log(
-//             'Login successful! Username: $usernameResponse, Password: $passwordResponse , ID: ${DataStatic.userRole}');
+//             'Login successful! Username: $usernameResponse, Password: $passwordResponse , ID: ${StaticVariables.userRole}');
 //         return true;
 //       } else {
 //         log('Login failed: ${response.body}');
@@ -1357,9 +1357,9 @@ class DioNetworkRepos {
 
 //       if (response.statusCode == 200) {
 //         final data = json.decode(response.body);
-//         DataStatic.userRole = data['role'];
-//         DataStatic.handasahName = data['controlUnit'];
-//         DataStatic.username = data['username'];
+//         StaticVariables.userRole = data['role'];
+//         StaticVariables.handasahName = data['controlUnit'];
+//         StaticVariables.username = data['username'];
 //         log("PRINTED DATA FROM API: ${data['role']}");
 //         log("PRINTED DATA FROM API: ${data['controlUnit']}");
 //         log("PRINTED DATA FROM API: ${data['username']}");
