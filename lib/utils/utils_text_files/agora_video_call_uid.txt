@@ -1,0 +1,196 @@
+
+To use a specific uid in the Agora video call code, you need to pass it when joining the channel using the joinChannel() method. In the code provided, the uid is currently set to 0, which allows Agora to assign a unique ID automatically.
+
+To use a specific uid, follow these steps:
+
+1. Define the UID
+Declare the UID as a constant or pass it as a parameter to the widget:
+
+dart
+Copy
+Edit
+// Define a specific UID
+const int myUid = 12345;
+2. Pass the UID to joinChannel()
+Replace the uid parameter in joinChannel() with your specific UID:
+
+dart
+Copy
+Edit
+await _engine.joinChannel(
+  token: token,
+  channelId: channel,
+  uid: myUid,  // Use your specific UID here
+  options: const ChannelMediaOptions(),
+);
+3. Update the Local Video View
+Ensure the local video view uses the same UID:
+
+dart
+Copy
+Edit
+child: _localUserJoined
+    ? AgoraVideoView(
+        controller: VideoViewController(
+          rtcEngine: _engine,
+          canvas: VideoCanvas(uid: myUid),  // Use the same UID here
+        ),
+      )
+    : const CircularProgressIndicator(),
+4. Update the Remote Video View
+No changes are needed for the remote video view because it listens for the onUserJoined event and uses the remoteUid value automatically.
+
+Example Changes
+Here is a modified snippet of the relevant sections:
+
+dart
+Copy
+Edit
+const int myUid = 12345;
+
+await _engine.joinChannel(
+  token: token,
+  channelId: channel,
+  uid: myUid,  // Use specific UID
+  options: const ChannelMediaOptions(),
+);
+dart
+Copy
+Edit
+child: _localUserJoined
+    ? AgoraVideoView(
+        controller: VideoViewController(
+          rtcEngine: _engine,
+          canvas: VideoCanvas(uid: myUid),  // Match the specific UID
+        ),
+      )
+    : const CircularProgressIndicator(),
+Note:
+Ensure the uid is unique in the channel; otherwise, there will be conflicts.
+If you are using tokens for authentication, make sure the token is generated with the same uid.
+This change ensures you are using a predefined uid instead of letting Agora auto-assign one.
+
+
+
+
+
+
+
+You said:
+how local user and remote user can join the same channel with uid
+ChatGPT said:
+To have both the local and remote users join the same Agora channel with specific UIDs, follow these steps:
+
+Use Unique UIDs: Make sure each user has a unique uid. For example, the local user can have uid = 12345, and the remote user can have uid = 67890.
+Join the Same Channel: Both users must join the same channelId.
+Generate Tokens (if required): If you're using token authentication, generate tokens for each UID using your backend server.
+Step 1: Define UIDs and Channel
+First, define the UIDs and the channel name. Make sure the channel name is identical on both devices:
+
+dart
+Copy
+Edit
+const String channel = "testChannel";
+const int localUid = 12345;
+const int remoteUid = 67890;
+Step 2: Join Channel with Specific UID
+In the joinChannel() method, use the localUid for the local user:
+
+dart
+Copy
+Edit
+await _engine.joinChannel(
+  token: token,
+  channelId: channel,
+  uid: localUid, // Use the specific UID for local user
+  options: const ChannelMediaOptions(),
+);
+On the remote device, you should use remoteUid instead:
+
+dart
+Copy
+Edit
+await _engine.joinChannel(
+  token: token,
+  channelId: channel,
+  uid: remoteUid, // Use the specific UID for remote user
+  options: const ChannelMediaOptions(),
+);
+Step 3: Display Local and Remote Video
+In _localUserJoined, display the local video using the localUid:
+
+dart
+Copy
+Edit
+child: _localUserJoined
+    ? AgoraVideoView(
+        controller: VideoViewController(
+          rtcEngine: _engine,
+          canvas: VideoCanvas(uid: localUid), // Use local UID
+        ),
+      )
+    : const CircularProgressIndicator(),
+In _remoteVideo(), display the remote video using the remoteUid:
+
+dart
+Copy
+Edit
+Widget _remoteVideo() {
+  if (_remoteUid != null) {
+    return AgoraVideoView(
+      controller: VideoViewController.remote(
+        rtcEngine: _engine,
+        canvas: VideoCanvas(uid: _remoteUid),
+        connection: const RtcConnection(channelId: channel),
+      ),
+    );
+  } else {
+    return const Text(
+      'Please wait for remote user to join',
+      textAlign: TextAlign.center,
+    );
+  }
+}
+Step 4: Handle Remote User Joined Event
+Listen for the remote user joining the channel and update the state accordingly:
+
+dart
+Copy
+Edit
+_engine.registerEventHandler(
+  RtcEngineEventHandler(
+    onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+      log("Remote user $remoteUid joined");
+      setState(() {
+        _remoteUid = remoteUid;
+      });
+    },
+    onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+      log("Remote user $remoteUid left channel");
+      setState(() {
+        _remoteUid = null;
+      });
+    },
+  ),
+);
+Step 5: Generate Tokens (Optional)
+If you are using tokens for security, generate tokens with the corresponding UIDs on your backend. Ensure that each UID has its own token.
+
+Example token generation logic:
+
+Local user (localUid = 12345) → Token generated for UID 12345
+Remote user (remoteUid = 67890) → Token generated for UID 67890
+Step 6: Run on Two Devices
+Device 1 (Local User): Run the app with uid = 12345
+Device 2 (Remote User): Run the app with uid = 67890
+Ensure both devices:
+
+Use the same channelId (testChannel)
+Have internet connectivity
+Are granted microphone and camera permissions
+Summary
+Use unique UIDs for each device (12345 and 67890 in this example).
+Both devices join the same channelId.
+Use tokens generated for specific UIDs if using token authentication.
+The local video uses the localUid, while the remote video listens for the remoteUid.
+This approach ensures the local and remote users join the same channel using predefined UIDs, enabling stable video communication

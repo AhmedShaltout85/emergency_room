@@ -1,0 +1,64 @@
+You cannot completely disable "View Page Source" in Flutter web applications. This is because Flutter web compiles to standard HTML, CSS, and JavaScript that runs in browsers, and browsers inherently provide the "View Source" functionality as a core feature that cannot be disabled by web applications.
+However, here are some approaches to make your source code less readable or accessible:
+Code Obfuscation
+Use Flutter's built-in obfuscation when building for production:
+
+bash
+
+flutter build web --obfuscate --split-debug-info=build/debug-info
+
+
+<!-- Add this to your web/index.html -->
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 117)) { // Ctrl+U
+      e.preventDefault();
+    }
+    if (e.keyCode === 123) { // F12
+      e.preventDefault();
+    }
+  });
+</script>
+
+
+Methods to Protect Your Code
+Obfuscation/Minification:
+
+bash
+
+flutter build web --release
+
+
+The release build automatically minifies and obfuscates your Dart code.
+
+Disable Right-Click (not recommended as it's user-unfriendly):
+
+dart
+import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+
+void main() {
+  setUrlStrategy(PathUrlStrategy());
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () {}, // Disables long-press
+      child: MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return GestureDetector(
+                onSecondaryTap: () {}, // Disables right-click on web
+                child: YourActualContent(),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}

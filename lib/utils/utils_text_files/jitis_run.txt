@@ -1,0 +1,20 @@
+ ElevatedButton(
+              onPressed: () => VideoCallService.startVideoCall(
+                context: context,
+                userEmail: userEmail,
+                isInitiator: true,
+                userName: 'ahmed',
+                customRoomName: 'EmergancyRoom'
+              ),
+              child: const Text("Start Video Call"),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => VideoCallService.showCallInvitationDialog(
+                context: context,
+                userEmail: userEmail,
+                userName: 'فنى',
+                customRoomName: 'EmergancyRoom',
+              ),
+              child: const Text("Invite to Video Call"),
+            ),

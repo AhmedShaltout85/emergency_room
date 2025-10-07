@@ -1,0 +1,6 @@
+    MUST CHANGE :
+    1- IP Address for Local (172.18.0.101/2:9999) or public (41.33.226.211:8099/9999)
+    2- build package web or apk
+
+    NOTES:
+    CHANGE IP 41.33.226.211:8090/9999 AND PUBLISH AS WEB SITE (MUST TEST 19-APR-20235) tested and working

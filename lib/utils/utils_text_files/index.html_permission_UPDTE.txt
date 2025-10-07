@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="dio_http">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <title>تطبيق الطوارئ</title>
+  <link rel="manifest" href="manifest.json">
+  <!-- permissions for vedio and camera with agora -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="camera 'self'; microphone 'self';">
+  <script src='https://meet.jit.si/external_api.js'></script>
+
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+ 
+  <style id="splash-screen-style">
+    html {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: #f3f6f8;
+      background-size: 100% 100%;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .contain {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .stretch {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cover {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      -ms-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+
+    .bottomLeft {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .bottomRight {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+
+    /* Permission Modal Styles */
+    #permission-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      direction: rtl; /* RTL support for Arabic */
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      direction: rtl;
+    }
+    
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 24px;
+    }
+    
+    .modal-content p {
+      margin-bottom: 25px;
+      color: #666;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    
+    .permission-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      min-width: 120px;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+      transform: translateY(-2px);
+    }
+    
+    .permission-status {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: right;
+    }
+    
+    .status-granted {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #c3e6cb;
+    }
+    
+    .status-denied {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #f5c6cb;
+    }
+    
+    .status-checking {
+      background: #fff3cd;
+      color: #856404;
+      border: 2px solid #ffeaa7;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+
+    /* Loading animation */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script id="splash-screen-script">
+    function removeSplashFromWeb() {
+      document.getElementById("splash")?.remove();
+      document.getElementById("splash-branding")?.remove();
+      document.body.style.background = "transparent";
+    }
+  </script>
+
+  <!-- Google Maps and Geolocation Scripts -->
+  <script>
+    // Function to load all external scripts
+    function loadScripts() {
+      // Load Google Maps
+      const mapsScript = document.createElement('script');
+      mapsScript.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDRaJJnyvmDSU8OgI8M20C5nmwHNc_AMvk&libraries=places&callback=initMap';
+      mapsScript.async = true;
+      mapsScript.defer = true;
+      document.head.appendChild(mapsScript);
+
+      // Load Geolocation polyfill if needed
+      const geoScript = document.createElement('script');
+      geoScript.src = 'https://unpkg.com/@ionic-native/geolocation/5.36.0/dist/geolocation.js';
+      geoScript.async = true;
+      document.head.appendChild(geoScript);
+    }
+
+    window.addEventListener('load', loadScripts);
+  </script>
+
+  <!-- Permissions Management Script -->
+  <script>
+    let permissionModal = null;
+    let permissionStatus = {
+      camera: 'unknown',
+      microphone: 'unknown',
+      location: 'unknown'
+    };
+
+    // Arabic text content
+    const arabicText = {
+      title: '🔐 الأذونات المطلوبة',
+      description: 'يحتاج هذا التطبيق إلى الوصول للكاميرا والميكروفون والموقع للعمل بشكل صحيح.',
+      camera: '📹 الكاميرا',
+      microphone: '🎤 الميكروفون', 
+      location: '📍 الموقع',
+      granted: 'مسموح ✅',
+      denied: 'غير مسموح ❌',
+      checking: 'جاري التحقق...',
+      grantButton: 'منح الأذونات',
+      skipButton: 'تخطي الآن'
+    };
+
+    // Create permission modal
+    function createPermissionModal() {
+      const modal = document.createElement('div');
+      modal.id = 'permission-modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>${arabicText.title}</h2>
+          <p>${arabicText.description}</p>
+          
+          <div id="permission-status">
+            <div class="permission-status status-checking">
+              ${arabicText.camera}: <span id="camera-status">${arabicText.checking}</span>
+            </div>
+            <div class="permission-status status-checking">
+              ${arabicText.microphone}: <span id="mic-status">${arabicText.checking}</span>
+            </div>
+            <div class="permission-status status-checking">
+              ${arabicText.location}: <span id="location-status">${arabicText.checking}</span>
+            </div>
+          </div>
+          
+          <div class="permission-buttons">
+            <button class="btn btn-primary" onclick="requestAllPermissions()">
+              ${arabicText.grantButton}
+              <span id="loading-spinner" class="loading-spinner hidden"></span>
+            </button>
+            <button class="btn btn-secondary" onclick="skipPermissions()">
+              ${arabicText.skipButton}
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      return modal;
+    }
+
+    // Update permission status display
+    function updatePermissionDisplay() {
+      const cameraEl = document.getElementById('camera-status');
+      const micEl = document.getElementById('mic-status');
+      const locationEl = document.getElementById('location-status');
+      
+      if (cameraEl) {
+        cameraEl.textContent = permissionStatus.camera === 'granted' ? arabicText.granted : arabicText.denied;
+        cameraEl.parentElement.className = `permission-status ${permissionStatus.camera === 'granted' ? 'status-granted' : 'status-denied'}`;
+      }
+      
+      if (micEl) {
+        micEl.textContent = permissionStatus.microphone === 'granted' ? arabicText.granted : arabicText.denied;
+        micEl.parentElement.className = `permission-status ${permissionStatus.microphone === 'granted' ? 'status-granted' : 'status-denied'}`;
+      }
+      
+      if (locationEl) {
+        locationEl.textContent = permissionStatus.location === 'granted' ? arabicText.granted : arabicText.denied;
+        locationEl.parentElement.className = `permission-status ${permissionStatus.location === 'granted' ? 'status-granted' : 'status-denied'}`;
+      }
+    }
+
+    // Check current permissions
+    async function checkPermissions() {
+      try {
+        // Check camera and microphone permissions
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            permissionStatus.camera = 'granted';
+            permissionStatus.microphone = 'granted';
+          } catch (e) {
+            console.log('Media permissions not granted:', e);
+            permissionStatus.camera = 'denied';
+            permissionStatus.microphone = 'denied';
+          }
+        }
+
+        // Check location permission
+        if ('geolocation' in navigator) {
+          try {
+            // Try to get current position with a short timeout
+            await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  permissionStatus.location = 'granted';
+                  resolve(position);
+                },
+                (error) => {
+                  permissionStatus.location = 'denied';
+                  reject(error);
+                },
+                { timeout: 5000, enableHighAccuracy: false }
+              );
+            });
+          } catch (e) {
+            console.log('Location permission not granted:', e);
+            permissionStatus.location = 'denied';
+          }
+        }
+
+        return permissionStatus;
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+        return permissionStatus;
+      }
+    }
+
+    // Request all permissions
+    async function requestAllPermissions() {
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) {
+        spinner.classList.remove('hidden');
+      }
+
+      try {
+        // Request camera and microphone
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+          
+          // Stop the stream immediately
+          mediaStream.getTracks().forEach(track => track.stop());
+          
+          permissionStatus.camera = 'granted';
+          permissionStatus.microphone = 'granted';
+          
+          console.log('Camera and microphone permissions granted');
+        }
+        
+        // Request location
+        if ('geolocation' in navigator) {
+          await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                permissionStatus.location = 'granted';
+                console.log('Location permission granted');
+                resolve(position);
+              },
+              (error) => {
+                permissionStatus.location = 'denied';
+                console.log('Location permission denied:', error);
+                reject(error);
+              },
+              { timeout: 10000, enableHighAccuracy: true }
+            );
+          });
+        }
+        
+        updatePermissionDisplay();
+        
+        // Close modal if all permissions granted
+        if (permissionStatus.camera === 'granted' && 
+            permissionStatus.microphone === 'granted' && 
+            permissionStatus.location === 'granted') {
+          setTimeout(() => {
+            closePermissionModal();
+          }, 1500);
+        }
+        
+      } catch (error) {
+        console.error('Permission request failed:', error);
+        updatePermissionDisplay();
+      } finally {
+        if (spinner) {
+          spinner.classList.add('hidden');
+        }
+      }
+    }
+
+    // Skip permissions
+    function skipPermissions() {
+      console.log('User skipped permissions');
+      closePermissionModal();
+    }
+
+    // Close permission modal
+    function closePermissionModal() {
+      if (permissionModal) {
+        permissionModal.remove();
+        permissionModal = null;
+      }
+    }
+
+    // Show permission modal if needed
+    async function showPermissionModalIfNeeded() {
+      await checkPermissions();
+      
+      // Show modal if any permission is not granted
+      if (permissionStatus.camera !== 'granted' || 
+          permissionStatus.microphone !== 'granted' || 
+          permissionStatus.location !== 'granted') {
+        
+        permissionModal = createPermissionModal();
+        updatePermissionDisplay();
+      }
+    }
+
+    // Initialize permissions check
+    function initializePermissions() {
+      // Check permissions after a short delay to ensure page is ready
+      setTimeout(() => {
+        showPermissionModalIfNeeded();
+      }, 2000);
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initializePermissions);
+
+    // Also check when page is fully loaded
+    window.addEventListener('load', () => {
+      // Only show if modal hasn't been shown yet
+      if (!permissionModal) {
+        setTimeout(() => {
+          showPermissionModalIfNeeded();
+        }, 1000);
+      }
+    });
+
+    // Make functions globally available for Flutter
+    window.requestAllPermissions = requestAllPermissions;
+    window.checkPermissions = checkPermissions;
+    window.skipPermissions = skipPermissions;
+    window.getPermissionStatus = () => permissionStatus;
+  </script>
+
+</head>
+
+<body>
+  <!-- <picture id="splash">
+    <source
+      srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x"
+      media="(prefers-color-scheme: light)">
+    <source
+      srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x"
+      media="(prefers-color-scheme: dark)">
+    <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture> -->
+
+  <script src="flutter_bootstrap.js" async=""></script>
+
+  <!-- <script src="https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js"></script> -->
+
+</body>
+
+</html>

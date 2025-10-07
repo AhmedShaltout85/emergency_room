@@ -1,0 +1,113 @@
+
+  void handleLogin(BuildContext context) async {
+    final username = usernameController.text;
+    final password = passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please enter both username and password',
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final response = await DioNetworkRepos().login(username, password);
+
+    if (context.mounted) {
+      if (response['success']) {
+     
+        if (roleValue == 'غرفة الطوارىء' && DataStatic.userRole == 1) {
+          // Navigate to AddressToCoordinates screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const AddressToCoordinates()),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم تسجيل الدخول بنجاح',
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+
+        } else if (roleValue == 'شكاوى خارجية' && DataStatic.userRole == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const AddressToCoordinatesOther()),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم تسجيل الدخول بنجاح',
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+
+        } else if (roleValue == 'مدير النظام' && DataStatic.userRole == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SystemAdminScreen()),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم تسجيل الدخول بنجاح',
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+
+        }
+        else {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'فضلا, أدخل البيانات الصحيحة',
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+            'Login failed: ${response['message']}',
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.center,
+          )),
+        );
+      }
+    }
+  }
+
+  void handleLoginWithDropDown(BuildContext context) async {
+    // final username = usernameController.text;
+    final password = passwordController.text;
+
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please enter both username and password',
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+      return;
+    }

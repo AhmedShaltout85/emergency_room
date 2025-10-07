@@ -1,0 +1,16 @@
+http://192.168.2.170:8081/ ---> hotline ip address
+
+http://196.219.231.3:8000/ ----> public ip GIS
+
+http://172.18.0.102:9999/ || 
+http://172.18.0.101:9999/ || 
+http://dr.awcoprod.com:9999/ ----->  ip stores
+http://172.18.0.1/ ----->  embeded ip address in api package
+
+http://41.33.226.211:8070/ ----> public ip address scada
+http://192.168.30.12:80/ ----> Local ip address scada
+
+http://196.219.231.5 ----> public ip address Camera 
+
+http://196.219.231.3:8000/ ----> public ip address GIS very crrouded areas with clams
+
