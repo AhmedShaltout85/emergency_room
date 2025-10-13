@@ -83,13 +83,20 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
       await DioNetworkRepos().updateUserRequestToolsByAddress(
         item['address'].toString(),
         int.parse(qtyController.text),
-        item['isApproved'],
+        //TODO: Update 1 at 13-10-2025
+        item['isApproved'] = 1,
+        // 1
       );
 
       // Refresh the data after update
       await _fetchUserRequestForAddress();
 
       log('User request updated successfully');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تحديث كمية المهمة بنجاح')),
+      );
+      
     } catch (e) {
       log(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(

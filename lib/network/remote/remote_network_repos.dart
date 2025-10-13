@@ -7,7 +7,7 @@ import '../../utils/app_constants.dart';
 
 class DioNetworkRepos {
   // Singleton
-   DioNetworkRepos._internal();
+  DioNetworkRepos._internal();
 
   static final DioNetworkRepos _instance = DioNetworkRepos._internal();
 
@@ -1129,7 +1129,7 @@ class DioNetworkRepos {
       int labCode, String testCode) async {
     final url =
         // '$BASE_URI_IP_ADDRESS_LOCAL_HOST/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
-        'http://localhost:9997/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
+        'http://localhost:9999/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
 
     try {
       final response = await dio.get(url);
@@ -1155,7 +1155,6 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
-  
 }
 
 // import 'dart:convert';
