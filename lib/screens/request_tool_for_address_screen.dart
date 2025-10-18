@@ -96,7 +96,7 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم تحديث كمية المهمة بنجاح')),
       );
-      
+
     } catch (e) {
       log(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(
