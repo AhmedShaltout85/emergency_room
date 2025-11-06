@@ -370,17 +370,19 @@ class _LabTestScreenState extends State<LabTestScreenRadial> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.testName,
-          style: const TextStyle(color: Colors.indigo),
-        ),
+        automaticallyImplyLeading: false,
+
+        // title: Text(
+        //   widget.testName,
+        //   style: const TextStyle(color: Colors.indigo),
+        // ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.indigo),
             onPressed: _loadLabData,
           ),
         ],
-        centerTitle: true,
+        // centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -424,10 +424,12 @@ class _LabTestScreenState extends State<LabTestScreenDoughnut> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.testName,
-          style: const TextStyle(color: Colors.indigo),
-        ),
+                automaticallyImplyLeading: false,
+
+        // title: Text(
+        //   widget.testName,
+        //   style: const TextStyle(color: Colors.indigo),
+        // ),
         // backgroundColor: Colors.purple[700],
         // foregroundColor: Colors.white,
         // elevation: 4,
@@ -441,7 +443,7 @@ class _LabTestScreenState extends State<LabTestScreenDoughnut> {
             tooltip: 'Refresh Data',
           ),
         ],
-        centerTitle: true,
+        // centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

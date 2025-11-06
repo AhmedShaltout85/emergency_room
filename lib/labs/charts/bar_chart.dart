@@ -344,10 +344,11 @@ class _LabTestScreenState extends State<LabTestScreenBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.testName,
-          style: const TextStyle(color: Colors.indigo),
-        ),
+        automaticallyImplyLeading: false,
+        // title: Text(
+        //   widget.testName,
+        //   style: const TextStyle(color: Colors.indigo),
+        // ),
         actions: [
           IconButton(
             icon: const Icon(
@@ -357,8 +358,8 @@ class _LabTestScreenState extends State<LabTestScreenBar> {
             onPressed: _loadLabData,
           ),
         ],
-        centerTitle: true,
-        elevation: 7,
+        // centerTitle: true,
+        // elevation: 7,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

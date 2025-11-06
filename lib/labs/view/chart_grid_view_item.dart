@@ -5,7 +5,7 @@ import '../model/grid_view_items.dart';
 class ChartGridViewItem extends StatelessWidget {
   final GridItem gridItem;
 
-  const ChartGridViewItem({Key? key, required this.gridItem}) : super(key: key);
+  const ChartGridViewItem({super.key, required this.gridItem});
 
   @override
   Widget build(BuildContext context) {

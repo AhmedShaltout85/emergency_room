@@ -540,13 +540,15 @@ class _LabTestScreenState extends State<LabTestScreenLine> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.testName,
-          style: const TextStyle(
-            color: Colors.indigo,
-          ),
-        ),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
+
+        // title: Text(
+        //   widget.testName,
+        //   style: const TextStyle(
+        //     color: Colors.indigo,
+        //   ),
+        // ),
+        // centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(

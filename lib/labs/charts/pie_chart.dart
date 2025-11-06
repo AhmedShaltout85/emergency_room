@@ -11,12 +11,12 @@ class LabTestPieChart extends StatelessWidget {
   final String labelKey;
 
   const LabTestPieChart({
-    Key? key,
+    super.key,
     required this.labData,
     required this.chartTitle,
     required this.valueKey,
     required this.labelKey,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -376,11 +376,11 @@ class LabTestScreenPie extends StatefulWidget {
   final String testName, testCode;
   final int labCode;
   const LabTestScreenPie({
-    Key? key,
+    super.key,
     required this.labCode,
     required this.testCode,
     required this.testName,
-  }) : super(key: key);
+  });
 
   @override
   _LabTestScreenState createState() => _LabTestScreenState();
@@ -490,11 +490,12 @@ class _LabTestScreenState extends State<LabTestScreenPie> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.testName,
-          style: const TextStyle(color: Colors.indigo),
-        ),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
+        // title: Text(
+        //   widget.testName,
+        //   style: const TextStyle(color: Colors.indigo),
+        // ),
+        // centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(
