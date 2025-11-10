@@ -35,6 +35,9 @@ class _CustomEndDrawerState extends State<CustomEndDrawer> {
 
     return SafeArea(
       child: Drawer(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+        ),
         backgroundColor: Colors.black45,
         child: ListView(
           shrinkWrap: true,
