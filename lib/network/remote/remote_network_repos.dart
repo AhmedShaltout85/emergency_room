@@ -929,7 +929,7 @@ class DioNetworkRepos {
   }
 
   //39-- UPDATE USER REQUEST TOOLS BY ADDRESS(UPDATE USER QTYTOOL AND ISAPPROVED BY ADDRESS)
-
+  // "http://localhost:9999/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
   Future updateUserRequestToolsByAddress(
     String address,
     String toolName,
@@ -937,8 +937,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
-          // "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
           data: {
             "toolQty": toolQty,
             "isApproved": 1,
