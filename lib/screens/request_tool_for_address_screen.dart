@@ -82,9 +82,9 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
       // Update tool qty and approval status
       await DioNetworkRepos().updateUserRequestToolsByAddress(
         item['address'].toString(),
+        item['toolName'].toString(),
         int.parse(qtyController.text),
         //TODO: Update 1 at 13-10-2025
-        item['isApproved'] = 1,
         // 1
       );
 
@@ -94,9 +94,9 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
       log('User request updated successfully');
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تحديث كمية المهمة بنجاح')),
+        const SnackBar(
+            content: Center(child: Text('تم تحديث كمية المهمة بنجاح'))),
       );
-
     } catch (e) {
       log(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(
@@ -166,174 +166,208 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
                 itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) {
                   final item = snapshot.data![index] as Map<String, dynamic>;
-                  return Card(
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  widget.handasahName,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              ),
-                              const Expanded(
-                                child: Text(
-                                  'اسم الهندسة : ',
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  item['toolName']?.toString() ??
-                                      'Default Tool',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              ),
-                              const Expanded(
-                                child: Text(
-                                  'اسم المهمة: ',
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  item['techName']?.toString() ??
-                                      'Default user',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              ),
-                              const Expanded(
-                                child: Text(
-                                  'أسم الفنى :',
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  ' ${item['toolQty']?.toString() ?? 'N/A'}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              ),
-                              const Expanded(
-                                child: Text(
-                                  'العدد: ',
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: SizedBox.shrink(),
-                              ),
-                              Expanded(
-                                child: TextButton(
-                                  style: const ButtonStyle(
-                                    shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(3),
-                                        ),
-                                      ),
+                  return InkWell(
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    widget.handasahName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
                                     ),
-                                    backgroundColor:
-                                        WidgetStatePropertyAll<Color>(
-                                            Colors.indigo),
-                                  ),
-                                  onPressed: () => _updateToolQty(item),
-                                  child: const Text(
-                                    'حفظ',
-                                    style: TextStyle(color: Colors.white),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: CustomTextField(
-                                  controller: qtyController,
-                                  keyboardType: TextInputType.number,
-                                  lableText: 'العدد',
-                                  hintText: 'فضلا أدخل الكمية',
-                                  prefixIcon: const SizedBox.shrink(),
-                                  suffixIcon: const SizedBox.shrink(),
-                                  obscureText: false,
-                                  textInputAction: TextInputAction.done,
+                                const Expanded(
+                                  child: Text(
+                                    'اسم الهندسة : ',
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    item['toolName']?.toString() ??
+                                        'Default Tool',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(
+                                  child: Text(
+                                    'اسم المهمة: ',
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    item['techName']?.toString() ??
+                                        'Default user',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(
+                                  child: Text(
+                                    'أسم الفنى :',
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    ' ${item['toolQty']?.toString() ?? 'N/A'}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(
+                                  child: Text(
+                                    'العدد: ',
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                            // const SizedBox(height: 4),
+                            // Row(
+                            //   children: [
+                            //     const Expanded(
+                            //       child: SizedBox.shrink(),
+                            //     ),
+                            //     Expanded(
+                            //       child: TextButton(
+                            //         style: const ButtonStyle(
+                            //           shape: WidgetStatePropertyAll(
+                            //             RoundedRectangleBorder(
+                            //               borderRadius: BorderRadius.all(
+                            //                 Radius.circular(3),
+                            //               ),
+                            //             ),
+                            //           ),
+                            //           backgroundColor:
+                            //               WidgetStatePropertyAll<Color>(
+                            //                   Colors.indigo),
+                            //         ),
+                            //         onPressed: () => _updateToolQty(item),
+                            //         child: const Text(
+                            //           'حفظ',
+                            //           style: TextStyle(color: Colors.white),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //     Expanded(
+                            //       child: CustomTextField(
+                            //         controller: qtyController,
+                            //         keyboardType: TextInputType.number,
+                            //         lableText: 'العدد',
+                            //         hintText: 'فضلا أدخل الكمية',
+                            //         prefixIcon: const SizedBox.shrink(),
+                            //         suffixIcon: const SizedBox.shrink(),
+                            //         obscureText: false,
+                            //         textInputAction: TextInputAction.done,
+                            //       ),
+                            //     ),
+                            //   ],
+                            // ),
+                          ],
+                        ),
                       ),
                     ),
+                    onTap: () {
+                      showDialog(context: context, builder: (context) {
+                        return AlertDialog(
+                          title: const Text('تحديث كمية المهمة'),
+                          content: CustomTextField(
+                            controller: qtyController,
+                            keyboardType: TextInputType.number,
+                            lableText: 'العدد',
+                            hintText: 'فضلا أدخل الكمية',
+                            prefixIcon: const SizedBox.shrink(),
+                            suffixIcon: const SizedBox.shrink(),
+                            obscureText: false,
+                            textInputAction: TextInputAction.done,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('إلغاء'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await _updateToolQty(item);
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('حفظ'),
+                            ),
+                          ],
+                        );
+                      });
+                    },
                   );
                 },
               );
