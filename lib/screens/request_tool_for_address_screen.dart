@@ -117,6 +117,12 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
         ),
         centerTitle: true,
         elevation: 7,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.indigo),
+            onPressed: _fetchUserRequestForAddress,
+          ),
+        ],
         // backgroundColor: Colors.white,
         // iconTheme: const IconThemeData(
         //   color: Colors.indigo,
@@ -337,6 +343,7 @@ class _RequestToolForAddressState extends State<RequestToolForAddressScreen> {
                       ),
                     ),
                     onTap: () {
+                      qtyController.clear();
                       showDialog(context: context, builder: (context) {
                         return AlertDialog(
                           title: const Text('تحديث كمية المهمة'),
