@@ -1,3 +1,4 @@
+import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
 import 'package:flutter/material.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
@@ -157,6 +158,10 @@ final router = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: '/integration-with-labs',
+      builder: (context, state) => const DashboardChartsList(),
+    )
 
     // GoRoute(
     //   path: '/web-view-iframe/:url',

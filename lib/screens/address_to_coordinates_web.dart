@@ -26,7 +26,6 @@ import '../custom_widget/custom_end_drawer.dart';
 import '../custom_widget/custom_reusable_alter_dialog_drop_down_textfield.dart';
 import '../custom_widget/custom_text_button_drop_down_menu.dart';
 import '../custom_widget/cutom_texts_alert_dailog.dart';
-import '../labs/view/dashboard_charts_list.dart';
 import '../labs/widget/convert_handasah_to_lab_code.dart';
 import '../labs/widget/convert_lab_code_to_lab_name.dart';
 import '../network/remote/remote_network_repos.dart';
@@ -1489,13 +1488,16 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
 
                                                   log("LAB_CODE: ${StaticVariables.labCode}");
                                                   log("LAB_NAME: ${StaticVariables.labName}");
-
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (BuildContext
-                                                                  context) =>
-                                                              DashboardChartsList()));
+                                                  //navigate to DashboardChartsList
+                                                  //TODO: open labs dashboard charts list
+                                                  context.go(
+                                                      '/integration-with-labs');
+                                                  // Navigator.push(
+                                                  //     context,
+                                                  //     MaterialPageRoute(
+                                                  //         builder: (BuildContext
+                                                  //                 context) =>
+                                                  //             DashboardChartsList()));
                                                 },
                                                 icon: const Icon(
                                                   Icons.report_gmailerrorred,
