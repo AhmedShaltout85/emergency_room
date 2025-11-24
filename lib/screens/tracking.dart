@@ -57,6 +57,7 @@ class _TrackingState extends State<Tracking> {
               size: Size(40, 40),
             ),
             'assets/green_marker.png')
+            // 'assets/green_marker.png')
         .then((onValue) {
       pinLocationIcon = onValue;
     });
