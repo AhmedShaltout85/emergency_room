@@ -97,6 +97,8 @@ flutter:
     - assets/imgs/4.png
     - assets/imgs/5.png
     - assets/logo.png
+    - assets/logoo.png
+    - assets/login_logo.png
     - assets/aw_logo.png
     - assets/sounds/ringtone.mp3
     - assets/sounds/alarm.mp3
