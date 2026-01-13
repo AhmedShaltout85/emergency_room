@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.indigo,
         primarySwatch: Colors.indigo,
+        fontFamily: 'Cairo',
       ),
       // home: const LandingScreen(),
 
