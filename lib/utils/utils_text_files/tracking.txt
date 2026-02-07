@@ -1,0 +1,1172 @@
+// // ignore_for_file: unused_field
+
+// import 'dart:async';
+// import 'dart:developer';
+
+// import 'package:flutter/material.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:emergency_room/network/remote/remote_network_repos.dart';
+
+// class Tracking extends StatefulWidget {
+//   final String latitude;
+//   final String longitude;
+//   final String address;
+//   final String technicianName;
+//   const Tracking({
+//     super.key,
+//     required this.latitude,
+//     required this.longitude,
+//     required this.address,
+//     required this.technicianName,
+//   });
+
+//   @override
+//   State<Tracking> createState() => _TrackingState();
+// }
+
+// class _TrackingState extends State<Tracking> {
+//   Timer? _timer; // Timer for periodic fetching
+//   final Completer<GoogleMapController> _controller = Completer();
+//   LatLng alexandriaCoordinates = const LatLng(31.205753, 29.924526);
+//   double currentLatitude = 0.0;
+//   double currentLongitude = 0.0;
+//   BitmapDescriptor? pinLocationIcon;
+
+//   final Set<Marker> markers = {};
+//   final String googleMapsApiKey =
+//       "AIzaSyDRaJJnyvmDSU8OgI8M20C5nmwHNc_AMvk"; // Replace with your API key
+//   late Future getCurrentLocation;
+//   // Polyline _addPolyline() {
+//   //   LatLng end =
+//   //       LatLng(double.parse(widget.latitude), double.parse(widget.longitude));
+//   //   LatLng current = LatLng(currentLatitude, currentLongitude);
+
+//   //   return Polyline(
+//   //     polylineId: const PolylineId('polyline'),
+//   //     points: [current, end],
+//   //     color: Colors.blue,
+//   //     width: 5,
+//   //   );
+//   // }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     BitmapDescriptor.asset(
+//             const ImageConfiguration(
+//               size: Size(40, 40),
+//             ),
+//             'assets/green_marker.png')
+//             // 'assets/green_marker.png')
+//         .then((onValue) {
+//       pinLocationIcon = onValue;
+//     });
+//     setState(() {
+//       _getCurrentLocation();
+//       _startFetchingLocation();
+//     });
+//   }
+
+//   @override
+//   void dispose() {
+//     _timer?.cancel(); // Cancel periodic fetch and location update timer
+//     super.dispose();
+//   }
+
+//   /// current and start latitude and longitude.
+//   Future<void> _getCurrentLocation() async {
+//     debugPrint(widget.address);
+//     debugPrint(widget.technicianName);
+
+//     getCurrentLocation = DioNetworkRepos().getLocationByAddressAndTechnician(
+//         widget.address, widget.technicianName);
+
+//     getCurrentLocation.then((value) {
+//       debugPrint("print from ui: in Location Tracking $value");
+//       debugPrint("Address: ${value['address']}");
+//       debugPrint("Latitude: ${value['latitude']}");
+//       debugPrint("Longitude: ${value['longitude']}");
+//       debugPrint("Technical Name: ${value['technicalName']}");
+//       debugPrint("Start Latitude: ${value['startLatitude']}");
+//       debugPrint("Start Longitude: ${value['startLongitude']}");
+//       debugPrint("Current Latitude: ${value['currentLatitude']}");
+//       debugPrint("Current Longitude: ${value['currentLongitude']}");
+//       setState(() {
+//         currentLatitude = double.parse(value['currentLatitude']);
+//         currentLongitude = double.parse(value['currentLongitude']);
+//       });
+//     });
+//     // }
+//   }
+
+//   Future<void> _moveCamera() async {
+//     final GoogleMapController controller = await _controller.future;
+//     CameraPosition cameraPosition = CameraPosition(
+//       target: LatLng(currentLatitude, currentLongitude),
+//       zoom: 14,
+//     );
+//     controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+//   }
+
+//   //Function to start fetching updated location
+//   void _startFetchingLocation() {
+//     const updateInterval = Duration(minutes: 1);
+//     _timer = Timer.periodic(updateInterval, (Timer timer) {
+//       _getCurrentLocation();
+//       _moveCamera(); // Move camera to the updated location
+//     });
+//   }
+
+//   //draw polyline bet
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//         centerTitle: true,
+//         elevation: 7,
+//         // backgroundColor: Colors.white,
+//         // iconTheme: const IconThemeData(color: Colors.indigo, size: 17),
+//         title: Text(
+//           'تتبع عنوان : ${widget.address}',
+//           style: const TextStyle(
+//             color: Colors.indigo,
+//           ),
+//         ),
+//       ),
+//       body: currentLatitude == 0.0 || currentLongitude == 0.0
+//           ? const Center(
+//               child: CircularProgressIndicator(),
+//             )
+//           : GoogleMap(
+//               onMapCreated: (GoogleMapController controller) {
+//                 _controller.complete(controller);
+//               },
+//               initialCameraPosition: CameraPosition(
+//                 target: alexandriaCoordinates,
+//                 zoom: 13,
+//               ),
+//               markers: {
+//                 Marker(
+//                     markerId: MarkerId(widget.address),
+//                     position: LatLng(double.parse(widget.latitude),
+//                         double.parse(widget.longitude)),
+//                     infoWindow: InfoWindow(
+//                         title: widget.address,
+//                         snippet: "${widget.latitude}, ${widget.longitude}"),
+//                     icon: pinLocationIcon!
+//                     // BitmapDescriptor.defaultMarkerWithHue(
+//                     //     BitmapDescriptor.hueGreen),
+//                     ),
+//                 Marker(
+//                   markerId: const MarkerId("موقع الفنى الحالى"),
+//                   position: LatLng(currentLatitude, currentLongitude),
+//                   infoWindow: InfoWindow(
+//                       title: "موقع الفنى الحالى",
+//                       // title: widget.address,
+//                       snippet: "$currentLatitude, $currentLongitude"),
+//                   icon: BitmapDescriptor.defaultMarkerWithHue(
+//                       BitmapDescriptor.hueRed),
+//                 ),
+//               },
+//               // polylines: {
+//               //   _addPolyline(),
+//               // },
+//             ),
+//     );
+//   }
+// }
+
+
+// // ignore_for_file: unused_field
+
+// import 'dart:async';
+
+// import 'dart:math';
+// import 'dart:ui' as ui;
+
+// import 'package:flutter/material.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:emergency_room/network/remote/remote_network_repos.dart';
+
+// class Tracking extends StatefulWidget {
+//   final String latitude;
+//   final String longitude;
+//   final String address;
+//   final String technicianName;
+//   const Tracking({
+//     super.key,
+//     required this.latitude,
+//     required this.longitude,
+//     required this.address,
+//     required this.technicianName,
+//   });
+
+//   @override
+//   State<Tracking> createState() => _TrackingState();
+// }
+
+// class _TrackingState extends State<Tracking> {
+//   Timer? _timer;
+//   Timer? _pulseTimer;
+//   final Completer<GoogleMapController> _controller = Completer();
+//   LatLng alexandriaCoordinates = const LatLng(31.205753, 29.924526);
+//   double currentLatitude = 0.0;
+//   double currentLongitude = 0.0;
+//   BitmapDescriptor? pinLocationIcon;
+//   BitmapDescriptor? directionIcon;
+
+//   // Route tracking
+//   final Set<Polyline> polylines = {};
+//   final PolylineId routePolylineId = const PolylineId('route');
+//   bool isLoadingRoute = false;
+//   bool _isPulsing = false;
+//   String routeDistance = 'جاري الحساب...';
+//   String routeDuration = 'جاري الحساب...';
+//   String apiStatus = 'جاهز';
+
+//   final Set<Marker> markers = {};
+//   late Future getCurrentLocation;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     // Load custom markers
+//     _loadCustomMarker();
+//     _createDirectionIcon().then((icon) {
+//       directionIcon = icon;
+//     });
+
+//     // Start location tracking
+//     _getCurrentLocation();
+//     _startFetchingLocation();
+//     _startPulseAnimation();
+//   }
+
+//   void _loadCustomMarker() {
+//     BitmapDescriptor.fromAssetImage(
+//       const ImageConfiguration(size: Size(40, 40)),
+//       'assets/green_marker.png',
+//     ).then((icon) {
+//       setState(() {
+//         pinLocationIcon = icon;
+//       });
+//     }).catchError((error) {
+//       debugPrint('Error loading marker icon: $error');
+//       pinLocationIcon = BitmapDescriptor.defaultMarkerWithHue(
+//         BitmapDescriptor.hueGreen,
+//       );
+//     });
+//   }
+
+//   Future<BitmapDescriptor> _createDirectionIcon() async {
+//     final pictureRecorder = ui.PictureRecorder();
+//     final canvas = ui.Canvas(pictureRecorder);
+//     final paint = ui.Paint()
+//       ..color = Colors.blue
+//       ..style = ui.PaintingStyle.fill;
+
+//     final path = ui.Path();
+//     path.moveTo(0, 20);
+//     path.lineTo(10, 0);
+//     path.lineTo(20, 20);
+//     path.close();
+
+//     canvas.drawPath(path, paint);
+
+//     final picture = pictureRecorder.endRecording();
+//     final image = await picture.toImage(20, 20);
+//     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+
+//     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+//   }
+
+//   @override
+//   void dispose() {
+//     _timer?.cancel();
+//     _pulseTimer?.cancel();
+//     super.dispose();
+//   }
+
+//   void _startPulseAnimation() {
+//     _pulseTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+//       if (mounted) {
+//         setState(() {
+//           _isPulsing = !_isPulsing;
+//           // Redraw polyline with animation
+//           if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+//             _drawCurvedRoute(
+//               LatLng(currentLatitude, currentLongitude),
+//               LatLng(
+//                 double.parse(widget.latitude),
+//                 double.parse(widget.longitude),
+//               ),
+//             );
+//           }
+//         });
+//       }
+//     });
+//   }
+
+//   /// Fetch current technician location
+//   Future<void> _getCurrentLocation() async {
+//     try {
+//       getCurrentLocation = DioNetworkRepos().getLocationByAddressAndTechnician(
+//         widget.address,
+//         widget.technicianName,
+//       );
+
+//       getCurrentLocation.then((value) {
+//         debugPrint('✅ Technician Location Updated');
+
+//         setState(() {
+//           currentLatitude = double.parse(value['currentLatitude'].toString());
+//           currentLongitude = double.parse(value['currentLongitude'].toString());
+//         });
+
+//         // Update markers and calculate route
+//         _updateMarkers();
+//         _calculateAndDrawRoute();
+//       }).catchError((error) {
+//         debugPrint('❌ Error fetching technician location: $error');
+//       });
+//     } catch (e) {
+//       debugPrint('❌ Exception in _getCurrentLocation: $e');
+//     }
+//   }
+
+//   /// Update markers on map
+//   Future<void> _updateMarkers() async {
+//     if (directionIcon == null) {
+//       directionIcon = await _createDirectionIcon();
+//     }
+
+//     setState(() {
+//       markers.clear();
+
+//       // Destination marker (Green)
+//       markers.add(
+//         Marker(
+//           markerId: MarkerId('dest_${widget.address}'),
+//           position: LatLng(
+//             double.parse(widget.latitude),
+//             double.parse(widget.longitude),
+//           ),
+//           infoWindow: InfoWindow(
+//             title: '📍 الوجهة النهائية',
+//             snippet: widget.address,
+//           ),
+//           icon: pinLocationIcon ??
+//               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+//         ),
+//       );
+
+//       // Current location marker (Red)
+//       if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+//         markers.add(
+//           Marker(
+//             markerId: const MarkerId('current_technician'),
+//             position: LatLng(currentLatitude, currentLongitude),
+//             infoWindow: InfoWindow(
+//               title: '👷 الموقع الحالي للفني',
+//               snippet:
+//                   '${currentLatitude.toStringAsFixed(6)}, ${currentLongitude.toStringAsFixed(6)}',
+//             ),
+//             icon:
+//                 BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+//           ),
+//         );
+
+//         // Add direction arrow at 75% of the route
+//         final start = LatLng(currentLatitude, currentLongitude);
+//         final end = LatLng(
+//           double.parse(widget.latitude),
+//           double.parse(widget.longitude),
+//         );
+
+//         final arrowPoint = _calculatePointAlongRoute(start, end, 0.75);
+
+//         markers.add(
+//           Marker(
+//             markerId: const MarkerId('direction_arrow'),
+//             position: arrowPoint,
+//             icon: directionIcon!,
+//             anchor: const Offset(0.5, 0.5),
+//             rotation: _calculateBearing(
+//               currentLatitude,
+//               currentLongitude,
+//               double.parse(widget.latitude),
+//               double.parse(widget.longitude),
+//             ),
+//           ),
+//         );
+//       }
+//     });
+//   }
+
+//   /// Calculate a point along the route
+//   LatLng _calculatePointAlongRoute(
+//       LatLng start, LatLng end, double percentage) {
+//     final lat = start.latitude + (end.latitude - start.latitude) * percentage;
+//     final lng =
+//         start.longitude + (end.longitude - start.longitude) * percentage;
+//     return LatLng(lat, lng);
+//   }
+
+//   /// Calculate bearing between two points
+//   double _calculateBearing(
+//       double startLat, double startLng, double endLat, double endLng) {
+//     final startLatRad = startLat * pi / 180;
+//     final startLngRad = startLng * pi / 180;
+//     final endLatRad = endLat * pi / 180;
+//     final endLngRad = endLng * pi / 180;
+
+//     final y = sin(endLngRad - startLngRad) * cos(endLatRad);
+//     final x = cos(startLatRad) * sin(endLatRad) -
+//         sin(startLatRad) * cos(endLatRad) * cos(endLngRad - startLngRad);
+
+//     final bearing = atan2(y, x);
+//     return (bearing * 180 / pi + 360) % 360;
+//   }
+
+//   /// MAIN ROUTE CALCULATION - Always works!
+//   Future<void> _calculateAndDrawRoute() async {
+//     if (currentLatitude == 0.0 || currentLongitude == 0.0) return;
+
+//     setState(() {
+//       isLoadingRoute = true;
+//       apiStatus = 'جاري حساب المسار...';
+//     });
+
+//     debugPrint('📍 Calculating route...');
+
+//     // Create source and destination points
+//     final source = LatLng(currentLatitude, currentLongitude);
+//     final destination = LatLng(
+//       double.parse(widget.latitude),
+//       double.parse(widget.longitude),
+//     );
+
+//     // Calculate distance
+//     final distanceKm = _calculateHaversineDistance(source, destination);
+//     final estimatedTime = _estimateTravelTime(distanceKm);
+
+//     setState(() {
+//       routeDistance = '${distanceKm.toStringAsFixed(1)} كم';
+//       routeDuration = '~${estimatedTime} دقيقة';
+//       apiStatus = 'تم حساب المسار';
+//     });
+
+//     // Draw curved route for better visual effect
+//     _drawCurvedRoute(source, destination);
+
+//     // Adjust camera
+//     _adjustCameraToRoute(source, destination);
+
+//     setState(() {
+//       isLoadingRoute = false;
+//     });
+//   }
+
+//   /// Calculate distance using Haversine formula
+//   double _calculateHaversineDistance(LatLng point1, LatLng point2) {
+//     const R = 6371.0; // Earth's radius in km
+
+//     final lat1 = point1.latitude * pi / 180;
+//     final lon1 = point1.longitude * pi / 180;
+//     final lat2 = point2.latitude * pi / 180;
+//     final lon2 = point2.longitude * pi / 180;
+
+//     final dlat = lat2 - lat1;
+//     final dlon = lon2 - lon1;
+
+//     final a = sin(dlat / 2) * sin(dlat / 2) +
+//         cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
+
+//     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+//     return R * c;
+//   }
+
+//   /// Estimate travel time based on distance
+//   int _estimateTravelTime(double distanceKm) {
+//     // Average speed in city: 30 km/h
+//     const averageSpeed = 30.0;
+//     final hours = distanceKm / averageSpeed;
+//     final minutes = (hours * 60).ceil();
+
+//     // Minimum 5 minutes, maximum 120 minutes
+//     return minutes.clamp(5, 120);
+//   }
+
+//   /// Draw a curved route between two points (looks better than straight line)
+//   void _drawCurvedRoute(LatLng start, LatLng end) {
+//     final List<LatLng> routePoints = [];
+
+//     // Calculate midpoint with slight curve
+//     final midLat = (start.latitude + end.latitude) / 2;
+//     final midLng = (start.longitude + end.longitude) / 2;
+
+//     // Create a curved path by adding intermediate points
+//     const steps = 20;
+//     for (int i = 0; i <= steps; i++) {
+//       final t = i / steps;
+
+//       // Bezier curve calculation for smooth path
+//       final lat = _bezierCurve(start.latitude, end.latitude, midLat + 0.001, t);
+//       final lng =
+//           _bezierCurve(start.longitude, end.longitude, midLng + 0.001, t);
+
+//       routePoints.add(LatLng(lat, lng));
+//     }
+
+//     // Draw the polyline with animation
+//     final Polyline polyline = Polyline(
+//       polylineId: routePolylineId,
+//       color: _isPulsing
+//           ? const Color(0xFF4285F4)
+//           : const Color(0xFF34A853), // Google Blue/Green
+//       width: _isPulsing ? 6 : 5,
+//       points: routePoints,
+//       startCap: Cap.roundCap,
+//       endCap: Cap.roundCap,
+//       jointType: JointType.round,
+//       patterns: _isPulsing ? [PatternItem.dash(10), PatternItem.gap(5)] : [],
+//     );
+
+//     setState(() {
+//       polylines.clear();
+//       polylines.add(polyline);
+//     });
+
+//     debugPrint('✅ Route drawn with ${routePoints.length} points');
+//   }
+
+//   /// Bezier curve calculation for smooth path
+//   double _bezierCurve(double start, double end, double control, double t) {
+//     final mt = 1 - t;
+//     return mt * mt * start + 2 * mt * t * control + t * t * end;
+//   }
+
+//   /// Calculate progress percentage
+//   double _calculateProgressPercentage() {
+//     final startPoint = const LatLng(31.2049664, 29.9237376); // Starting point
+//     final endPoint = LatLng(
+//       double.parse(widget.latitude),
+//       double.parse(widget.longitude),
+//     );
+//     final currentPoint = LatLng(currentLatitude, currentLongitude);
+
+//     final totalDistance = _calculateHaversineDistance(startPoint, endPoint);
+//     final remainingDistance =
+//         _calculateHaversineDistance(currentPoint, endPoint);
+
+//     if (totalDistance == 0) return 0;
+
+//     final progress =
+//         ((totalDistance - remainingDistance) / totalDistance * 100);
+//     return progress.clamp(0, 100);
+//   }
+
+//   /// Calculate arrival time
+//   String _calculateArrivalTime() {
+//     final minutes = _estimateTravelTime(
+//       _calculateHaversineDistance(
+//         LatLng(currentLatitude, currentLongitude),
+//         LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
+//       ),
+//     );
+
+//     final now = DateTime.now();
+//     final arrivalTime = now.add(Duration(minutes: minutes));
+
+//     // Format time in 12-hour format with AM/PM
+//     final hour = arrivalTime.hour;
+//     final minute = arrivalTime.minute;
+
+//     if (hour < 12) {
+//       return '${hour == 0 ? 12 : hour}:${minute.toString().padLeft(2, '0')} ص';
+//     } else {
+//       final pmHour = hour > 12 ? hour - 12 : hour;
+//       return '$pmHour:${minute.toString().padLeft(2, '0')} م';
+//     }
+//   }
+
+//   /// Adjust camera to show both points
+//   Future<void> _adjustCameraToRoute(LatLng start, LatLng end) async {
+//     try {
+//       final GoogleMapController controller = await _controller.future;
+
+//       // Calculate bounds
+//       final minLat = min(start.latitude, end.latitude);
+//       final maxLat = max(start.latitude, end.latitude);
+//       final minLng = min(start.longitude, end.longitude);
+//       final maxLng = max(start.longitude, end.longitude);
+
+//       // Add padding
+//       const padding = 0.01;
+
+//       final bounds = LatLngBounds(
+//         southwest: LatLng(minLat - padding, minLng - padding),
+//         northeast: LatLng(maxLat + padding, maxLng + padding),
+//       );
+
+//       await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
+
+//       debugPrint('✅ Camera adjusted to show route');
+//     } catch (e) {
+//       debugPrint('❌ Error adjusting camera: $e');
+//     }
+//   }
+
+//   /// Move camera to technician location
+//   Future<void> _moveCameraToTechnician() async {
+//     try {
+//       final GoogleMapController controller = await _controller.future;
+//       await controller.animateCamera(CameraUpdate.newLatLngZoom(
+//         LatLng(currentLatitude, currentLongitude),
+//         16,
+//       ));
+//       debugPrint('✅ Camera moved to technician');
+//     } catch (e) {
+//       debugPrint('❌ Error moving camera: $e');
+//     }
+//   }
+
+//   /// Move camera to destination
+//   Future<void> _moveCameraToDestination() async {
+//     try {
+//       final GoogleMapController controller = await _controller.future;
+//       await controller.animateCamera(CameraUpdate.newLatLngZoom(
+//         LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
+//         16,
+//       ));
+//       debugPrint('✅ Camera moved to destination');
+//     } catch (e) {
+//       debugPrint('❌ Error moving camera: $e');
+//     }
+//   }
+
+//   /// Show entire route
+//   Future<void> _showEntireRoute() async {
+//     try {
+//       final source = LatLng(currentLatitude, currentLongitude);
+//       final destination = LatLng(
+//         double.parse(widget.latitude),
+//         double.parse(widget.longitude),
+//       );
+
+//       await _adjustCameraToRoute(source, destination);
+//       debugPrint('✅ Showing entire route');
+//     } catch (e) {
+//       debugPrint('❌ Error showing route: $e');
+//     }
+//   }
+
+//   /// Start periodic location updates
+//   void _startFetchingLocation() {
+//     const updateInterval = Duration(seconds: 30);
+//     _timer = Timer.periodic(updateInterval, (Timer timer) {
+//       debugPrint('🔄 Periodic location update');
+//       _getCurrentLocation();
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final progressPercentage = _calculateProgressPercentage();
+//     final arrivalTime = _calculateArrivalTime();
+
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//         centerTitle: true,
+//         elevation: 7,
+//         title: Text(
+//           'تتبع الفني: ${widget.technicianName}',
+//           style: const TextStyle(color: Colors.white),
+//         ),
+//         backgroundColor: Colors.blue,
+//         iconTheme: const IconThemeData(color: Colors.white),
+//       ),
+//       body: Stack(
+//         children: [
+//           // Google Map
+//           GoogleMap(
+//             onMapCreated: (GoogleMapController controller) {
+//               _controller.complete(controller);
+//               debugPrint('✅ Map created');
+//               // Initial route calculation
+//               Future.delayed(const Duration(milliseconds: 500), () {
+//                 if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+//                   _calculateAndDrawRoute();
+//                 }
+//               });
+//             },
+//             initialCameraPosition: CameraPosition(
+//               target: alexandriaCoordinates,
+//               zoom: 12,
+//             ),
+//             markers: markers,
+//             polylines: polylines,
+//             zoomControlsEnabled: true,
+//             myLocationButtonEnabled: false,
+//             compassEnabled: true,
+//             rotateGesturesEnabled: true,
+//             scrollGesturesEnabled: true,
+//             zoomGesturesEnabled: true,
+//             tiltGesturesEnabled: true,
+//           ),
+
+//           // Progress indicator
+//           Positioned(
+//             bottom: 220,
+//             left: 20,
+//             right: 20,
+//             child: Container(
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.circular(10),
+//                 boxShadow: [
+//                   BoxShadow(
+//                     color: Colors.black.withOpacity(0.1),
+//                     blurRadius: 8,
+//                     spreadRadius: 2,
+//                   ),
+//                 ],
+//               ),
+//               child: Column(
+//                 children: [
+//                   // Progress text
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       const Text(
+//                         'تقدم الرحلة',
+//                         style: TextStyle(fontWeight: FontWeight.bold),
+//                       ),
+//                       Text(
+//                         '${progressPercentage.toStringAsFixed(0)}%',
+//                         style: const TextStyle(
+//                           fontWeight: FontWeight.bold,
+//                           color: Colors.blue,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 8),
+
+//                   // Progress bar
+//                   Container(
+//                     height: 8,
+//                     decoration: BoxDecoration(
+//                       color: Colors.grey[200],
+//                       borderRadius: BorderRadius.circular(4),
+//                     ),
+//                     child: Stack(
+//                       children: [
+//                         // Background
+//                         Container(
+//                           decoration: BoxDecoration(
+//                             color: Colors.grey[200],
+//                             borderRadius: BorderRadius.circular(4),
+//                           ),
+//                         ),
+
+//                         // Progress
+//                         Container(
+//                           width: MediaQuery.of(context).size.width *
+//                               progressPercentage /
+//                               100,
+//                           decoration: BoxDecoration(
+//                             gradient: const LinearGradient(
+//                               colors: [Colors.blue, Colors.green],
+//                             ),
+//                             borderRadius: BorderRadius.circular(4),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+
+//                   // Progress indicators
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       Column(
+//                         children: [
+//                           Container(
+//                             width: 12,
+//                             height: 12,
+//                             decoration: BoxDecoration(
+//                               color: Colors.red,
+//                               shape: BoxShape.circle,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 4),
+//                           const Text(
+//                             'بداية',
+//                             style: TextStyle(fontSize: 10),
+//                           ),
+//                         ],
+//                       ),
+//                       Expanded(
+//                         child: Container(
+//                           height: 1,
+//                           color: Colors.grey[300],
+//                           margin: const EdgeInsets.symmetric(horizontal: 10),
+//                         ),
+//                       ),
+//                       Column(
+//                         children: [
+//                           Container(
+//                             width: 12,
+//                             height: 12,
+//                             decoration: BoxDecoration(
+//                               color: progressPercentage > 50
+//                                   ? Colors.green
+//                                   : Colors.orange,
+//                               shape: BoxShape.circle,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 4),
+//                           Text(
+//                             '${progressPercentage.toStringAsFixed(0)}%',
+//                             style: const TextStyle(fontSize: 10),
+//                           ),
+//                         ],
+//                       ),
+//                       Expanded(
+//                         child: Container(
+//                           height: 1,
+//                           color: Colors.grey[300],
+//                           margin: const EdgeInsets.symmetric(horizontal: 10),
+//                         ),
+//                       ),
+//                       Column(
+//                         children: [
+//                           Container(
+//                             width: 12,
+//                             height: 12,
+//                             decoration: const BoxDecoration(
+//                               color: Colors.blue,
+//                               shape: BoxShape.circle,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 4),
+//                           const Text(
+//                             'نهاية',
+//                             style: TextStyle(fontSize: 10),
+//                           ),
+//                         ],
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+
+//           // Route info card
+//           Positioned(
+//             top: 20,
+//             left: 20,
+//             right: 20,
+//             child: Card(
+//               elevation: 4,
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(12),
+//               ),
+//               child: Padding(
+//                 padding: const EdgeInsets.all(16),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     // Address
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.location_on,
+//                             size: 20, color: Colors.blue),
+//                         const SizedBox(width: 10),
+//                         Expanded(
+//                           child: Text(
+//                             widget.address,
+//                             style: const TextStyle(
+//                               fontWeight: FontWeight.bold,
+//                               fontSize: 14,
+//                               color: Colors.blue,
+//                             ),
+//                             maxLines: 2,
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 12),
+
+//                     // Technician
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.person, size: 18, color: Colors.green),
+//                         const SizedBox(width: 10),
+//                         Expanded(
+//                           child: Text(
+//                             'الفني: ${widget.technicianName}',
+//                             style: const TextStyle(fontSize: 14),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 12),
+
+//                     // Route Info
+//                     Container(
+//                       padding: const EdgeInsets.all(10),
+//                       decoration: BoxDecoration(
+//                         color: Colors.blue[50],
+//                         borderRadius: BorderRadius.circular(8),
+//                       ),
+//                       child: Row(
+//                         mainAxisAlignment: MainAxisAlignment.spaceAround,
+//                         children: [
+//                           Column(
+//                             children: [
+//                               const Icon(Icons.directions_car,
+//                                   color: Colors.orange, size: 20),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 routeDistance,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 14,
+//                                 ),
+//                               ),
+//                               const Text(
+//                                 'المسافة',
+//                                 style:
+//                                     TextStyle(fontSize: 11, color: Colors.grey),
+//                               ),
+//                             ],
+//                           ),
+//                           Column(
+//                             children: [
+//                               const Icon(Icons.access_time,
+//                                   color: Colors.red, size: 20),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 routeDuration,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 14,
+//                                 ),
+//                               ),
+//                               const Text(
+//                                 'الوقت المتوقع',
+//                                 style:
+//                                     TextStyle(fontSize: 11, color: Colors.grey),
+//                               ),
+//                             ],
+//                           ),
+//                           Column(
+//                             children: [
+//                               const Icon(Icons.schedule,
+//                                   color: Colors.green, size: 20),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 arrivalTime,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 14,
+//                                 ),
+//                               ),
+//                               const Text(
+//                                 'وقت الوصول',
+//                                 style:
+//                                     TextStyle(fontSize: 11, color: Colors.grey),
+//                               ),
+//                             ],
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+
+//                     // Status
+//                     if (apiStatus.isNotEmpty)
+//                       Padding(
+//                         padding: const EdgeInsets.only(top: 12),
+//                         child: Row(
+//                           children: [
+//                             Icon(
+//                               Icons.info,
+//                               size: 16,
+//                               color: apiStatus.contains('جاري')
+//                                   ? Colors.orange
+//                                   : apiStatus.contains('خطأ')
+//                                       ? Colors.red
+//                                       : Colors.green,
+//                             ),
+//                             const SizedBox(width: 8),
+//                             Expanded(
+//                               child: Text(
+//                                 apiStatus,
+//                                 style: TextStyle(
+//                                   fontSize: 12,
+//                                   color: apiStatus.contains('جاري')
+//                                       ? Colors.orange
+//                                       : apiStatus.contains('خطأ')
+//                                           ? Colors.red
+//                                           : Colors.green,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                             ),
+//                             if (_isPulsing)
+//                               Container(
+//                                 width: 10,
+//                                 height: 10,
+//                                 decoration: BoxDecoration(
+//                                   color: Colors.green,
+//                                   shape: BoxShape.circle,
+//                                   boxShadow: [
+//                                     BoxShadow(
+//                                       color: Colors.green.withOpacity(0.7),
+//                                       blurRadius: 8,
+//                                       spreadRadius: 2,
+//                                     ),
+//                                   ],
+//                                 ),
+//                               ),
+//                           ],
+//                         ),
+//                       ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+
+//           // Loading overlay
+//           if (isLoadingRoute)
+//             Container(
+//               color: Colors.black.withOpacity(0.3),
+//               child: const Center(
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     CircularProgressIndicator(color: Colors.white),
+//                     SizedBox(height: 16),
+//                     Text(
+//                       'جاري تحديث الموقع...',
+//                       style: TextStyle(color: Colors.white, fontSize: 16),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+
+//           // Floating action buttons
+//           Positioned(
+//             bottom: 180,
+//             right: 20,
+//             child: Column(
+//               children: [
+//                 // Technician button
+//                 FloatingActionButton(
+//                   onPressed: _moveCameraToTechnician,
+//                   backgroundColor: Colors.red,
+//                   heroTag: 'tech_fab',
+//                   mini: true,
+//                   child: const Icon(Icons.person_pin_circle,
+//                       color: Colors.white, size: 20),
+//                 ),
+//                 const SizedBox(height: 10),
+//                 // Destination button
+//                 FloatingActionButton(
+//                   onPressed: _moveCameraToDestination,
+//                   backgroundColor: Colors.green,
+//                   heroTag: 'dest_fab',
+//                   mini: true,
+//                   child: const Icon(Icons.location_on,
+//                       color: Colors.white, size: 20),
+//                 ),
+//                 const SizedBox(height: 10),
+//                 // Route button
+//                 FloatingActionButton(
+//                   onPressed: _showEntireRoute,
+//                   backgroundColor: Colors.blue,
+//                   heroTag: 'route_fab',
+//                   mini: true,
+//                   child: const Icon(Icons.zoom_out_map,
+//                       color: Colors.white, size: 20),
+//                 ),
+//               ],
+//             ),
+//           ),
+
+//           // Refresh button (main)
+//           Positioned(
+//             bottom: 20,
+//             right: 20,
+//             child: FloatingActionButton(
+//               onPressed: _calculateAndDrawRoute,
+//               backgroundColor: Colors.orange,
+//               heroTag: 'refresh_fab',
+//               child: const Icon(Icons.refresh, color: Colors.white),
+//             ),
+//           ),
+//         ],
+//       ),
+//       // Bottom info bar
+//       bottomNavigationBar: Container(
+//         height: 40,
+//         color: Colors.grey[100],
+//         padding: const EdgeInsets.symmetric(horizontal: 16),
+//         child: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Row(
+//               children: [
+//                 Container(
+//                   width: 10,
+//                   height: 10,
+//                   decoration: const BoxDecoration(
+//                     color: Colors.red,
+//                     shape: BoxShape.circle,
+//                   ),
+//                 ),
+//                 const SizedBox(width: 8),
+//                 Text(
+//                   'الفني: ${currentLatitude.toStringAsFixed(5)}, ${currentLongitude.toStringAsFixed(5)}',
+//                   style: const TextStyle(fontSize: 11),
+//                 ),
+//               ],
+//             ),
+//             Row(
+//               children: [
+//                 Container(
+//                   width: 10,
+//                   height: 10,
+//                   decoration: const BoxDecoration(
+//                     color: Colors.green,
+//                     shape: BoxShape.circle,
+//                   ),
+//                 ),
+//                 const SizedBox(width: 8),
+//                 Text(
+//                   'الوجهة: ${widget.latitude}, ${widget.longitude}',
+//                   style: const TextStyle(fontSize: 11),
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+If you need actual road routing, you'll need to implement a backend service that handles the Google Directions API calls and returns the data to your Flutter app, or use a commercial routing service that provides CORS headers.
