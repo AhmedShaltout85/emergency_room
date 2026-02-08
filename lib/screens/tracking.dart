@@ -1239,7 +1239,7 @@
 //     );
 //   }
 // }
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unused_element, deprecated_member_use
 
 // import 'dart:async';
 // import 'dart:convert';
@@ -2383,16 +2383,7 @@ class _TrackingState extends State<Tracking> {
     _initializeTracking();
   }
 
-  // @override
-  // void dispose() {
-  //   debugPrint('🛑 Disposing tracking widget');
-  //   _locationTimer?.cancel();
-  //   _pulseTimer?.cancel();
-  //   _simulationTimer?.cancel();
-  //   _httpClient.close();
-  //   _mapController?.dispose();
-  //   super.dispose();
-  // }
+
 @override
   void dispose() {
     debugPrint('🛑 Disposing tracking widget');
@@ -2616,9 +2607,7 @@ class _TrackingState extends State<Tracking> {
       if (_startLatitude == 0.0 || _startLongitude == 0.0) {
         _startLatitude = _parseDouble(locationData['startLatitude']) ?? newLat;
         _startLongitude = _parseDouble(locationData['startLongitude']) ??
-            newLng ??
-            _parseDouble(widget.longitude) ??
-            29.924526;
+            newLng;
         debugPrint('📍 Start location initialized');
       }
 
@@ -3015,77 +3004,7 @@ void _startSimulation() {
       }
     });
   }
-  // void _startSimulation() {
-  //   if (_simulatedRoute.isEmpty) {
-  //     debugPrint('❌ لا يوجد مسار للمحاكاة');
-  //     return;
-  //   }
-
-  //   _simulationTimer?.cancel();
-  //   _simulationIndex = 0;
-  //   _simulationProgress = 0.0;
-  //   _isSimulating = true;
-
-  //   debugPrint('▶️ بدء محاكاة حركة الفني');
-
-  //   _simulationTimer =
-  //       Timer.periodic(const Duration(milliseconds: 200), (timer) {
-  //     if (_simulationIndex < _simulatedRoute.length) {
-  //       setState(() {
-  //         _simulatedPosition = _simulatedRoute[_simulationIndex];
-  //         _simulationProgress =
-  //             (_simulationIndex / _simulatedRoute.length) * 100;
-  //         _simulationIndex++;
-
-  //         // Update distance and time during simulation
-  //         final remainingDistance = _calculateDistance(
-  //           _simulatedPosition!,
-  //           LatLng(
-  //               double.parse(widget.latitude), double.parse(widget.longitude)),
-  //         );
-  //         final remainingTime = ((remainingDistance / 30.0) * 60).ceil();
-
-  //         _routeDistance = '${remainingDistance.toStringAsFixed(1)} كم متبقي';
-  //         _routeDuration = '~$remainingTime دقيقة';
-  //       });
-
-  //       // Update markers with new position
-  //       _updateMarkers();
-
-  //       // Follow the technician during simulation
-  //       if (_mapController != null) {
-  //         _mapController!.animateCamera(
-  //           CameraUpdate.newLatLng(_simulatedPosition!),
-  //         );
-  //       }
-  //     } else {
-  //       // Simulation complete
-  //       timer.cancel();
-  //       _isSimulating = false;
-  //       setState(() {
-  //         _simulatedPosition = null;
-  //         _simulationProgress = 100.0;
-  //         _routeDistance = 'وصل إلى الوجهة';
-  //         _routeDuration = '0 دقيقة';
-  //         _apiStatus = 'تم الوصول';
-  //       });
-  //       _updateMarkers();
-  //       debugPrint('✅ انتهت المحاكاة - الفني وصل إلى الوجهة');
-
-  //       // Show completion message
-  //       if (mounted) {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(
-  //             content:
-  //                 Text('${widget.technicianName} وصل إلى ${widget.address}'),
-  //             backgroundColor: Colors.green,
-  //             duration: const Duration(seconds: 3),
-  //           ),
-  //         );
-  //       }
-  //     }
-  //   });
-  // }
+  
 
   void _stopSimulation() {
     _simulationTimer?.cancel();
