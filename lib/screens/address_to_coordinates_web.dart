@@ -234,7 +234,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             getLocsByHandasahNameAndTechinicianName =
                 DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
           });
-
+          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
           //get last gis record from GIS server
           int lastRecordNumber = await DioNetworkRepos()
               .getLastRecordNumberWeb(); //get last gis record from GIS serverWEB-NO-BODY
@@ -242,6 +242,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
           int newRecordNumber = lastRecordNumber + 1;
           log("newRecordNumber :>> $newRecordNumber");
           //
+
           //create new gis point
           String mapLink =
               await DioNetworkRepos().createNewGisPointAndGetMapLink(
@@ -613,6 +614,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                       ),
                     ),
                     FutureBuilder(
+                      //TODO: update locations after getting coordinates and gis link and getLocsByHandasahName
                         future: getLocsAfterGetCoordinatesAndGis,
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {

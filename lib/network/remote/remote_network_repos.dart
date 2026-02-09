@@ -182,7 +182,8 @@ class DioNetworkRepos {
             "is_finished": 0,
             "is_approved": 0,
             "handasah_name": "free",
-            "technical_name": "free"
+            "technical_name": "free",
+            "broker_type": "لم يدرج نوع الكسر",
           });
       return response.data;
     } catch (e) {
