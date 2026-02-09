@@ -447,6 +447,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       ),
       body: Row(
         children: [
+          //TODO:INTEGRATION_WITH_GIS_TO_GET_HANDASAT_AUTOMATICALLY(INPROGRESS)
           Expanded(
             flex: 1,
             child: Container(
@@ -785,54 +786,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                 }
                                                               }),
                                                     );
-                                                    // showDialog(
-                                                    //   context: context,
-                                                    //   builder: (context) =>
-                                                    //       CustomReusableAlertDialog(
-                                                    //     title:
-                                                    //         "تحديث بيانات الشكوى",
-                                                    //     fieldLabels: const [
-                                                    //       "إسم المبلغ",
-                                                    //       "نوع الكسر",
-                                                    //       "رقم الموبيل"
-                                                    //     ],
-                                                    //     onSubmit: (values) {
-                                                    //       log(
-                                                    //           "User Input: $values"); // values[0]=Name, values[1]=Email, etc.
-                                                    //       if (values[0] == "" ||
-                                                    //           values[1] == "" ||
-                                                    //           values[2] == "") {
-                                                    //         ScaffoldMessenger
-                                                    //                 .of(context)
-                                                    //             .showSnackBar(
-                                                    //           const SnackBar(
-                                                    //             content: Text(
-                                                    //               "يرجى ملء جميع الحقول",
-                                                    //               textDirection:
-                                                    //                   TextDirection
-                                                    //                       .rtl,
-                                                    //               textAlign:
-                                                    //                   TextAlign
-                                                    //                       .center,
-                                                    //             ),
-                                                    //           ),
-                                                    //         );
-                                                    //       } else {
-                                                    //         DioNetworkRepos()
-                                                    //             .updateLocationBrokenByAddress(
-                                                    //                 snapshot.data![
-                                                    //                         index]
-                                                    //                     [
-                                                    //                     'address'],
-                                                    //                 values[0],
-                                                    //                 values[1],
-                                                    //                 values[2]);
-                                                    //         log(
-                                                    //             "User Input: updated Caller Name, Phone, And Borken Number");
-                                                    //       }
-                                                    //     },
-                                                    //   ),
-                                                    // );
+                                                   
                                                   },
                                                   icon: const Icon(
                                                     Icons.add_circle_outlined,
@@ -1557,7 +1511,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                   //     ),
                                                   //   ),
                                                   // );
-
+                                                  //TODO://ADD_IP_CAMERA(INTEGRATION_INPROGRESS)
                                                   //navigate to Browser
                                                   const url =
                                                       'http://196.219.231.5';
