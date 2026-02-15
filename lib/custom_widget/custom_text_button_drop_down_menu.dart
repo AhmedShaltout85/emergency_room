@@ -22,7 +22,11 @@ class TextButtonDropdown extends StatelessWidget {
         label,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(color: Colors.indigo),
+        style: const TextStyle(
+          color: Colors.indigo,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Cairo',
+        ),
       ),
       items: options.map((String option) {
         return DropdownMenuItem<String>(

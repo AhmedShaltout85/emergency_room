@@ -51,7 +51,7 @@ const String WEBRTC_BASE_URI_IP_ADDRESS_WEB_SOCKET =
     'ws://dr.awcoprod.com:5090'; // publish WEBRTC WEB SOCKET ONLINE server
 const String BASE_URI_IP_ADDRESS_LOCAL_HOST =
     "http://dr.awcoprod.com:8099"; //publish and handheld online server(resolver-name-OR-DOMAIN-name)
-    // "http://41.33.226.211:8099"; //publish and handheld online server
+// "http://41.33.226.211:8099"; //publish and handheld online server
 const String BASE_URI_IP_ADDRESS_LOCAL_HOST_STORES =
     "http://dr.awcoprod.com:8099"; // publish and handheld online server
 
@@ -77,9 +77,11 @@ const password = 'gislab1257910';
 const hotLineUsername = "IT1234";
 const HotLinePassword = "it2020";
 
-//skada constants
+//scada constants
 const String skadaStationsReportbaseUrl =
     'http://41.33.226.211:8070/api/data/stations-report';
+
+const String mobileCarIpCameratbaseUrlLocalHost = 'https://10.33.100.1';
 
 class StaticVariables {
 //Assign HandasahName

@@ -384,7 +384,11 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       appBar: AppBar(
         title: const Text(
           " غرفة الطوارئ",
-          style: TextStyle(color: Colors.indigo),
+          style: TextStyle(
+            color: Colors.indigo,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
         elevation: 7,
@@ -614,7 +618,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                       ),
                     ),
                     FutureBuilder(
-                      //TODO: update locations after getting coordinates and gis link and getLocsByHandasahName
+                        //TODO: update locations after getting coordinates and gis link and getLocsByHandasahName
                         future: getLocsAfterGetCoordinatesAndGis,
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
@@ -788,7 +792,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                 }
                                                               }),
                                                     );
-                                                   
                                                   },
                                                   icon: const Icon(
                                                     Icons.add_circle_outlined,
@@ -1425,7 +1428,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 tooltip: 'الربط مع المعامل',
                                                 hoverColor: Colors.yellow,
                                                 onPressed: () {
-                                                  //TODO:07-09-2025
                                                   StaticVariables.labCode =
                                                       convertHandasahToLabCode(
                                                           snapshot.data![index][
@@ -1433,7 +1435,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                   //
                                                   StaticVariables.labName =
                                                       convertLabCodeToLabName(
-                                                          StaticVariables.labCode);
+                                                          StaticVariables
+                                                              .labCode);
                                                   //
                                                   log(snapshot.data![index]
                                                           ['handasah_name'] +
@@ -1445,7 +1448,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                   log("LAB_CODE: ${StaticVariables.labCode}");
                                                   log("LAB_NAME: ${StaticVariables.labName}");
                                                   //navigate to DashboardChartsList
-                                                  //TODO: open labs dashboard charts list
                                                   context.go(
                                                       '/integration-with-labs');
                                                   // Navigator.push(
@@ -1516,7 +1518,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                   //TODO://ADD_IP_CAMERA(INTEGRATION_INPROGRESS)
                                                   //navigate to Browser
                                                   const url =
-                                                      'http://196.219.231.5';
+                                                      mobileCarIpCameratbaseUrlLocalHost;
+                                                  // 'http://196.219.231.5';
                                                   CustomBrowserRedirect
                                                       .openInBrowser(
                                                           url); // Open in browser
