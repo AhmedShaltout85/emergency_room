@@ -81,6 +81,39 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     super.dispose();
   }
 
+  //TODO:convert GIS-HANDASAH-NAME-TO-EMERGENCY-HANDASAH-NAME(inprogress-21-02-2026)
+  String convertGisHandasahNameToEmergencyHandasahName(
+      String emergencyHandasahPattern) {
+    const Map<String, String> patternToName = {
+      'ELBALAD_MOHERMBK/البلد ومحرم بك': 'هندسة فرع البلد ومحرم بك',
+      'ABUKEER/ابو قير': 'هندسة فرع أبو قير',
+      'MANDARA/المندرة': 'هندسة فرع المندرة',
+      'SIDIBISHR/سيدى بشر': 'هندسة فرع سيدى بشر',
+      'ELRAML/الرمل': 'هندسة فرع الرمل',
+      'ELQABBARI/القبارى': 'هندسة فرع القبارى',
+      'ELAGAMI/ العجمى': 'هندسة فرع العجمى',
+      'MADINET_NOUBARIA_ELGDIDA/مدينة النوباريه الجديدة': 'هندسة النوبارية',
+      'ELAMREYA/العامريه': 'هندسة فرع العامريه',
+      'ELBANGER/البنجر': 'هندسة بنجر السكر',
+      // '': 'هندسة ك 59',
+      'BORGELARAB/برج العرب': 'هندسة برج العرب الجديده',
+      '6OCTOBER/6 اكتوبر': 'هندسة فرع 6 اكتوبر',
+      'ELMINA/الميناء': 'هندسة فرع الميناء',
+      'ELNOZHA/النزهه': 'هندسة فرع النزهه',
+      'MARIOUT1/مريوط 1': 'هندسة فرع مريوط 1',
+      'ELBRAHEMIA/الابراهمية': 'هندسة فرع الابراهمية',
+    };
+
+    for (final entry in patternToName.entries) {
+      if (emergencyHandasahPattern.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return emergencyHandasahPattern;
+  }
+
+  //initialize app(hotline data)
   Future<void> _initializeApp() async {
     try {
       setState(() {
@@ -234,7 +267,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             getLocsByHandasahNameAndTechinicianName =
                 DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
           });
-          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
           //get last gis record from GIS server
           int lastRecordNumber = await DioNetworkRepos()
               .getLastRecordNumberWeb(); //get last gis record from GIS serverWEB-NO-BODY
@@ -243,17 +275,34 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
           log("newRecordNumber :>> $newRecordNumber");
           //
 
+          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
           //create new gis point
-          String mapLink =
-              await DioNetworkRepos().createNewGisPointAndGetMapLink(
-            newRecordNumber,
-            longitude.toString(),
-            latitude.toString(),
-          );
-          log("gis_longitude :>> $longitude");
-          log("gis_latitude :>> $latitude");
-          log("GIS MAP LINK :>> $mapLink");
+          // String mapLink =
+          //     await DioNetworkRepos().createNewGisPointAndGetMapLink(
+          //   newRecordNumber,
+          //   longitude.toString(),
+          //   latitude.toString(),
+          // );
+          // log("gis_longitude :>> $longitude");
+          // log("gis_latitude :>> $latitude");
+          // log("GIS MAP LINK :>> $mapLink");
 
+          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
+          final result = await DioNetworkRepos()
+              .createNewGisPointAndGetMapLinkAndHandasah(
+                  newRecordNumber, longitude.toString(), latitude.toString());
+          log("GIS-RESPONSE-DATA :>> $result");        
+                  //
+          final gisUrl = result['url'];
+          final branch = result['engineering_branch'];
+          final service = result['wtp_service'];
+          log("GIS MAP LINK :>> $gisUrl");
+          log("GIS BRANCH :>> $branch");
+          log("GIS SERVICE :>> $service");
+
+          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-16-03-2026)
+          String handasahBranch =
+              convertGisHandasahNameToEmergencyHandasahName(branch);
           // check if address already exist(UPDATED-IN-29-01-2025)
           var addressInList =
               await DioNetworkRepos().checkAddressExists(address);
@@ -268,11 +317,20 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
 
             //  call the function to update locations in database
             //update Locations list after getting coordinates and gis link
+            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
+            // await DioNetworkRepos().updateLocations(
+            //   address,
+            //   longitude,
+            //   latitude,
+            //   url, //updated(28-02-2026)
+            // );
+            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
             await DioNetworkRepos().updateLocations(
               address,
               longitude,
               latitude,
-              mapLink,
+              gisUrl,
+              handasahBranch,
             );
             //
             log("updated Locations list after getting coordinates and gis link");
@@ -281,13 +339,21 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             log("address not exist >>>>>>>>> $addressInList");
 
             //  call the function to post locations in database
+            // await DioNetworkRepos().createNewLocation(
+            //   address,
+            //   longitude,
+            //   latitude,
+            //   url, //updated(28-02-2026)
+            // );
+            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
             await DioNetworkRepos().createNewLocation(
               address,
               longitude,
               latitude,
-              mapLink,
+              gisUrl,
+              handasahBranch
             );
-            //
+
             log("POSTED new Location In Locations list after getting coordinates and gis link");
           }
 
@@ -452,7 +518,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       ),
       body: Row(
         children: [
-          //TODO:INTEGRATION_WITH_GIS_TO_GET_HANDASAT_AUTOMATICALLY(INPROGRESS)
+          //TODO:INTEGRATION_WITH_GIS_TO_GET_HANDASAT_AUTOMATICALLY(INPROGRESS-21-02-2026-comment it for now)
           Expanded(
             flex: 1,
             child: Container(

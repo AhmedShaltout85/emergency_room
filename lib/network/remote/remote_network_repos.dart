@@ -169,8 +169,10 @@ class DioNetworkRepos {
   }
 
 //9-- UPDATE locations By address(wiht-url)
+//TODO: add handasahName BY GET IT FROM GIS SERVER(INPROGRESS-21-02-2026)
   Future<void> updateLocations(
-      String address, double longitude, double latitude, String url) async {
+      // String address, double longitude, double latitude, String url) async {
+      String address, double longitude, double latitude, String url, String handasahName) async {
     try {
       var response = await dio.put(
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/address/$address",
@@ -181,7 +183,7 @@ class DioNetworkRepos {
             "gis_url": url,
             "is_finished": 0,
             "is_approved": 0,
-            "handasah_name": "free",
+            "handasah_name": handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
             "technical_name": "free",
             "broker_type": "لم يدرج نوع الكسر",
           });
@@ -193,6 +195,7 @@ class DioNetworkRepos {
   }
 
   //10-- POST in GIS Server and GET MAP Link
+  //TODO: add GET HANDASAH NAME AND GIS URL BY GET IT FROM GIS SERVER(INPROGRESS-21-02-2026)
   Future<String> createNewGisPointAndGetMapLink(
       int id, String longitude, String latitude) async {
     // Encode credentials to Base64
@@ -220,6 +223,62 @@ class DioNetworkRepos {
       throw Exception(e);
     }
   }
+  //TODO: add GET HANDASAH NAME AND GIS URL BY GET IT FROM GIS SERVER(INPROGRESS-21-02-2026-NOT_TESTED)
+ Future<Map<String, dynamic>> createNewGisPointAndGetMapLinkAndHandasah(
+      int id, String longitude, String latitude) async {
+    final basicAuth =
+        'Basic ${base64Encode(utf8.encode('$username:$password'))}';
+
+    try {
+      final response = await dio.post(
+        gisUrl,
+        data: {
+          "uid": id,
+          "x": longitude,
+          "y": latitude,
+          "category": "gis_lab_api",
+        },
+        options: Options(
+          headers: {
+            'authorization': basicAuth,
+          },
+        ),
+      );
+
+      if (response.statusCode == 201) {
+        final data = response.data;
+
+        // Handle both String and Map responses from Dio
+        final Map<String, dynamic> jsonData =
+            data is String ? jsonDecode(data) : Map<String, dynamic>.from(data);
+
+        log(jsonData.toString());
+
+        return {
+          'url': jsonData['url'] as String? ?? '',
+          'engineering_branch': jsonData['Engineering_Branch'] as String? ?? '',
+          'wtp_service': jsonData['Wtp_Service'] as String? ?? '',
+        };
+      } else {
+        throw Exception(
+            'Failed to post data. Status code: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      final message =
+          e.response?.data?.toString() ?? e.message ?? 'Unknown Dio error';
+      log('DioException: $message');
+      throw Exception('Network error: $message');
+    } catch (e) {
+      log('Unexpected error: $e');
+      throw Exception('Unexpected error: $e');
+    }
+  }
+  //TODO: to-use-it(INPROGRESS-21-02-2026-NOT_TESTED)
+//   final result = await createNewGisPointAndGetMapLinkAndHandasah(603, "29.9", "31.2");
+
+// final url = result['url'];
+// final branch = result['engineering_branch'];
+// final service = result['wtp_service'];
 
   //11-- GET USERNAME AND PASSWORD
   //Login User using username and password(working)
@@ -346,8 +405,10 @@ class DioNetworkRepos {
   }
 
   //15-- POST locations(wiht-url)
+  //TODO://ADD HANDSAH BY GET IT FROM GIS SERVER(INPORGRESS-21-02-2026)
   Future createNewLocation(
-      String address, double longitude, double latitude, String url) async {
+      // String address, double longitude, double latitude, String url) async {
+      String address, double longitude, double latitude, String url, String handasahName) async {
     try {
       var response = await dio.post(
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc",
@@ -358,7 +419,7 @@ class DioNetworkRepos {
             "flag": 1,
             "gis_url": url,
             "is_finished": 0,
-            "handasah_name": "free",
+            "handasah_name": handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
             "technical_name": "free",
             "caller_name": "لم يدرج",
             "caller_phone": "لم يدرج",

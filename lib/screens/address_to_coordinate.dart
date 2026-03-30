@@ -172,6 +172,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
           longitude,
           latitude,
           mapLink,
+          'free',
         );
         //
         log("updated Locations list after getting coordinates and gis link");
@@ -185,6 +186,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
           longitude,
           latitude,
           mapLink,
+          'free',
         );
         //
         log("POSTED new Location In Locations list after getting coordinates and gis link");

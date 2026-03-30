@@ -70,9 +70,13 @@ const channel = 'control_room_location';
 // const tokenAudio = '';
 // const channelAudio = 'control_location_voice';
 
-// Basic Authentication credentials
+//GIS Basic Authentication credentials
+//old Credential
+// const username = 'gis';
+// const password = 'gislab1257910';
 const username = 'gis';
-const password = 'gislab1257910';
+const password = 'awcogiscenter';
+
 // Basic Authentication credentials for hotline
 const hotLineUsername = "IT1234";
 const HotLinePassword = "it2020";

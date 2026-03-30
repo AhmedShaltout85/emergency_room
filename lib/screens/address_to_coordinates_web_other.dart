@@ -158,6 +158,7 @@ class AddressToCoordinatesOtherState extends State<AddressToCoordinatesOther> {
           lng,
           lat,
           mapLink,
+          'free'
         );
       } else {
         await DioNetworkRepos().createNewLocation(
@@ -165,6 +166,7 @@ class AddressToCoordinatesOtherState extends State<AddressToCoordinatesOther> {
           lng,
           lat,
           mapLink,
+          'free'
         );
       }
     } catch (e) {
