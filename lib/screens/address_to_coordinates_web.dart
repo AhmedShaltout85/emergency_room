@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -85,11 +86,13 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   String convertGisHandasahNameToEmergencyHandasahName(
       String emergencyHandasahPattern) {
     const Map<String, String> patternToName = {
-      'ELBALAD_MOHERMBK/البلد ومحرم بك': 'هندسة فرع البلد ومحرم بك',
       'ABUKEER/ابو قير': 'هندسة فرع أبو قير',
       'MANDARA/المندرة': 'هندسة فرع المندرة',
       'SIDIBISHR/سيدى بشر': 'هندسة فرع سيدى بشر',
       'ELRAML/الرمل': 'هندسة فرع الرمل',
+      'ELBRAHEMIA/الابراهمية': 'هندسة فرع الابراهمية',
+      'ELNOZHA/النزهه': 'هندسة فرع النزهه',
+      'ELBALAD_MOHERMBK/البلد ومحرم بك': 'هندسة فرع البلد',
       'ELQABBARI/القبارى': 'هندسة فرع القبارى',
       'ELAGAMI/ العجمى': 'هندسة فرع العجمى',
       'MADINET_NOUBARIA_ELGDIDA/مدينة النوباريه الجديدة': 'هندسة النوبارية',
@@ -99,9 +102,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       'BORGELARAB/برج العرب': 'هندسة برج العرب الجديده',
       '6OCTOBER/6 اكتوبر': 'هندسة فرع 6 اكتوبر',
       'ELMINA/الميناء': 'هندسة فرع الميناء',
-      'ELNOZHA/النزهه': 'هندسة فرع النزهه',
       'MARIOUT1/مريوط 1': 'هندسة فرع مريوط 1',
-      'ELBRAHEMIA/الابراهمية': 'هندسة فرع الابراهمية',
     };
 
     for (final entry in patternToName.entries) {
@@ -209,178 +210,337 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   }
 
   // Function to get latitude and longitude from an address using Google Maps Geocoding API
+  // Future<void> _getCoordinatesFromAddress(String address) async {
+  //   final url = Uri.parse(
+  //       'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$googleMapsApiKey');
+
+  //   final GoogleMapController controller = await _controller.future;
+
+  //   try {
+  //     final response = await http.get(url);
+
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+
+  //       if (data['results'].isNotEmpty) {
+  //         var location = data['results'][0]['geometry']['location'];
+  //         setState(() {
+  //           coordinates =
+  //               "Latitude: ${location['lat']}, Longitude: ${location['lng']}";
+  //           latitude = location['lat']; // latitude
+  //           longitude = location['lng']; // longitude
+
+  //           //add marker
+  //           pickMarkers.add(
+  //             Marker(
+  //               markerId: MarkerId(address),
+  //               position: LatLng(latitude, longitude),
+  //               infoWindow: InfoWindow(
+  //                 title: address,
+  //                 snippet: coordinates,
+  //               ),
+  //               icon:
+  //                   // pinLocationIcon!,
+  //                   BitmapDescriptor.defaultMarkerWithHue(
+  //                       BitmapDescriptor.hueGreen),
+  //             ),
+  //           );
+  //           // Move camera to the new location
+  //           controller.animateCamera(
+  //             CameraUpdate.newCameraPosition(
+  //               CameraPosition(
+  //                 target: LatLng(latitude, longitude),
+  //                 zoom: 15.0, // You can adjust the zoom level as needed
+  //               ),
+  //             ),
+  //           );
+  //           //
+  //           log(address);
+  //           log(coordinates);
+  //           log(longitude.toString());
+  //           log(latitude.toString());
+
+  //           //update locations after getting coordinates
+  //           // getLocs = DioNetworkRepos().getLoc();
+  //           //update locations after getting coordinates and gis link
+  //           getLocsAfterGetCoordinatesAndGis =
+  //               DioNetworkRepos().getLocByFlagAndIsFinished();
+  //           getLocsByHandasahNameAndTechinicianName =
+  //               DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
+  //         });
+  //         log('START-GIS-INTEGRATIONS');
+  //         //get last gis record from GIS server
+  //         int lastRecordNumber = await DioNetworkRepos()
+  //             .getLastRecordNumberWeb(); //get last gis record from GIS serverWEB-NO-BODY
+
+  //         log("lastRecordNumber :>> $lastRecordNumber");
+  //         int newRecordNumber = lastRecordNumber + 1;
+  //         log("newRecordNumber :>> $newRecordNumber");
+  //         //
+
+  //         //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
+  //         //create new gis point
+  //         // String mapLink =
+  //         //     await DioNetworkRepos().createNewGisPointAndGetMapLink(
+  //         //   newRecordNumber,
+  //         //   longitude.toString(),
+  //         //   latitude.toString(),
+  //         // );
+  //         // log("gis_longitude :>> $longitude");
+  //         // log("gis_latitude :>> $latitude");
+  //         // log("GIS MAP LINK :>> $mapLink");
+
+  //         //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
+  //         final result = await DioNetworkRepos()
+  //             .createNewGisPointAndGetMapLinkAndHandasah(
+  //                 newRecordNumber, longitude.toString(), latitude.toString());
+  //         log("GIS-RESPONSE-DATA :>> $result");
+  //                 //
+  //         final gisUrl = result['url'];
+  //         final branch = result['engineering_branch'];
+  //         final service = result['wtp_service'];
+  //         log("GIS MAP LINK :>> $gisUrl");
+  //         log("GIS BRANCH :>> $branch");
+  //         log("GIS SERVICE :>> $service");
+
+  //         //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-16-03-2026)
+  //         String handasahBranch =
+  //             convertGisHandasahNameToEmergencyHandasahName(branch);
+  //         // check if address already exist(UPDATED-IN-29-01-2025)
+  //         var addressInList =
+  //             await DioNetworkRepos().checkAddressExists(address);
+  //         log("PRINTED DATA FROM UI:  ${await DioNetworkRepos().checkAddressExists(address)}");
+  //         log("PRINTED BY USING VAR: $addressInList");
+  //         // log("PRINTED BY USING STRING: $addressInListString");
+  //         //
+  //         //
+  //         if (addressInList == true) {
+  //           //  call the function to update locations in database
+  //           log("address already exist >>>>>> $addressInList");
+
+  //           //  call the function to update locations in database
+  //           //update Locations list after getting coordinates and gis link
+  //           //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
+  //           // await DioNetworkRepos().updateLocations(
+  //           //   address,
+  //           //   longitude,
+  //           //   latitude,
+  //           //   url, //updated(28-02-2026)
+  //           // );
+  //           //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
+  //           await DioNetworkRepos().updateLocations(
+  //             address,
+  //             longitude,
+  //             latitude,
+  //             gisUrl,
+  //             handasahBranch,
+  //           );
+  //           //
+  //           log("updated Locations list after getting coordinates and gis link");
+  //         } else {
+  //           //  call the function to post locations in database
+  //           log("address not exist >>>>>>>>> $addressInList");
+
+  //           //  call the function to post locations in database
+  //           // await DioNetworkRepos().createNewLocation(
+  //           //   address,
+  //           //   longitude,
+  //           //   latitude,
+  //           //   url, //updated(28-02-2026)
+  //           // );
+  //           //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
+  //           await DioNetworkRepos().createNewLocation(
+  //             address,
+  //             longitude,
+  //             latitude,
+  //             gisUrl,
+  //             handasahBranch
+  //           );
+
+  //           log("POSTED new Location In Locations list after getting coordinates and gis link");
+  //         }
+
+  //         //update Locations list after getting coordinates
+
+  //         setState(() {
+  //           // getLocs = DioNetworkRepos().getLoc();
+  //           //update locations after getting coordinates and gis link
+  //           getLocsAfterGetCoordinatesAndGis =
+  //               DioNetworkRepos().getLocByFlagAndIsFinished();
+  //           getLocsByHandasahNameAndTechinicianName =
+  //               DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
+  //         });
+  //       } else {
+  //         setState(() {
+  //           coordinates = "Error: No results found";
+  //         });
+  //       }
+  //     } else {
+  //       setState(() {
+  //         coordinates = "Error: Failed to fetch data";
+  //       });
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       coordinates = "Error: Unable to get coordinates";
+  //     });
+  //   }
+  // }
+  // ==================== UI: _getCoordinatesFromAddress ====================
+
+// ==================== UI: _getCoordinatesFromAddress ====================
+
   Future<void> _getCoordinatesFromAddress(String address) async {
     final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$googleMapsApiKey');
+      'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$googleMapsApiKey',
+    );
 
     final GoogleMapController controller = await _controller.future;
 
     try {
       final response = await http.get(url);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      // ── 1. HTTP error ──────────────────────────────────────────────────────
+      if (response.statusCode != 200) {
+        setState(() => coordinates = "Error: Failed to fetch data");
+        return;
+      }
 
-        if (data['results'].isNotEmpty) {
-          var location = data['results'][0]['geometry']['location'];
-          setState(() {
-            coordinates =
-                "Latitude: ${location['lat']}, Longitude: ${location['lng']}";
-            latitude = location['lat']; // latitude
-            longitude = location['lng']; // longitude
+      final data = json.decode(response.body);
 
-            //add marker
-            pickMarkers.add(
-              Marker(
-                markerId: MarkerId(address),
-                position: LatLng(latitude, longitude),
-                infoWindow: InfoWindow(
-                  title: address,
-                  snippet: coordinates,
-                ),
-                icon:
-                    // pinLocationIcon!,
-                    BitmapDescriptor.defaultMarkerWithHue(
-                        BitmapDescriptor.hueGreen),
-              ),
-            );
-            // Move camera to the new location
-            controller.animateCamera(
-              CameraUpdate.newCameraPosition(
-                CameraPosition(
-                  target: LatLng(latitude, longitude),
-                  zoom: 15.0, // You can adjust the zoom level as needed
-                ),
-              ),
-            );
-            //
-            log(address);
-            log(coordinates);
-            log(longitude.toString());
-            log(latitude.toString());
+      // ── 2. No geocode results ──────────────────────────────────────────────
+      if (data['results'] == null || data['results'].isEmpty) {
+        setState(() => coordinates = "Error: No results found");
+        return;
+      }
 
-            //update locations after getting coordinates
-            // getLocs = DioNetworkRepos().getLoc();
-            //update locations after getting coordinates and gis link
-            getLocsAfterGetCoordinatesAndGis =
-                DioNetworkRepos().getLocByFlagAndIsFinished();
-            getLocsByHandasahNameAndTechinicianName =
-                DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
-          });
-          //get last gis record from GIS server
-          int lastRecordNumber = await DioNetworkRepos()
-              .getLastRecordNumberWeb(); //get last gis record from GIS serverWEB-NO-BODY
-          log("lastRecordNumber :>> $lastRecordNumber");
-          int newRecordNumber = lastRecordNumber + 1;
-          log("newRecordNumber :>> $newRecordNumber");
-          //
+      // ── 3. Extract coordinates ─────────────────────────────────────────────
+      final location = data['results'][0]['geometry']['location'];
+      latitude = location['lat'];
+      longitude = location['lng'];
+      coordinates = "Latitude: $latitude, Longitude: $longitude";
 
-          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
-          //create new gis point
-          // String mapLink =
-          //     await DioNetworkRepos().createNewGisPointAndGetMapLink(
-          //   newRecordNumber,
-          //   longitude.toString(),
-          //   latitude.toString(),
-          // );
-          // log("gis_longitude :>> $longitude");
-          // log("gis_latitude :>> $latitude");
-          // log("GIS MAP LINK :>> $mapLink");
+      log("Address     :>> $address");
+      log("Coordinates :>> $coordinates");
+      log("Longitude   :>> $longitude");
+      log("Latitude    :>> $latitude");
 
-          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-10-02-2026)
-          final result = await DioNetworkRepos()
-              .createNewGisPointAndGetMapLinkAndHandasah(
-                  newRecordNumber, longitude.toString(), latitude.toString());
-          log("GIS-RESPONSE-DATA :>> $result");        
-                  //
-          final gisUrl = result['url'];
-          final branch = result['engineering_branch'];
-          final service = result['wtp_service'];
-          log("GIS MAP LINK :>> $gisUrl");
-          log("GIS BRANCH :>> $branch");
-          log("GIS SERVICE :>> $service");
+      // ── 4. Update map UI (marker + camera) ────────────────────────────────
+      setState(() {
+        pickMarkers.add(
+          Marker(
+            markerId: MarkerId(address),
+            position: LatLng(latitude, longitude),
+            infoWindow: InfoWindow(title: address, snippet: coordinates),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueGreen,
+            ),
+          ),
+        );
+      });
 
-          //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(INPROGRESS-IN-16-03-2026)
-          String handasahBranch =
-              convertGisHandasahNameToEmergencyHandasahName(branch);
-          // check if address already exist(UPDATED-IN-29-01-2025)
-          var addressInList =
-              await DioNetworkRepos().checkAddressExists(address);
-          log("PRINTED DATA FROM UI:  ${await DioNetworkRepos().checkAddressExists(address)}");
-          log("PRINTED BY USING VAR: $addressInList");
-          // log("PRINTED BY USING STRING: $addressInListString");
-          //
-          //
-          if (addressInList == true) {
-            //  call the function to update locations in database
-            log("address already exist >>>>>> $addressInList");
+      await controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: LatLng(latitude, longitude), zoom: 15.0),
+        ),
+      );
 
-            //  call the function to update locations in database
-            //update Locations list after getting coordinates and gis link
-            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
-            // await DioNetworkRepos().updateLocations(
-            //   address,
-            //   longitude,
-            //   latitude,
-            //   url, //updated(28-02-2026)
-            // );
-            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
-            await DioNetworkRepos().updateLocations(
-              address,
-              longitude,
-              latitude,
-              gisUrl,
-              handasahBranch,
-            );
-            //
-            log("updated Locations list after getting coordinates and gis link");
-          } else {
-            //  call the function to post locations in database
-            log("address not exist >>>>>>>>> $addressInList");
+      // ── 5. GIS Integration ─────────────────────────────────────────────────
+      log('START-GIS-INTEGRATIONS');
+      await _runGisIntegration(address); // ✅ Separated into its own method
 
-            //  call the function to post locations in database
-            // await DioNetworkRepos().createNewLocation(
-            //   address,
-            //   longitude,
-            //   latitude,
-            //   url, //updated(28-02-2026)
-            // );
-            //TODO: UPDATE_GET_GIS_LINK_HANDASAT_NAME_FORM_GIS_SERVER(ADD-HANDASAT-NAME-INPROGRESS-IN-21-02-2026)
-            await DioNetworkRepos().createNewLocation(
-              address,
-              longitude,
-              latitude,
-              gisUrl,
-              handasahBranch
-            );
+      // ── 6. Refresh UI lists after everything is done ───────────────────────
+      setState(() {
+        getLocsAfterGetCoordinatesAndGis =
+            DioNetworkRepos().getLocByFlagAndIsFinished();
+        getLocsByHandasahNameAndTechinicianName =
+            DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
+      });
+    } catch (e) {
+      log("_getCoordinatesFromAddress error: $e");
+      setState(() => coordinates = "Error: Unable to get coordinates");
+    }
+  }
 
-            log("POSTED new Location In Locations list after getting coordinates and gis link");
-          }
+// ── GIS Integration (separated so catch works correctly) ──────────────────
+  Future<void> _runGisIntegration(String address) async {
+    log("=== _runGisIntegration STARTED ===");
+    try {
+      log("=== CALLING getLastRecordNumberWeb ===");
+      final lastRecordNumber = await DioNetworkRepos().getLastRecordNumberWeb();
+      log("=== getLastRecordNumberWeb SUCCESS: $lastRecordNumber ===");
 
-          //update Locations list after getting coordinates
+      final newRecordNumber = lastRecordNumber + 1;
 
-          setState(() {
-            // getLocs = DioNetworkRepos().getLoc();
-            //update locations after getting coordinates and gis link
-            getLocsAfterGetCoordinatesAndGis =
-                DioNetworkRepos().getLocByFlagAndIsFinished();
-            getLocsByHandasahNameAndTechinicianName =
-                DioNetworkRepos().getLocByHandasahAndTechnician("free", "free");
-          });
-        } else {
-          setState(() {
-            coordinates = "Error: No results found";
-          });
-        }
+      log("=== CALLING createNewGisPointAndGetMapLinkAndHandasah ===");
+      final result =
+          await DioNetworkRepos().createNewGisPointAndGetMapLinkAndHandasah(
+        newRecordNumber,
+        longitude.toString(),
+        latitude.toString(),
+      );
+      log("=== createNewGisPoint SUCCESS: $result ===");
+
+      final gisUrl = result['url'] as String? ?? 'free';
+      final branch = result['engineering_branch'] as String? ?? 'free';
+      final service = result['wtp_service'] as String? ?? 'free';
+
+      log("GIS MAP LINK :>> $gisUrl");
+      log("GIS BRANCH   :>> $branch");
+      log("GIS SERVICE  :>> $service");
+
+      final handasahBranch =
+          convertGisHandasahNameToEmergencyHandasahName(branch);
+
+      log("=== CALLING _saveOrUpdateLocation WITH REAL DATA ===");
+      await _saveOrUpdateLocation(address, gisUrl, handasahBranch);
+      log("=== _saveOrUpdateLocation DONE ===");
+    } catch (gisError, stackTrace) {
+      log("=== GIS CATCH BLOCK REACHED ===");
+      log("=== gisError: $gisError ===");
+      log("=== stackTrace: $stackTrace ===");
+      log("=== CALLING _saveOrUpdateLocation WITH FALLBACK ===");
+      await _saveOrUpdateLocation(address, 'free', 'free');
+      log("=== FALLBACK _saveOrUpdateLocation DONE ===");
+    }
+
+    log("=== _runGisIntegration ENDED ===");
+  }
+
+// ── Helper: save new or update existing location ──────────────────────────
+
+  Future<void> _saveOrUpdateLocation(
+    String address,
+    String gisUrl,
+    String handasahBranch,
+  ) async {
+    try {
+      final addressExists = await DioNetworkRepos().checkAddressExists(address);
+      log("addressExists: $addressExists");
+
+      if (addressExists == true) {
+        log("Address already exists — updating...");
+        await DioNetworkRepos().updateLocations(
+          address,
+          longitude,
+          latitude,
+          gisUrl,
+          handasahBranch,
+        );
+        log("Location updated successfully.");
       } else {
-        setState(() {
-          coordinates = "Error: Failed to fetch data";
-        });
+        log("Address not found — creating new location...");
+        await DioNetworkRepos().createNewLocation(
+          address,
+          longitude,
+          latitude,
+          gisUrl,
+          handasahBranch,
+        );
+        log("New location created successfully.");
       }
     } catch (e) {
-      setState(() {
-        coordinates = "Error: Unable to get coordinates";
-      });
+      log("_saveOrUpdateLocation error: $e");
     }
   }
 
@@ -1249,6 +1409,30 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 hoverColor: Colors.yellow,
                                                 onPressed: () {
                                                   log("Start Gis Map ${snapshot.data![index]['gis_url']}");
+                                                  //TODO:MAKE-TOAST
+                                                  if(snapshot.data![index]['gis_url'] == 'free'){
+                                                    //TODO:MAKE-TOAST
+                                                    Fluttertoast.showToast(
+                                                        msg:
+                                                            "لا يوجد رابط GIS Map",
+                                                        toastLength:
+                                                            Toast.LENGTH_SHORT,
+                                                        gravity:
+                                                            ToastGravity.CENTER,
+                                                        timeInSecForIosWeb: 1,
+                                                        backgroundColor:
+                                                            Colors.red,
+                                                        textColor: Colors.white,
+                                                        fontSize: 16.0);
+                                                  }else{
+                                                    
+                                                  //open in browser
+                                                  CustomBrowserRedirect
+                                                      .openInBrowser(
+                                                    snapshot.data![index]
+                                                        ['gis_url'],
+                                                  );
+                                                  }
                                                   //open in iframe webview in web app
                                                   // Navigator.push(
                                                   //   context,
@@ -1261,12 +1445,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                   //   ),
                                                   // );
 
-                                                  //open in browser
-                                                  CustomBrowserRedirect
-                                                      .openInBrowser(
-                                                    snapshot.data![index]
-                                                        ['gis_url'],
-                                                  );
                                                   //open in webview
                                                   //   Navigator.push(
                                                   //     context,
@@ -1494,6 +1672,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 tooltip: 'الربط مع المعامل',
                                                 hoverColor: Colors.yellow,
                                                 onPressed: () {
+                                                  //TODO: HANDLE-HANDASAH-NAME-TO-LAB-CODE(31-MAR-2026)
                                                   StaticVariables.labCode =
                                                       convertHandasahToLabCode(
                                                           snapshot.data![index][

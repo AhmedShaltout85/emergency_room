@@ -7,6 +7,7 @@ import 'dart:developer';
 // import 'dart:io';
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:go_router/go_router.dart';
 import 'package:location/location.dart';
@@ -501,8 +502,20 @@ class _UserScreenState extends State<UserScreen> {
 
   void _openGisMap(String url, String title) {
     log("Start Gis Map $url");
-    // if (kIsWeb) {
-    CustomBrowserRedirect.openInBrowser(url);
+    if (url == 'free') {
+      //TODO:MAKE-TOAST
+      Fluttertoast.showToast(
+          msg: "لا يوجد رابط GIS Map",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    } else {
+      // if (kIsWeb) {
+      CustomBrowserRedirect.openInBrowser(url);
+    }
     // } else if(Platform.isAndroid) {
     //    CustomBrowserRedirect.openInBrowser(url);
     // }else if (Platform.isWindows){

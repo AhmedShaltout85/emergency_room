@@ -13,7 +13,14 @@ class DioNetworkRepos {
 
   factory DioNetworkRepos() => _instance;
   //
-  final dio = Dio();
+  // final dio = Dio();
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+    ),
+  );
 
 //1-- GET locations(GET by flag 0 (address not set yet)--HOTLINE)
   Future getLoc() async {
@@ -543,33 +550,74 @@ class DioNetworkRepos {
   }
 
 //20-- GET last record number from GIS serverWEB (broken-number-generator)
+  // Future<int> getLastRecordNumberWeb() async {
+  //   var getLastRecordUrlWeb = 'http://196.219.231.3:8000/lab-api/web-lab-id';
+  //   final basicAuth =
+  //       'Basic ${base64Encode(utf8.encode('$username:$password'))}';
+  //   try {
+  //     var response = await dio.get(
+  //       getLastRecordUrlWeb,
+  //       // data: {"category": "gis_lab_api"},
+  //       options: Options(
+  //         headers: {
+  //           'authorization': basicAuth,
+  //         },
+  //       ),
+  //     );
+  //     if (response.statusCode == 201) {
+  //       // log(dataList);
+  //       log("PRINTED DATA FROM API:  ${response.data}");
+
+  //       return response.data;
+  //     } else {
+  //       log('List is empty');
+  //       return 0;
+  //       // throw Exception('List is empty');
+  //     }
+  //   } catch (e) {
+  //     log(e.toString());
+  //     throw Exception(e);
+  //   }
+  // }
   Future<int> getLastRecordNumberWeb() async {
-    var getLastRecordUrlWeb = 'http://196.219.231.3:8000/lab-api/web-lab-id';
+    log("=== getLastRecordNumberWeb STARTED ===");
+    const getLastRecordUrlWeb = 'http://196.219.231.3:8000/lab-api/web-lab-id';
     final basicAuth =
         'Basic ${base64Encode(utf8.encode('$username:$password'))}';
+
     try {
-      var response = await dio.get(
+      log("=== SENDING REQUEST TO: $getLastRecordUrlWeb ===");
+      final response = await dio.get(
         getLastRecordUrlWeb,
-        // data: {"category": "gis_lab_api"},
         options: Options(
-          headers: {
-            'authorization': basicAuth,
-          },
+          headers: {'authorization': basicAuth},
+          // ✅ Add timeouts so it doesn't hang forever
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        
         ),
       );
-      if (response.statusCode == 201) {
-        // log(dataList);
-        log("PRINTED DATA FROM API:  ${response.data}");
 
-        return response.data;
+      log("=== RESPONSE STATUS: ${response.statusCode} ===");
+      log("=== RESPONSE DATA: ${response.data} ===");
+      log("=== RESPONSE DATA TYPE: ${response.data.runtimeType} ===");
+
+      if (response.statusCode == 201) {
+        log("=== STATUS 201 SUCCESS ===");
+        return response.data as int;
       } else {
-        log('List is empty');
-        return 0;
-        // throw Exception('List is empty');
+        log("=== STATUS NOT 201 — THROWING ===");
+        throw Exception(
+          "getLastRecordNumberWeb failed with status: ${response.statusCode}",
+        );
       }
-    } catch (e) {
-      log(e.toString());
-      throw Exception(e);
+    } on DioException catch (e) {
+      log("=== DioException CAUGHT: type=${e.type} message=${e.message} ===");
+      throw Exception("DioException: ${e.message}");
+    } catch (e, stackTrace) {
+      log("=== UNKNOWN ERROR CAUGHT: $e ===");
+      log("=== StackTrace: $stackTrace ===");
+      rethrow;
     }
   }
 

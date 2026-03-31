@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emergency_room/custom_widget/custom_alert_dialog_create_handasah_users.dart';
 import 'package:emergency_room/custom_widget/custom_handasah_assign_user.dart';
@@ -284,10 +285,23 @@ class _HandasahScreenState extends State<HandasahScreen> {
                             itemBuilder: (context, index) {
                               return InkWell(
                                 onTap: () {
-                                  setState(() {
-                                    gisHandasahUrl =
-                                        snapshot.data![index]['gis_url'];
-                                  });
+                                  if (snapshot.data![index]['gis_url'] ==
+                                      'free') {
+                                    //TODO:MAKE-TOAST
+                                    Fluttertoast.showToast(
+                                        msg: "لا يوجد رابط GIS Map",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.CENTER,
+                                        timeInSecForIosWeb: 1,
+                                        backgroundColor: Colors.red,
+                                        textColor: Colors.white,
+                                        fontSize: 16.0);
+                                  } else {
+                                    setState(() {
+                                      gisHandasahUrl =
+                                          snapshot.data![index]['gis_url'];
+                                    });
+                                  }
                                 },
                                 child: Card(
                                   child: Column(
