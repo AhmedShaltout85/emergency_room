@@ -616,7 +616,7 @@ class DioNetworkRepos {
       throw Exception("DioException: ${e.message}");
     } catch (e, stackTrace) {
       // log("=== UNKNOWN ERROR CAUGHT: $e ===");
-      // log("=== StackTrace: $stackTrace ===");
+      log("=== StackTrace: $stackTrace ===");
       rethrow;
     }
   }
