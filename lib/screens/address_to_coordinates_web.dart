@@ -1490,70 +1490,71 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 ),
                                               ),
                                             ),
-                                            Expanded(
-                                              child: IconButton(
-                                                tooltip: 'أجراء مكالمة فيديو',
-                                                hoverColor: Colors.yellow,
-                                                onPressed: () {
-                                                  log("Start Video Call ${snapshot.data![index]['id']}");
-                                                  if (snapshot.data![index]
-                                                          ['is_approved'] ==
-                                                      0) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content: Text(
-                                                        'لايمكن إجراء مكالمة فيديو قبل قبول الفنى الشكوى',
-                                                        textDirection:
-                                                            TextDirection.rtl,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      )),
-                                                    );
-                                                  } else {
-                                                    //update video call status(23-03-2025)
-                                                    DioNetworkRepos()
-                                                        .updateLocationBrokenByAddressUpdateVideoCall(
-                                                            snapshot.data![
-                                                                    index]
-                                                                ['address'],
-                                                            1);
-                                                    //open video call
-                                                    // Navigator.push(
-                                                    //   context,
-                                                    //   MaterialPageRoute(
-                                                    //     builder: (context) =>
-                                                    //         AgoraVideoCall(
-                                                    //       title:
-                                                    //           '${snapshot.data![index]['address']}',
-                                                    //     ),
-                                                    //   ),
-                                                    // );
+                                            //TODO: DISABLED-VIDEO-CALL
+                                            // Expanded(
+                                            //   child: IconButton(
+                                            //     tooltip: 'أجراء مكالمة فيديو',
+                                            //     hoverColor: Colors.yellow,
+                                            //     onPressed: () {
+                                            //       log("Start Video Call ${snapshot.data![index]['id']}");
+                                            //       if (snapshot.data![index]
+                                            //               ['is_approved'] ==
+                                            //           0) {
+                                            //         ScaffoldMessenger.of(
+                                            //                 context)
+                                            //             .showSnackBar(
+                                            //           const SnackBar(
+                                            //               content: Text(
+                                            //             'لايمكن إجراء مكالمة فيديو قبل قبول الفنى الشكوى',
+                                            //             textDirection:
+                                            //                 TextDirection.rtl,
+                                            //             textAlign:
+                                            //                 TextAlign.center,
+                                            //           )),
+                                            //         );
+                                            //       } else {
+                                            //         //update video call status(23-03-2025)
+                                            //         DioNetworkRepos()
+                                            //             .updateLocationBrokenByAddressUpdateVideoCall(
+                                            //                 snapshot.data![
+                                            //                         index]
+                                            //                     ['address'],
+                                            //                 1);
+                                            //         //open video call
+                                            //         // Navigator.push(
+                                            //         //   context,
+                                            //         //   MaterialPageRoute(
+                                            //         //     builder: (context) =>
+                                            //         //         AgoraVideoCall(
+                                            //         //       title:
+                                            //         //           '${snapshot.data![index]['address']}',
+                                            //         //     ),
+                                            //         //   ),
+                                            //         // );
 
-                                                    //open Video Call from online server
-                                                    context.go(
-                                                        '/mobile-caller/${snapshot.data![index]['address']}');
-                                                    // context.go(
-                                                    //     '/webrtc-mob/${snapshot.data![index]['address']}');
+                                            //         //open Video Call from online server
+                                            //         context.go(
+                                            //             '/mobile-caller/${snapshot.data![index]['address']}');
+                                            //         // context.go(
+                                            //         //     '/webrtc-mob/${snapshot.data![index]['address']}');
 
-                                                    // Navigator.push(
-                                                    //   context,
-                                                    //   MaterialPageRoute(
-                                                    //     builder: (context) =>
-                                                    //         CallerMobileScreen(
-                                                    //             addressTitle:
-                                                    //                 '${snapshot.data![index]['address']}'),
-                                                    //   ),
-                                                    // );
-                                                  }
-                                                },
-                                                icon: const Icon(
-                                                  Icons.video_call,
-                                                  color: Colors.green,
-                                                ),
-                                              ),
-                                            ),
+                                            //         // Navigator.push(
+                                            //         //   context,
+                                            //         //   MaterialPageRoute(
+                                            //         //     builder: (context) =>
+                                            //         //         CallerMobileScreen(
+                                            //         //             addressTitle:
+                                            //         //                 '${snapshot.data![index]['address']}'),
+                                            //         //   ),
+                                            //         // );
+                                            //       }
+                                            //     },
+                                            //     icon: const Icon(
+                                            //       Icons.video_call,
+                                            //       color: Colors.green,
+                                            //     ),
+                                            //   ),
+                                            // ),
                                             Expanded(
                                               child: IconButton(
                                                 tooltip: 'بدء تتبع فنى الهندسة',

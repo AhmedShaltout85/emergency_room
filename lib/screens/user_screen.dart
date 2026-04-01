@@ -96,7 +96,7 @@ class _UserScreenState extends State<UserScreen> {
         return;
       }
 
-      _handleVideoCallStatus(data);
+      // _handleVideoCallStatus(data);
     } catch (error) {
       log("Error fetching data: $error");
     }
@@ -145,19 +145,19 @@ class _UserScreenState extends State<UserScreen> {
     }
   }
 
-  void _handleVideoCallStatus(List<Map<String, dynamic>> data) {
-    final firstItem = data.first;
-    if (firstItem['video_call'] == 1) {
-      if (!_isPlayingRingtone) {
-        _playRingtoneSound();
-        _showDialog(context, firstItem['address']);
-      }
-      _timer2?.cancel();
-    } else if (firstItem['video_call'] == 0) {
-      _stopAllSounds();
-      _startUIUpdateTimer();
-    }
-  }
+  // void _handleVideoCallStatus(List<Map<String, dynamic>> data) {
+  //   final firstItem = data.first;
+  //   if (firstItem['video_call'] == 1) {
+  //     if (!_isPlayingRingtone) {
+  //       _playRingtoneSound();
+  //       _showDialog(context, firstItem['address']);
+  //     }
+  //     _timer2?.cancel();
+  //   } else if (firstItem['video_call'] == 0) {
+  //     _stopAllSounds();
+  //     _startUIUpdateTimer();
+  //   }
+  // }
 
   Future<void> _getCurrentLocation() async {
     try {
@@ -214,23 +214,23 @@ class _UserScreenState extends State<UserScreen> {
     });
   }
 
-  void _showDialog(BuildContext context, String address) {
-    if (_isDisposed) return;
+  // void _showDialog(BuildContext context, String address) {
+  //   if (_isDisposed) return;
 
-    showDialog(
-      context: context,
-      builder: (context) => CustomAlertDialogWithSound(
-        title: 'مكالمة فيديو واردة من الطورائ',
-        message: address,
-        soundPath: 'sounds/incoming_call.mp3',
-        icon: Icons.videocam,
-        address: address,
-        onDismiss: () {
-          _stopAllSounds();
-        },
-      ),
-    );
-  }
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => CustomAlertDialogWithSound(
+  //       title: 'مكالمة فيديو واردة من الطورائ',
+  //       message: address,
+  //       soundPath: 'sounds/incoming_call.mp3',
+  //       icon: Icons.videocam,
+  //       address: address,
+  //       onDismiss: () {
+  //         _stopAllSounds();
+  //       },
+  //     ),
+  //   );
+  // }
 
   Future<void> _handleApproval(Map<String, dynamic> item) async {
     try {
@@ -453,13 +453,13 @@ class _UserScreenState extends State<UserScreen> {
                           () => _handleSoundCall(item['address']),
                           // 'EmergencyRoom'),
                         ),
-                        _buildIconButton(
-                          Icons.video_call,
-                          Colors.green,
-                          'إجراء مكالمة فيديو',
-                          () => _handleVideoCall(
-                              item['video_call'], item['address']),
-                        ),
+                        // _buildIconButton(
+                        //   Icons.video_call,
+                        //   Colors.green,
+                        //   'إجراء مكالمة فيديو',
+                        //   () => _handleVideoCall(
+                        //       item['video_call'], item['address']),
+                        // ),
                         _buildIconButton(
                           Icons.local_convenience_store_outlined,
                           Colors.cyan,

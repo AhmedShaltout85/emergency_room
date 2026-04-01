@@ -598,9 +598,9 @@ class DioNetworkRepos {
         ),
       );
 
-      log("=== RESPONSE STATUS: ${response.statusCode} ===");
-      log("=== RESPONSE DATA: ${response.data} ===");
-      log("=== RESPONSE DATA TYPE: ${response.data.runtimeType} ===");
+      // log("=== RESPONSE STATUS: ${response.statusCode} ===");
+      // log("=== RESPONSE DATA: ${response.data} ===");
+      // log("=== RESPONSE DATA TYPE: ${response.data.runtimeType} ===");
 
       if (response.statusCode == 201) {
         log("=== STATUS 201 SUCCESS ===");
@@ -612,11 +612,11 @@ class DioNetworkRepos {
         );
       }
     } on DioException catch (e) {
-      log("=== DioException CAUGHT: type=${e.type} message=${e.message} ===");
+      // log("=== DioException CAUGHT: type=${e.type} message=${e.message} ===");
       throw Exception("DioException: ${e.message}");
     } catch (e, stackTrace) {
-      log("=== UNKNOWN ERROR CAUGHT: $e ===");
-      log("=== StackTrace: $stackTrace ===");
+      // log("=== UNKNOWN ERROR CAUGHT: $e ===");
+      // log("=== StackTrace: $stackTrace ===");
       rethrow;
     }
   }
