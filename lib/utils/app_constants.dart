@@ -85,7 +85,7 @@ const HotLinePassword = "it2020";
 const String skadaStationsReportbaseUrl =
     'http://41.33.226.211:8070/api/data/stations-report';
 
-const String mobileCarIpCameratbaseUrlLocalHost = 'http://41.33.226.211:3380'; //updated-2-04-2026-by-eng-mostafa
+const String mobileCarIpCameratbaseUrlLocalHost = 'http://41.33.226.211:3380/'; //updated-2-04-2026-by-eng-mostafa
 
 class StaticVariables {
 //Assign HandasahName
