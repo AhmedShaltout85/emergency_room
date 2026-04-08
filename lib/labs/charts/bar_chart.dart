@@ -66,57 +66,59 @@ class LabTestBarChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 300,
-            child: Chart(
-              layers: [
-                ChartAxisLayer(
-                  settings: ChartAxisSettings(
-                    x: ChartAxisSettingsAxis(
-                      frequency: 1,
-                      max: chartItems.length.toDouble(),
-                      min: 0,
-                      textStyle: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 10,
+          Expanded(
+            child: SizedBox(
+              height: 300,
+              child: Chart(
+                layers: [
+                  ChartAxisLayer(
+                    settings: ChartAxisSettings(
+                      x: ChartAxisSettingsAxis(
+                        frequency: 1,
+                        max: chartItems.length.toDouble(),
+                        min: 0,
+                        textStyle: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 10,
+                        ),
+                      ),
+                      y: ChartAxisSettingsAxis(
+                        frequency: _calculateYFrequency(chartItems),
+                        max: _calculateYMax(chartItems),
+                        min: 0,
+                        textStyle: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                    y: ChartAxisSettingsAxis(
-                      frequency: _calculateYFrequency(chartItems),
-                      max: _calculateYMax(chartItems),
-                      min: 0,
-                      textStyle: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 12,
+                    labelX: (value) {
+                      final index = value.toInt() - 1;
+                      if (index >= 0 && index < chartItems.length) {
+                        return _formatDateLabel(chartItems[index].label);
+                      }
+                      return '';
+                    },
+                    labelY: (value) => value.toStringAsFixed(1),
+                  ),
+                  ChartBarLayer(
+                    items: chartItems.map((item) {
+                      return ChartBarDataItem(
+                        x: item.x.toDouble(),
+                        value: item.value,
+                        color: _getBarColor(item.value, chartItems),
+                      );
+                    }).toList(),
+                    settings: const ChartBarSettings(
+                      thickness: 20,
+                      radius: BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
                       ),
                     ),
                   ),
-                  labelX: (value) {
-                    final index = value.toInt() - 1;
-                    if (index >= 0 && index < chartItems.length) {
-                      return _formatDateLabel(chartItems[index].label);
-                    }
-                    return '';
-                  },
-                  labelY: (value) => value.toStringAsFixed(1),
-                ),
-                ChartBarLayer(
-                  items: chartItems.map((item) {
-                    return ChartBarDataItem(
-                      x: item.x.toDouble(),
-                      value: item.value,
-                      color: _getBarColor(item.value, chartItems),
-                    );
-                  }).toList(),
-                  settings: const ChartBarSettings(
-                    thickness: 20,
-                    radius: BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
