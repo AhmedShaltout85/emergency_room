@@ -2,8 +2,14 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../labs/utils/extract_lab_value.dart';
+import '../../network/remote/remote_network_repos.dart';
 import '../../utils/app_constants.dart';
 import '../models/station_data.dart';
+
+// Test codes used by the labs API (see labs_reports_dashboard_screen.dart).
+const String _turbidityTestCode = '1'; // العكارة
+const String _residualChlorineTestCode = '82'; // الكلور المتبقى
 
 class ApiService {
   // Static fields not yet provided by the live API.
@@ -13,38 +19,47 @@ class ApiService {
       "location": "31.185514, 29.934137",
       "desgin_capacity": 380.000,
       "actual_capacity": 356.045,
+      "lab_code": 11,
     },
     "Manshia2": {
       "location": "31.175664, 29.986611",
       "desgin_capacity": 240.000,
       "actual_capacity": 204.579,
+      "lab_code": 8,
     },
     "Roundpoint": {
       "location": "31.200825, 29.919157",
       "desgin_capacity": 510.000,
       "actual_capacity": 356.796,
+      "lab_code": 9,
     },
     "Siouf": {
       "location": "31.222324, 29.988280",
       "desgin_capacity": 840.000,
       "actual_capacity": 709.139,
+      "lab_code": 10,
     },
     "Nozha": {
       "location": "31.198524, 29.952943",
       "desgin_capacity": 200.000,
       "actual_capacity": 117.595,
+      "lab_code": 13,
     },
     "Maamoura": {
       "location": "31.290460, 30.050855",
       "desgin_capacity": 240.000,
       "actual_capacity": 132.445,
+      "lab_code": 7,
     },
     "NobariaExtension": {
       "location": null,
       "desgin_capacity": null,
       "actual_capacity": null,
+      "lab_code": null,
     },
   };
+
+  final DioNetworkRepos _labs = DioNetworkRepos();
 
   Future<List<StationData>> fetchStationsData() async {
     try {
@@ -61,16 +76,35 @@ class ApiService {
     }
   }
 
-  List<StationData> _parseApiResponse(Map<String, dynamic> jsonData) {
+  Future<List<StationData>> _parseApiResponse(
+      Map<String, dynamic> jsonData) async {
     final stationsJson = jsonData['data'] as Map<String, dynamic>;
 
-    return stationsJson.entries.map((entry) {
+    final entries = stationsJson.entries.toList();
+    // Build each station with its lab values in parallel.
+    return Future.wait(entries.map((entry) async {
       final stationName = entry.key;
       final stationData = entry.value;
 
-      // Merge in static fields (location / design & actual capacity)
+      // Merge in static fields (location / design & actual capacity / labCode)
       // that the live API doesn't return yet.
       final staticInfo = _staticStationInfo[stationName];
+      final labCode = staticInfo?['lab_code'] as int?;
+
+      double? turbidity;
+      double? residualChlorine;
+      if (labCode != null) {
+        try {
+          final results = await Future.wait([
+            _safeFetchLab(labCode, _turbidityTestCode),
+            _safeFetchLab(labCode, _residualChlorineTestCode),
+          ]);
+          turbidity = results[0];
+          residualChlorine = results[1];
+        } catch (_) {
+          // Keep both null on any lab failure; SCADA data still renders.
+        }
+      }
 
       return StationData(
         name: stationName,
@@ -81,8 +115,21 @@ class ApiService {
         location: staticInfo?['location'] as String?,
         desginCapacity: _parseDouble(staticInfo?['desgin_capacity']),
         actualCapacity: _parseDouble(staticInfo?['actual_capacity']),
+        turbidity: turbidity,
+        residualChlorine: residualChlorine,
+        labCode: labCode,
       );
-    }).toList();
+    }));
+  }
+
+  Future<double?> _safeFetchLab(int labCode, String testCode) async {
+    try {
+      final items =
+          await _labs.getAllLabsItemsByTestValueAndDate(labCode, testCode);
+      return extractLastLabValueByDate(items);
+    } catch (_) {
+      return null;
+    }
   }
 
   double? _parseDouble(dynamic value) {

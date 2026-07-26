@@ -144,6 +144,13 @@ Widget _buildDataTable(List<StationData> stations) {
             DataColumn(
                 label:
                     Text('Location', style: TextStyle(color: Colors.indigo))),
+            DataColumn(
+                label: Text('العكارة', style: TextStyle(color: Colors.indigo)),
+                numeric: true),
+            DataColumn(
+                label: Text('الكلور المتبقى',
+                    style: TextStyle(color: Colors.indigo)),
+                numeric: true),
           ],
           rows: stations.map((station) {
             return DataRow(cells: [
@@ -163,6 +170,11 @@ Widget _buildDataTable(List<StationData> stations) {
                   style: const TextStyle(color: Colors.indigo))),
               DataCell(Text(station.location ?? '---',
                   style: const TextStyle(color: Colors.indigo))),
+              DataCell(Text(station.turbidity?.toStringAsFixed(2) ?? '---',
+                  style: const TextStyle(color: Colors.indigo))),
+              DataCell(
+                  Text(station.residualChlorine?.toStringAsFixed(2) ?? '---',
+                      style: const TextStyle(color: Colors.indigo))),
             ]);
           }).toList(),
         ),

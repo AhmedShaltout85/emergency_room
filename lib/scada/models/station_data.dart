@@ -9,6 +9,10 @@ class StationData {
   final double? desginCapacity;
   final double? actualCapacity;
   final String? location;
+  //last lab test values (turbidity=العكارة, residual chlorine=الكلور المتبقى)
+  final double? turbidity;
+  final double? residualChlorine;
+  final int? labCode;
 
   StationData({
     required this.name,
@@ -20,5 +24,8 @@ class StationData {
     this.desginCapacity,
     this.actualCapacity,
     this.location,
+    this.turbidity,
+    this.residualChlorine,
+    this.labCode,
   });
 }
