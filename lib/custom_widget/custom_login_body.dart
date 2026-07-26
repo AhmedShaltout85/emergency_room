@@ -54,7 +54,7 @@ class _CustomizLoginScreenBodyState extends State<CustomizLoginScreenBody> {
     RadioOption(label: 'مديرى الهندسة', value: '2'),
     RadioOption(label: 'الطوارئ المتحركة', value: '4'),
     RadioOption(label: 'غرفة الطوارىء', value: '1'),
-    RadioOption(label: 'مدير النظام', value: '0'),
+    RadioOption(label: 'وزارة الإسكان', value: '0'),
   ];
 
   // Mobile-only options list
@@ -360,7 +360,7 @@ class _CustomizLoginScreenBodyState extends State<CustomizLoginScreenBody> {
                   selectedOption = value!;
                   switch (selectedOption) {
                     case '0':
-                      roleLabel = 'مدير النظام';
+                      roleLabel = 'وزارة الإسكان';
                       break;
                     case '1':
                       roleLabel = 'غرفة الطوارىء';

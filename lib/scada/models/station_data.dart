@@ -5,6 +5,10 @@ class StationData {
   final int? rawPumps;
   final int? treatedPumps;
   final double? level;
+  //update-for-scada-center-emergency
+  final double? desginCapacity;
+  final double? actualCapacity;
+  final String? location;
 
   StationData({
     required this.name,
@@ -12,5 +16,9 @@ class StationData {
     this.rawPumps,
     this.treatedPumps,
     this.level,
+    //update-for-scada-center-emergency
+    this.desginCapacity,
+    this.actualCapacity,
+    this.location,
   });
 }

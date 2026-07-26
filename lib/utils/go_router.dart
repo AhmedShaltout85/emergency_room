@@ -18,7 +18,7 @@ import 'package:emergency_room/screens/receiver_mobile_screen.dart';
 import 'package:emergency_room/screens/receiver_screen.dart';
 import 'package:emergency_room/screens/report_screen.dart';
 import 'package:emergency_room/screens/request_tool_for_address_screen.dart';
-import 'package:emergency_room/screens/system_admin_screen.dart';
+import 'package:emergency_room/screens/center_emergency/system_admin_screen.dart';
 import 'package:emergency_room/screens/tracking.dart';
 import 'package:emergency_room/screens/user_request_tools.dart';
 import 'package:emergency_room/screens/user_screen.dart';

@@ -906,7 +906,8 @@ class DioNetworkRepos {
   //34-- GET Reprots(GET by flag 1 and isFinished 1= CLOSED)
   Future getLocByFlagAndIsFinishedForReports() async {
     var urlGetAllEndedReportsByFlagAndIsFinished =
-        '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1/is-finished/1';
+        '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1';
+        // '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1/is-finished/1';
     try {
       var response = await dio.get(urlGetAllEndedReportsByFlagAndIsFinished);
       if (response.statusCode == 200) {
