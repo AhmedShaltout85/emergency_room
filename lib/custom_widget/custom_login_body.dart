@@ -179,7 +179,7 @@ class _CustomizLoginScreenBodyState extends State<CustomizLoginScreenBody> {
       case 0:
         // Navigator.push(context,
         //     MaterialPageRoute(builder: (context) => const SystemAdminScreen()));
-        context.go('/system-admin');
+        context.go('/centeral-emergency');
         break;
       case 1:
         // Navigator.push(

@@ -48,7 +48,7 @@ final router = GoRouter(
       builder: (context, state) => const UserScreen(),
     ),
     GoRoute(
-      path: '/system-admin',
+      path: '/centeral-emergency',
       builder: (context, state) => const SystemAdminScreen(),
     ),
     GoRoute(
