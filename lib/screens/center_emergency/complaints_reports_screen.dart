@@ -3,8 +3,12 @@
 
 import 'dart:developer';
 
+import 'package:emergency_room/custom_widget/no_internet_widget.dart';
+import 'package:emergency_room/custom_widget/offline_banner.dart';
 import 'package:emergency_room/model/custom_data_table_source.dart';
 import 'package:emergency_room/network/remote/remote_network_repos.dart';
+import 'package:emergency_room/services/connection_dialog_service.dart';
+import 'package:emergency_room/services/connectivity_service.dart';
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 
@@ -17,10 +21,12 @@ class ComplaintsReportsScreen extends StatefulWidget {
 }
 
 class _ComplaintsReportsScreenState extends State<ComplaintsReportsScreen> {
-  late CustomDataTableSource<Map<String, dynamic>> _dataSource;
+  CustomDataTableSource<Map<String, dynamic>>? _dataSource;
   final List<Map<String, dynamic>> _allData = [];
   List<Map<String, dynamic>> _filteredData = [];
   bool _isLoading = true;
+  bool _isOnline = true;
+  bool _isOnlineChecked = false;
 
   // --- Filter state ---
   final TextEditingController _searchController = TextEditingController();
@@ -48,20 +54,63 @@ class _ComplaintsReportsScreenState extends State<ComplaintsReportsScreen> {
   }
 
   void fetchData() async {
+    final online = await ConnectivityService.instance.hasConnection();
+    if (!mounted) return;
+    setState(() {
+      _isOnline = online;
+      _isOnlineChecked = true;
+    });
+    if (!online) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Only interrupt the user with a blocking dialog when there's
+      // truly nothing on screen to show. If we already have cached
+      // data, the OfflineBanner is enough — showing the dialog on
+      // top of a populated table is exactly the confusing behavior
+      // we want to avoid.
+      if (_allData.isEmpty) {
+        await ConnectionDialogService.showNoInternetDialog(
+          context,
+          onRetry: fetchData,
+        );
+      }
+      return;
+    }
     try {
       final value =
           await DioNetworkRepos().getLocByFlagAndIsFinishedForReports();
 
+      if (!mounted) return;
       setState(() {
         _allData.clear();
-        _allData.addAll(value.cast<Map<String, dynamic>>());
+        if (value is List) {
+          _allData.addAll(value.cast<Map<String, dynamic>>());
+        }
         _applyFilters();
         _isLoading = false;
       });
 
       log("GET ALL HOTLINE LOCATIONS: $value");
     } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
       log("Error fetching data: $e");
+      final onlineAgain = await ConnectivityService.instance.hasConnection();
+      if (!mounted) return;
+      setState(() {
+        _isOnline = onlineAgain;
+      });
+      // Same rule here: only block with a dialog if there's no data
+      // to fall back on. Otherwise let the banner communicate it.
+      if (!onlineAgain && _allData.isEmpty) {
+        await ConnectionDialogService.showNoInternetDialog(
+          context,
+          onRetry: fetchData,
+        );
+      }
     }
   }
 
@@ -222,21 +271,30 @@ class _ComplaintsReportsScreenState extends State<ComplaintsReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.indigo.shade50,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildFilterBar(),
-                  const SizedBox(height: 12),
-                  Expanded(child: _buildTable()),
-                ],
-              ),
-            ),
+    return Column(
+      children: [
+        OfflineBanner(visible: !_isOnline && _isOnlineChecked),
+        Expanded(
+          child: Container(
+            color: Colors.indigo.shade50,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : (!_isOnline && _allData.isEmpty)
+                    ? NoInternetWidget(onRetry: fetchData)
+                    : Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildFilterBar(),
+                            const SizedBox(height: 12),
+                            Expanded(child: _buildTable()),
+                          ],
+                        ),
+                      ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -394,6 +452,10 @@ class _ComplaintsReportsScreenState extends State<ComplaintsReportsScreen> {
   }
 
   Widget _buildTable() {
+    final source = _dataSource;
+    if (source == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return PaginatedDataTable2(
       columns: const [
         DataColumn(
@@ -465,7 +527,7 @@ class _ComplaintsReportsScreenState extends State<ComplaintsReportsScreen> {
                   color: Colors.indigo,
                 ))),
       ],
-      source: _dataSource,
+      source: source,
       rowsPerPage: 10,
       columnSpacing: 20,
       horizontalMargin: 12,

@@ -1,9 +1,11 @@
+
 import 'package:emergency_room/screens/center_emergency/complaints_reports_screen.dart';
 import 'package:emergency_room/screens/center_emergency/labs_reports_dashboard_screen.dart';
 import 'package:emergency_room/screens/center_emergency/map_screen.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SystemAdminScreen extends StatefulWidget {
   const SystemAdminScreen({super.key});
@@ -15,6 +17,14 @@ class SystemAdminScreen extends StatefulWidget {
 class _SystemAdminScreenState extends State<SystemAdminScreen>
     with TickerProviderStateMixin {
   late final TabController _tabController;
+
+  // Tracks which tabs have ever been visited. A tab's real screen (and
+  // therefore its initState / connectivity check / any dialog it might
+  // show) is only built the first time it's actually selected — not all
+  // four at once when this screen opens. Combined with
+  // AutomaticKeepAliveClientMixin below, once a tab is built it stays
+  // alive, so switching back to it doesn't rebuild/re-check it either.
+  late final Set<int> _visitedTabs;
 
   final List<_TabItem> _tabs = const [
     _TabItem(
@@ -44,11 +54,57 @@ class _SystemAdminScreenState extends State<SystemAdminScreen>
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(_handleTabChange);
+    // Only the initially-selected tab counts as visited on open.
+    _visitedTabs = {_tabController.index};
   }
 
   void _handleTabChange() {
     if (_tabController.indexIsChanging) {
-      setState(() {});
+      setState(() {
+        _visitedTabs.add(_tabController.index);
+      });
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text(
+              'تسجيل الخروج',
+              style: TextStyle(fontFamily: 'Cairo'),
+            ),
+            content: const Text(
+              'هل تريد تسجيل الخروج؟',
+              style: TextStyle(fontFamily: 'Cairo'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text(
+                  'إلغاء',
+                  style: TextStyle(fontFamily: 'Cairo'),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text(
+                  'تأكيد',
+                  style: TextStyle(fontFamily: 'Cairo'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (confirmed == true) {
+      context.go('/login');
     }
   }
 
@@ -70,24 +126,35 @@ class _SystemAdminScreenState extends State<SystemAdminScreen>
           builder: (context, constraints) {
             return TabBarView(
               controller: _tabController,
-              children: const [
-                _KeepAliveWrapper(
-                  child: MapScreen(
-                    latitude: '31.205753',
-                    longitude: '29.924526',
-                    // address: 'الإسكندرية - مركز التحكم',
-                    // technicianName: 'الفني',
-                  ),
-                ),
-                _KeepAliveWrapper(child: ScadaDashboardScreen()),
-                _KeepAliveWrapper(child: LabsReportsDashboardScreen()),
-                _KeepAliveWrapper(child: ComplaintsReportsScreen()),
+              children: [
+                _buildLazyTab(
+                    0,
+                    const MapScreen(
+                      latitude: '31.205753',
+                      longitude: '29.924526',
+                      // address: 'الإسكندرية - مركز التحكم',
+                      // technicianName: 'الفني',
+                    )),
+                _buildLazyTab(1, const ScadaDashboardScreen()),
+                _buildLazyTab(2, const LabsReportsDashboardScreen()),
+                _buildLazyTab(3, const ComplaintsReportsScreen()),
               ],
             );
           },
         ),
       ),
     );
+  }
+
+  /// Builds the real screen (wrapped to stay alive once built) only if
+  /// this tab has been visited. Until then, renders a lightweight
+  /// placeholder so the tab's initState — and any connectivity check or
+  /// dialog it triggers — never runs while the tab is off-screen.
+  Widget _buildLazyTab(int index, Widget screen) {
+    if (!_visitedTabs.contains(index)) {
+      return const SizedBox.shrink();
+    }
+    return _KeepAliveWrapper(child: screen);
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -106,6 +173,32 @@ class _SystemAdminScreenState extends State<SystemAdminScreen>
       ),
       iconTheme: const IconThemeData(color: Colors.white),
       actionsIconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: TextButton.icon(
+            onPressed: _handleLogout,
+            icon: const Icon(Icons.logout, color: Colors.white),
+            label: Text(
+              'تسجيل الخروج',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Cairo',
+                fontSize: ResponsiveHelper.titleFontSize(context) - 4,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.fromLTRB(
+                ResponsiveHelper.isMobile(context) ? 16 : 20,
+                6,
+                ResponsiveHelper.isMobile(context) ? 8 : 12,
+                6,
+              ),
+            ),
+          ),
+        ),
+      ],
       bottom: PreferredSize(
         preferredSize: Size.fromHeight(ResponsiveHelper.tabBarHeight(context)),
         child: _buildTabBar(context),

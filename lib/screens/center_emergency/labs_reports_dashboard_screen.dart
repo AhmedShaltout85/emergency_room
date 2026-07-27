@@ -1,3 +1,5 @@
+
+import 'package:emergency_room/custom_widget/offline_banner.dart';
 import 'package:emergency_room/labs/charts/bar_chart.dart';
 import 'package:emergency_room/labs/charts/doughnut_chart.dart';
 import 'package:emergency_room/labs/charts/line_chart.dart';
@@ -5,6 +7,8 @@ import 'package:emergency_room/labs/charts/pie_chart.dart';
 import 'package:emergency_room/labs/charts/radial_chart.dart';
 import 'package:emergency_room/labs/charts/rose_chart.dart';
 import 'package:emergency_room/labs/widget/convert_lab_code_to_lab_name.dart';
+import 'package:emergency_room/services/connection_dialog_service.dart';
+import 'package:emergency_room/services/connectivity_service.dart';
 import 'package:emergency_room/utils/app_constants.dart';
 import 'package:emergency_room/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +49,8 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
 
   final Color _selectedTabColor = Colors.indigo;
   final Color _unselectedTextColor = Colors.indigo;
+  bool _isOnline = true;
+  bool _isOnlineChecked = false;
 
   @override
   void initState() {
@@ -53,6 +59,28 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) setState(() {});
     });
+    _checkConnectivity();
+  }
+
+  Future<void> _checkConnectivity() async {
+    final online = await ConnectivityService.instance.hasConnection();
+    if (!mounted) return;
+    setState(() {
+      _isOnline = online;
+      _isOnlineChecked = true;
+    });
+    if (!online) {
+      // Only interrupt with a blocking dialog if there's nothing useful
+      // on screen yet (no lab selected, so no charts to look at). If a
+      // lab is already selected and its charts are visible, the
+      // OfflineBanner alone is enough.
+      if (_selectedLabCode == null) {
+        ConnectionDialogService.showNoInternetDialog(
+          context,
+          onRetry: _checkConnectivity,
+        );
+      }
+    }
   }
 
   @override
@@ -63,6 +91,12 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
 
   void _onLabChanged(int? code) {
     if (code == null) return;
+    if (!_isOnline) {
+      // This is a direct user action being blocked, so an explicit
+      // notice is appropriate here regardless of what's on screen.
+      ConnectionDialogService.showNoInternetDialog(context);
+      return;
+    }
     setState(() {
       _selectedLabCode = code;
       StaticVariables.labCode = code;
@@ -136,6 +170,7 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
       color: Colors.indigo.shade50,
       child: Column(
         children: [
+          OfflineBanner(visible: !_isOnline && _isOnlineChecked),
           _buildLabSelector(context, selectedName, isMobile),
           _buildTabBar(context, isMobile),
           Expanded(
@@ -216,8 +251,7 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     color: Colors.indigo.shade50,
-                    border:
-                        Border.all(color: Colors.indigo.shade200, width: 1),
+                    border: Border.all(color: Colors.indigo.shade200, width: 1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -281,9 +315,7 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
           fontFamily: 'Cairo',
           fontSize: ResponsiveHelper.tabBarFontSize(context),
         ),
-        tabs: _tabItems
-            .map((item) => Tab(text: item['title']!))
-            .toList(),
+        tabs: _tabItems.map((item) => Tab(text: item['title']!)).toList(),
       ),
     );
   }
