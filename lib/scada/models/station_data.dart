@@ -1,6 +1,8 @@
 
 class StationData {
   final String name;
+  final double? minPressure;
+  final double? maxPressure;
   final double? pressure;
   final int? rawPumps;
   final int? treatedPumps;
@@ -17,6 +19,8 @@ class StationData {
   StationData({
     required this.name,
     this.pressure,
+    this.minPressure,
+    this.maxPressure,
     this.rawPumps,
     this.treatedPumps,
     this.level,

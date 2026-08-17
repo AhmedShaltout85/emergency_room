@@ -192,7 +192,13 @@ class _ScadaDashboardScreenState extends State<ScadaDashboardScreen> {
             DataColumn(
                 label: Text('Station', style: TextStyle(color: Colors.indigo))),
             DataColumn(
+                label: Text('Min Pressure', style: TextStyle(color: Colors.indigo)),
+                numeric: true),
+            DataColumn(
                 label: Text('Pressure', style: TextStyle(color: Colors.indigo)),
+                numeric: true),
+            DataColumn(
+                label: Text('Max Pressure', style: TextStyle(color: Colors.indigo)),
                 numeric: true),
             DataColumn(
                 label:
@@ -228,7 +234,11 @@ class _ScadaDashboardScreenState extends State<ScadaDashboardScreen> {
             return DataRow(cells: [
               DataCell(Text(station.name,
                   style: const TextStyle(color: Colors.indigo))),
+              DataCell(Text(station.minPressure?.toStringAsFixed(2) ?? '---',
+                  style: const TextStyle(color: Colors.indigo))),
               DataCell(Text(station.pressure?.toStringAsFixed(2) ?? '---',
+                  style: const TextStyle(color: Colors.indigo))),
+              DataCell(Text(station.maxPressure?.toStringAsFixed(2) ?? '---',
                   style: const TextStyle(color: Colors.indigo))),
               DataCell(Text(station.rawPumps?.toString() ?? '---',
                   style: const TextStyle(color: Colors.indigo))),

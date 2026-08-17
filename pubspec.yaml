@@ -57,6 +57,7 @@ dependencies:
   provider: ^6.0.5
   socket_io_client: ^2.0.3+1
   syncfusion_flutter_charts: ^27.1.48
+  syncfusion_flutter_datepicker: ^27.2.5
   universal_html: ^2.2.1
   url_launcher: ^6.2.5
   url_strategy: ^0.2.0

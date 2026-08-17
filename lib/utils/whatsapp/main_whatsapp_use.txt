@@ -1,0 +1,63 @@
+// In your screen file - Add imports
+import '../services/whatsapp_service.dart';
+import '../widgets/whatsapp_dialog.dart';
+
+// Updated handler method
+  Future<void> _handleSendToWhatsapp(Map<String, dynamic> item) async {
+    try {
+      // Check if WhatsApp is installed
+      final whatsAppInstalled = await MainWhatsAppService.isWhatsAppInstalled();
+      if (!whatsAppInstalled) {
+        // Show dialog with copy option
+        await MainWhatsAppDialog.showCopyDialog(
+          context: context,
+          complaint: item,
+        );
+        return;
+      }
+
+      // Get phone number from complaint data or use default
+      String phoneNumber = '00201032743609';
+          
+
+      // Show dialog to get/confirm phone number
+      final userPhone = await MainWhatsAppDialog.showPhoneNumberDialog(
+        context: context,
+        initialPhoneNumber:
+            phoneNumber.isNotEmpty ? phoneNumber : '00201032743609',
+        complaint: item, // Pass complaint for preview
+      );
+
+      if (userPhone == null || userPhone.isEmpty) {
+        // User cancelled
+        _showActionSnackbar('تم إلغاء الإرسال');
+        return;
+      }
+
+      phoneNumber = userPhone;
+
+      // Send to WhatsApp
+      await MainWhatsAppService.sendToWhatsAppNumber(
+        complaint: item,
+        phoneNumber: phoneNumber,
+      );
+
+      _showActionSnackbar('تم فتح واتساب بنجاح');
+    } catch (e) {
+      debugPrint('WhatsApp error: $e');
+
+      // Fallback: Copy to clipboard
+      try {
+        await MainWhatsAppService.copyComplaintToClipboard(item);
+        _showActionSnackbar(
+          'حدث خطأ، تم نسخ البيانات إلى الحافظة',
+          isError: true,
+        );
+      } catch (copyError) {
+        _showActionSnackbar(
+          'حدث خطأ: ${e.toString()}',
+          isError: true,
+        );
+      }
+    }
+  }

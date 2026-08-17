@@ -1,4 +1,6 @@
 import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
+import 'package:emergency_room/screens/complaints_report_dashboard.dart';
+import 'package:emergency_room/screens/monitor_opening_complaints.dart';
 import 'package:flutter/material.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
@@ -66,6 +68,14 @@ final router = GoRouter(
     GoRoute(
       path: '/report',
       builder: (context, state) => const ReportScreen(),
+    ),
+    GoRoute( //complaints-report-12-08-2026
+      path: '/report-dashboard',
+      builder: (context, state) => const ComplaintsReportDashboard(),
+    ),
+    GoRoute( //open-complaints-report-13-08-2026
+      path: '/monitor-complaints',
+      builder: (context, state) => const MonitorOpeningComplaintsScreen(),
     ),
     GoRoute(
       path: '/caller',

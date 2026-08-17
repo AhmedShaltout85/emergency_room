@@ -16,42 +16,56 @@ class ApiService {
   // Keyed by the same station key used in the API's "data" map.
   static const Map<String, Map<String, dynamic>> _staticStationInfo = {
     "Manshia": {
+      "min_pressure": 0.00,
+      "max_pressure": 0.00,
       "location": "31.185514, 29.934137",
       "desgin_capacity": 380.000,
       "actual_capacity": 356.045,
       "lab_code": 11,
     },
     "Manshia2": {
+       "min_pressure": 0.00,
+      "max_pressure": 0.00,
       "location": "31.175664, 29.986611",
       "desgin_capacity": 240.000,
       "actual_capacity": 204.579,
       "lab_code": 8,
     },
     "Roundpoint": {
+       "min_pressure": 0.00,
+      "max_pressure": 0.00,
       "location": "31.200825, 29.919157",
       "desgin_capacity": 510.000,
       "actual_capacity": 356.796,
       "lab_code": 9,
     },
     "Siouf": {
+       "min_pressure": 0.00,
+      "max_pressure": 0.00,
       "location": "31.222324, 29.988280",
       "desgin_capacity": 840.000,
       "actual_capacity": 709.139,
       "lab_code": 10,
     },
     "Nozha": {
+       "min_pressure": 2.00,
+      "max_pressure": 2.00,
       "location": "31.198524, 29.952943",
       "desgin_capacity": 200.000,
       "actual_capacity": 117.595,
       "lab_code": 13,
     },
     "Maamoura": {
+       "min_pressure": 1.00,
+      "max_pressure": 1.00,
       "location": "31.290460, 30.050855",
       "desgin_capacity": 240.000,
       "actual_capacity": 132.445,
       "lab_code": 7,
     },
     "NobariaExtension": {
+       "min_pressure": 0.00,
+      "max_pressure": 0.00,
       "location": null,
       "desgin_capacity": null,
       "actual_capacity": null,
@@ -108,7 +122,9 @@ class ApiService {
 
       return StationData(
         name: stationName,
+        minPressure: _parseDouble(staticInfo?['min_pressure']),
         pressure: _parseDouble(stationData['pressure']),
+        maxPressure: _parseDouble(staticInfo?['max_pressure']),
         rawPumps: _parseInt(stationData['total_raw_pumps']),
         treatedPumps: _parseInt(stationData['total_treated_pumps']),
         level: _parseDouble(stationData['level']),

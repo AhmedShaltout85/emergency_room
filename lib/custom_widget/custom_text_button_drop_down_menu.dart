@@ -14,40 +14,61 @@ class TextButtonDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      elevation: 0,
-      style: const TextStyle(fontWeight: FontWeight.bold),
-      alignment: AlignmentDirectional.center,
-      hint: Text(
-        label,
-        textAlign: TextAlign.right,
-        textDirection: TextDirection.rtl,
-        style: const TextStyle(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
           color: Colors.indigo,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Cairo',
+          width: 2,
         ),
       ),
-      items: options.map((String option) {
-        return DropdownMenuItem<String>(
-          alignment: AlignmentDirectional.centerEnd,
-          value: option,
-          child: TextButton(
-            onPressed: () => onSelected(option),
-            child: Text(
-              option,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(color: Colors.indigo),
-            ),
+      child: DropdownButton<String>(
+        elevation: 5,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+        alignment: AlignmentDirectional.center,
+        hint: Text(
+          label,
+          textAlign: TextAlign.right,
+          textDirection: TextDirection.rtl,
+          style: const TextStyle(
+            color: Colors.indigo,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Cairo',
           ),
-        );
-      }).toList(),
-      onChanged: (_) {
-        // Optional: you can show selected text or do nothing
-      },
-      underline: Container(),
-      icon: const Icon(Icons.arrow_drop_down),
+        ),
+        items: options.map((String option) {
+          return DropdownMenuItem<String>(
+            alignment: AlignmentDirectional.centerEnd,
+            value: option,
+            child: TextButton(
+              onPressed: () => onSelected(option),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.indigo,
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  option,
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                  style: const TextStyle(color: Colors.indigo),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (_) {
+          // Optional: you can show selected text or do nothing
+        },
+        underline: Container(),
+        // icon: const Icon(Icons.arrow_drop_down),
+      ),
     );
   }
 }

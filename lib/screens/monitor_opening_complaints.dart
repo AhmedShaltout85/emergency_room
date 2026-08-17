@@ -1,10 +1,15 @@
-
 // ignore_for_file: library_private_types_in_public_api
 
 import 'dart:developer';
 
+import 'package:emergency_room/custom_widget/custom_browser_redirect.dart';
+import 'package:emergency_room/services/whatsapp_service.dart';
+import 'package:emergency_room/services/widget/whatsapp_dialog.dart';
+import 'package:emergency_room/utils/whatsapp/main_whatsapp_dialog.dart';
+import 'package:emergency_room/utils/whatsapp/main_whatsapp_service.dart';
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../custom_widget/no_internet_widget.dart';
 import '../custom_widget/offline_banner.dart';
@@ -13,18 +18,19 @@ import '../network/remote/remote_network_repos.dart';
 import '../services/connection_dialog_service.dart';
 import '../services/connectivity_service.dart';
 
-class ReportScreen extends StatefulWidget {
-  const ReportScreen({super.key});
+class MonitorOpeningComplaintsScreen extends StatefulWidget {
+  const MonitorOpeningComplaintsScreen({super.key});
 
   @override
-  _ReportScreenState createState() => _ReportScreenState();
+  _MonitorOpeningComplaintsScreenState createState() =>
+      _MonitorOpeningComplaintsScreenState();
 }
 
-class _ReportScreenState extends State<ReportScreen> {
+class _MonitorOpeningComplaintsScreenState
+    extends State<MonitorOpeningComplaintsScreen> {
   late CustomDataTableSource<Map<String, dynamic>> _dataSource;
   final List<Map<String, dynamic>> _sampleData = [];
   List<Map<String, dynamic>> _filteredData = [];
-  bool _isMounted = false;
 
   // --- Internet connection state ---
   bool _isLoading = true;
@@ -55,6 +61,8 @@ class _ReportScreenState extends State<ReportScreen> {
   String? _selectedSectorName;
   // نوع البلاغ (complaintType)
   String? _selectedComplaintType;
+  // NEW: رقم الاستعجال (urgencyNumber)
+  String? _selectedUrgencyNumber;
 
   // من تاريخ / إلى تاريخ
   DateTime? _fromDate;
@@ -63,24 +71,15 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   void initState() {
     super.initState();
-    _isMounted = true;
     // Pre-fill with today's date
     final today = DateTime.now();
     _fromDate = DateTime(today.year, 1, 1);
     _toDate = DateTime(today.year, today.month, today.day);
-
-    // Initialize data source with empty list to avoid null errors
-    _dataSource = CustomDataTableSource<Map<String, dynamic>>(
-      items: [],
-      buildRow: (_) => const DataRow(cells: []),
-    );
-
     _fetchData();
   }
 
   @override
   void dispose() {
-    _isMounted = false;
     _searchController.dispose();
     super.dispose();
   }
@@ -89,10 +88,10 @@ class _ReportScreenState extends State<ReportScreen> {
   // Unified data fetch
   // ==========================================================================
   Future<void> _fetchData({bool showSuccessSnackbar = false}) async {
-    if (!_isMounted) return;
+    if (!mounted) return;
 
     final online = await ConnectivityService.instance.hasConnection();
-    if (!_isMounted) return;
+    if (!mounted) return;
 
     setState(() {
       _isOnline = online;
@@ -117,14 +116,15 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      final value = await DioNetworkRepos().getAllComplaints();
+      final value = await DioNetworkRepos().getAllComplaintsNotFinished();
 
-      if (!_isMounted) return;
+      if (!mounted) return;
 
       setState(() {
         _sampleData.clear();
         if (value is List) {
-          _sampleData.addAll(value.cast<Map<String, dynamic>>());
+          final all = value.cast<Map<String, dynamic>>();
+          _sampleData.addAll(all.where((item) => !_asBool(item['isDeleted'])));
         }
         _applyFilters(skipSetState: true);
         _hasData = _sampleData.isNotEmpty;
@@ -134,7 +134,8 @@ class _ReportScreenState extends State<ReportScreen> {
 
       log("GET ALL COMPLAINTS LOCATIONS: $value");
 
-      if (showSuccessSnackbar && _isMounted) {
+      if (showSuccessSnackbar) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -149,10 +150,10 @@ class _ReportScreenState extends State<ReportScreen> {
       }
     } catch (e) {
       log("Error fetching data: $e");
-      if (!_isMounted) return;
+      if (!mounted) return;
 
       final onlineAgain = await ConnectivityService.instance.hasConnection();
-      if (!_isMounted) return;
+      if (!mounted) return;
 
       setState(() {
         _isOnline = onlineAgain;
@@ -167,7 +168,8 @@ class _ReportScreenState extends State<ReportScreen> {
           context,
           onRetry: _fetchData,
         );
-      } else if (showSuccessSnackbar && _isMounted) {
+      } else if (showSuccessSnackbar) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -184,7 +186,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Future<void> _onRefreshPressed() async {
     final online = await ConnectivityService.instance.hasConnection();
-    if (!_isMounted) return;
+    if (!mounted) return;
 
     if (!online) {
       setState(() {
@@ -231,35 +233,19 @@ class _ReportScreenState extends State<ReportScreen> {
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 
-  /// Get color based on complaint status
-  Color _getStatusColor(String? status) {
-    if (status == null || status.isEmpty) return Colors.grey;
-
-    if (status.contains('عالى') || status.contains('عالية')) {
-      return Colors.red;
-    } else if (status.contains('متوسط')) {
-      return Colors.orange;
-    } else if (status.contains('عادى') || status.contains('عادي')) {
-      return Colors.green;
-    } else if (status.contains('مفتوح')) {
-      return Colors.blue;
-    } else if (status.contains('مغلق')) {
-      return Colors.grey;
-    } else if (status.contains('عكس')) {
-      return Colors.purple;
-    } else {
-      return Colors.grey;
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'مفتوح':
+      case 'عالى الأهمية':
+        return Colors.red;
+      case 'متوسط الأهمية':
+        return Colors.orange;
+      case 'مغلق':
+      case 'عادى':
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
-  }
-
-  /// Get background color for status badge (lighter version)
-  Color _getStatusBackgroundColor(String? status) {
-    return _getStatusColor(status).withOpacity(0.12);
-  }
-
-  /// Get border color for status badge
-  Color _getStatusBorderColor(String? status) {
-    return _getStatusColor(status);
   }
 
   bool _asBool(dynamic v) {
@@ -270,9 +256,178 @@ class _ReportScreenState extends State<ReportScreen> {
     return false;
   }
 
-  void _updateDataSource() {
-    if (!_isMounted) return;
+  // ==========================================================================
+  // Opening complaints ticker (top banner)
+  // ==========================================================================
 
+  List<Map<String, dynamic>> _openingComplaints() {
+    return _sampleData.where((item) => !_asBool(item['isFinished'])).toList();
+  }
+
+  Color _severityColor(String? severity) {
+    if (severity == null || severity.isEmpty) return Colors.grey.shade600;
+    if (severity.contains('عالي') || severity.contains('عالى')) {
+      return Colors.red.shade600;
+    }
+    if (severity.contains('خطير')) {
+      return Colors.amber.shade800;
+    }
+    if (severity.contains('متوسط')) {
+      return Colors.green.shade600;
+    }
+    return Colors.grey.shade600;
+  }
+
+  IconData _severityIcon(String? severity) {
+    if (severity == null || severity.isEmpty) return Icons.help_outline;
+    if (severity.contains('عالي') || severity.contains('عالى')) {
+      return Icons.dangerous_outlined;
+    }
+    if (severity.contains('خطير')) {
+      return Icons.warning_amber_rounded;
+    }
+    if (severity.contains('متوسط')) {
+      return Icons.check_circle_outline;
+    }
+    return Icons.help_outline;
+  }
+
+  Widget _tickerDivider() => Container(
+        width: 1,
+        height: 14,
+        color: Colors.white.withOpacity(0.6),
+      );
+
+  Widget _tickerField(String text) => Text(
+        text,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontFamily: 'Cairo',
+        ),
+      );
+
+  Widget _tickerFieldBold(String text) => Text(
+        text,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Cairo',
+        ),
+      );
+
+  Widget _buildOpeningComplaintsTicker() {
+    final opening = _openingComplaints();
+
+    if (opening.isEmpty) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        decoration: BoxDecoration(
+          color: Colors.red.shade600,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'لا توجد بلاغات مفتوحة حالياً',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      constraints: BoxConstraints(
+        maxHeight: opening.length > 4 ? 220 : opening.length * 44.0 + 8,
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: opening.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 6),
+        itemBuilder: (context, index) {
+          final item = opening[index];
+          final severity = item['seriousStatus']?.toString();
+          final color = _severityColor(severity);
+
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  textDirection: TextDirection.rtl,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(_severityIcon(severity),
+                        color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    _tickerFieldBold(severity == null || severity.isEmpty
+                        ? 'غير محدد'
+                        : severity),
+                    const SizedBox(width: 14),
+                    _tickerDivider(),
+                    const SizedBox(width: 14),
+                    _tickerField(
+                      'جهة الاستلام: ${(item['recipientDestination'] == null || item['recipientDestination'].toString().isEmpty) ? 'لم يدرج' : item['recipientDestination']}',
+                    ),
+                    const SizedBox(width: 14),
+                    _tickerDivider(),
+                    const SizedBox(width: 14),
+                    _tickerField(
+                      'التوقيت: ${_formatDateOnly(item['createdAt'])}',
+                    ),
+                    const SizedBox(width: 14),
+                    _tickerDivider(),
+                    const SizedBox(width: 14),
+                    _tickerField(
+                      'بلاغ: ${item['complaintId']?.toString() ?? item['reportNumber']?.toString() ?? ''}',
+                    ),
+                    const SizedBox(width: 14),
+                    _tickerDivider(),
+                    const SizedBox(width: 14),
+                    _tickerField(
+                      'النوع: ${item['pumpDiameter']?.toString() ?? '-'}',
+                    ),
+                    const SizedBox(width: 14),
+                    _tickerDivider(),
+                    const SizedBox(width: 14),
+                    _tickerField(
+                      'العنوان: ${item['complaintAddress']?.toString() ?? ''}',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _updateDataSource() {
     _dataSource = CustomDataTableSource<Map<String, dynamic>>(
       items: _filteredData,
       buildRow: (item) => DataRow(
@@ -333,17 +488,17 @@ class _ReportScreenState extends State<ReportScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getStatusBackgroundColor(item['complaintStatus']),
+                color: _statusColor(item['complaintStatus']).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: _getStatusBorderColor(item['complaintStatus']),
-                  width: 1.5,
+                  color: _statusColor(item['complaintStatus']),
+                  width: 1,
                 ),
               ),
               child: Text(
                 item['complaintStatus'] ?? '',
                 style: TextStyle(
-                  color: _getStatusColor(item['complaintStatus']),
+                  color: _statusColor(item['complaintStatus']),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                   fontFamily: 'Cairo',
@@ -352,14 +507,343 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ),
           DataCell(
-            IconButton(
-              tooltip: 'عرض التفاصيل',
-              icon:
-                  const Icon(Icons.visibility, color: Colors.indigo, size: 20),
-              onPressed: () => _showDetailsDialog(item),
+            Builder(
+              builder: (buttonContext) => IconButton(
+                tooltip: 'عرض التفاصيل',
+                icon: const Icon(Icons.visibility,
+                    color: Colors.indigo, size: 20),
+                onPressed: () => _openActionsMenu(buttonContext, item),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // Actions menu (opened from the "عرض التفاصيل" row button)
+  // ==========================================================================
+
+  void _openActionsMenu(BuildContext buttonContext, Map<String, dynamic> item) {
+    final RenderBox button = buttonContext.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(buttonContext).context.findRenderObject() as RenderBox;
+
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    _showActionsMenu(position, item);
+  }
+
+  Future<void> _showActionsMenu(
+      RelativeRect position, Map<String, dynamic> item) async {
+    final selected = await showMenu<String>(
+      context: context,
+      position: position,
+      color: Colors.white,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      items: [
+        _buildActionMenuItem(
+          value: 'details',
+          icon: Icons.remove_red_eye_outlined,
+          iconColor: Colors.blue,
+          label: 'عرض التفاصيل',
+        ),
+        _buildActionMenuItem(
+          value: 'location',
+          icon: Icons.location_on_outlined,
+          iconColor: Colors.teal,
+          label: 'عرض الموقع',
+        ),
+        _buildActionMenuItem(
+          value: 'whatsapp',
+          icon: Icons.chat_outlined,
+          iconColor: Colors.green,
+          label: 'إرسال إلى واتساب',
+        ),
+        _buildActionMenuItem(
+          value: 'activate',
+          icon: Icons.edit_note_outlined,
+          iconColor: Colors.indigo,
+          label: 'تفعيل البلاغ',
+        ),
+        _buildActionMenuItem(
+          value: 'urgent',
+          icon: Icons.bolt_outlined,
+          iconColor: Colors.deepOrange,
+          label: 'استعجال',
+        ),
+        _buildActionMenuItem(
+          value: 'forward',
+          icon: Icons.forward_outlined,
+          iconColor: Colors.cyan.shade700,
+          label: 'إعادة توجيه',
+        ),
+        _buildActionMenuItem(
+          value: 'link_informant',
+          icon: Icons.link,
+          iconColor: Colors.purple,
+          label: 'ربط كمكرر',
+        ),
+        _buildActionMenuItem(
+          value: 'approval',
+          icon: Icons.check_circle_outline,
+          iconColor: Colors.green.shade700,
+          label: 'تم الحصول على الموافقة',
+        ),
+        const PopupMenuItem<String>(
+          enabled: false,
+          height: 1,
+          padding: EdgeInsets.zero,
+          child: Divider(height: 1),
+        ),
+        _buildActionMenuItem(
+          value: 'delete',
+          icon: Icons.delete_outline,
+          iconColor: Colors.red,
+          label: 'حذف',
+          labelColor: Colors.red,
+        ),
+      ],
+    );
+
+    if (selected == null || !mounted) return;
+
+    switch (selected) {
+      case 'details':
+        _showDetailsDialog(item);
+        break;
+      case 'location':
+        _handleShowLocation(item);
+        break;
+      case 'whatsapp':
+        _handleSendToWhatsapp(item);
+        break;
+      case 'activate':
+        _handleActivateComplaint(item);
+        break;
+      case 'urgent':
+        _handleMarkUrgent(item);
+        break;
+      case 'forward':
+        _handleForwardComplaint(item);
+        break;
+      case 'link_informant':
+        _handleLinkAsInformant(item);
+        break;
+      case 'approval':
+        _handleApprovalObtained(item);
+        break;
+      case 'delete':
+        _handleDeleteComplaint(item);
+        break;
+    }
+  }
+
+  PopupMenuItem<String> _buildActionMenuItem({
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    Color? labelColor,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 42,
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w500,
+                  color: labelColor ?? Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Action handlers ---------------------------------------------------
+  void _handleShowLocation(Map<String, dynamic> item) {
+    final lat = item['latitude']?.toString();
+    final lng = item['longitude']?.toString();
+    // const gisUrl = 'http://196.219.231.3:8000/lab-api/lab-marker/430';
+   final gisUrl = item['gisLink']?.toString();
+    if (lat == null || lng == null || lat.isEmpty || lng.isEmpty) {
+      _showActionSnackbar('لا يوجد إحداثيات مسجلة لهذا البلاغ', isError: true);
+      return;
+    }
+   debugPrint('gisUrl:--> $gisUrl');
+
+    if (gisUrl != null && gisUrl.isNotEmpty&& lng.isNotEmpty&& lat.isNotEmpty) {
+      CustomBrowserRedirect.openInBrowser(gisUrl);
+    } else {
+      CustomBrowserRedirect.openInBrowser(
+          'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      
+   }
+    
+  }
+
+
+
+
+// In your screen file - Use this handler
+
+  Future<void> _handleSendToWhatsapp(Map<String, dynamic> item) async {
+    try {
+      // Check if WhatsApp is installed
+      final whatsAppInstalled = await WhatsAppService.isWhatsAppInstalled();
+      if (!whatsAppInstalled) {
+        await WhatsAppService.copyComplaintToClipboard(item);
+        _showActionSnackbar(
+          'واتساب غير مثبت، تم نسخ البيانات إلى الحافظة',
+          isError: true,
+        );
+        return;
+      }
+
+      // Show the dialog
+      final phoneNumber = await WhatsAppDialog.showPhoneNumberDialog(
+        context: context,
+        initialPhoneNumber: '00201032743609',
+      );
+
+      if (phoneNumber == null || phoneNumber.isEmpty) {
+        // User cancelled
+        _showActionSnackbar('تم إلغاء الإرسال');
+        return;
+      }
+
+      // Send to WhatsApp
+      await WhatsAppService.sendToWhatsAppNumber(
+        complaint: item,
+        phoneNumber: phoneNumber,
+      );
+
+      _showActionSnackbar('تم فتح واتساب بنجاح');
+    } catch (e) {
+      debugPrint('WhatsApp error: $e');
+
+      // Fallback: Copy to clipboard
+      try {
+        await WhatsAppService.copyComplaintToClipboard(item);
+        _showActionSnackbar(
+          'حدث خطأ، تم نسخ البيانات إلى الحافظة',
+          isError: true,
+        );
+      } catch (copyError) {
+        _showActionSnackbar(
+          'حدث خطأ: ${e.toString()}',
+          isError: true,
+        );
+      }
+    }
+  }
+  ///
+  void _handleActivateComplaint(Map<String, dynamic> item) {
+    _showActionSnackbar('تم تفعيل البلاغ رقم ${item['complaintId'] ?? ''}');
+  }
+
+  void _handleMarkUrgent(Map<String, dynamic> item) {
+    _showActionSnackbar(
+        'تم تحديد البلاغ رقم ${item['complaintId'] ?? ''} كمستعجل');
+  }
+
+  void _handleForwardComplaint(Map<String, dynamic> item) {
+    _showActionSnackbar('إعادة توجيه البلاغ رقم ${item['complaintId'] ?? ''}');
+  }
+
+  void _handleLinkAsInformant(Map<String, dynamic> item) {
+    _showActionSnackbar('تم ربط البلاغ رقم ${item['complaintId'] ?? ''} كمكرر');
+  }
+
+  void _handleApprovalObtained(Map<String, dynamic> item) {
+    _showActionSnackbar(
+        'تم تسجيل الحصول على الموافقة للبلاغ رقم ${item['complaintId'] ?? ''}');
+  }
+
+  Future<void> _handleDeleteComplaint(Map<String, dynamic> item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: const Text(
+            'تأكيد الحذف',
+            style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'هل أنت متأكد من حذف هذا البلاغ؟ لا يمكن التراجع عن هذا الإجراء.',
+            style: TextStyle(fontFamily: 'Cairo'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('حذف', style: TextStyle(fontFamily: 'Cairo')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    _showActionSnackbar('تم حذف البلاغ رقم ${item['complaintId'] ?? ''}');
+  }
+
+  void _showActionSnackbar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Cairo'),
+        ),
+        backgroundColor: isError ? Colors.red : Colors.indigo,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -390,6 +874,7 @@ class _ReportScreenState extends State<ReportScreen> {
       MapEntry('خط الطول', item['longitude']?.toString() ?? ''),
       MapEntry('خط العرض', item['latitude']?.toString() ?? ''),
       MapEntry('القطاع', item['sectorName']?.toString() ?? ''),
+      MapEntry('رقم الاستعجال', item['urgencyNumber']?.toString() ?? ''),
       MapEntry('تاريخ الإنشاء', _formatDateOnly(item['createdAt'])),
       MapEntry('آخر تحديث', _formatDateOnly(item['updatedAt'])),
       MapEntry('تاريخ الانتهاء', _formatDateOnly(item['finishedAt'])),
@@ -422,17 +907,17 @@ class _ReportScreenState extends State<ReportScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusBackgroundColor(item['complaintStatus']),
+                  color:
+                      _statusColor(item['complaintStatus']).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: _getStatusBorderColor(item['complaintStatus']),
-                    width: 1.5,
+                    color: _statusColor(item['complaintStatus']),
                   ),
                 ),
                 child: Text(
                   item['complaintStatus']?.toString() ?? '',
                   style: TextStyle(
-                    color: _getStatusColor(item['complaintStatus']),
+                    color: _statusColor(item['complaintStatus']),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     fontFamily: 'Cairo',
@@ -576,6 +1061,11 @@ class _ReportScreenState extends State<ReportScreen> {
         return false;
       }
 
+      if (_selectedUrgencyNumber != null &&
+          (item['urgencyNumber']?.toString() ?? '') != _selectedUrgencyNumber) {
+        return false;
+      }
+
       if (_fromDate != null || _toDate != null) {
         final createdAt =
             DateTime.tryParse((item['createdAt'] ?? '').toString());
@@ -594,7 +1084,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }).toList();
 
     _updateDataSource();
-    if (!skipSetState && _isMounted) setState(() {});
+    if (!skipSetState) setState(() {});
   }
 
   void _clearFilters() {
@@ -610,6 +1100,7 @@ class _ReportScreenState extends State<ReportScreen> {
       _selectedRepeatComplaintNumber = null;
       _selectedSectorName = null;
       _selectedComplaintType = null;
+      _selectedUrgencyNumber = null;
       final today = DateTime.now();
       _fromDate = DateTime(today.year, 1, 1);
       _toDate = DateTime(today.year, today.month, today.day);
@@ -673,7 +1164,7 @@ class _ReportScreenState extends State<ReportScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'التقارير',
+            'متابعة البلاغات المفتوحة',
             style: TextStyle(
               color: Colors.indigo,
               fontWeight: FontWeight.bold,
@@ -771,7 +1262,8 @@ class _ReportScreenState extends State<ReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildEnhancedFilterBar(),
+          _buildOpeningComplaintsTicker(),
+          _buildFilterBar(),
           const SizedBox(height: 12),
           Expanded(
             child: Card(
@@ -782,7 +1274,7 @@ class _ReportScreenState extends State<ReportScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: PaginatedDataTable2(
-                  minWidth: 1500,
+                  minWidth: 1400,
                   columns: const [
                     DataColumn(
                       label: Text(
@@ -934,10 +1426,10 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ==========================================================================
-  // ENHANCED FILTER BAR - Modern UI with improved organization
+  // IMPROVED FILTER BAR - Enhanced UI with better organization
   // ==========================================================================
 
-  Widget _buildEnhancedFilterBar() {
+  Widget _buildFilterBar() {
     final recipientDestinationOptions = _distinctValues('recipientDestination');
     final neighborhoodOptions = _distinctValues('neighborhood');
     final repairStatusOptions = _distinctValues('complaintRepairStatus');
@@ -949,6 +1441,7 @@ class _ReportScreenState extends State<ReportScreen> {
         _distinctValuesAsString('repeatComplaintNumber');
     final sectorNameOptions = _distinctValues('sectorName');
     final complaintTypeOptions = _distinctValues('complaintType');
+    final urgencyNumberOptions = _distinctValuesAsString('urgencyNumber');
 
     return Card(
       color: Colors.white,
@@ -963,92 +1456,70 @@ class _ReportScreenState extends State<ReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with gradient background
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.indigo.shade50,
-                    Colors.indigo.shade100.withOpacity(0.2),
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+            // Header Row with title and clear button
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.indigo.shade400, Colors.indigo.shade700],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.filter_alt,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.indigo.shade200,
-                  width: 1,
+                const SizedBox(width: 12),
+                const Text(
+                  'فلاتر البحث المتقدم',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo,
+                    fontSize: 17,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.indigo.shade400,
-                          Colors.indigo.shade700
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
+                const Spacer(),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.grey.shade100, Colors.grey.shade200],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: const Icon(
-                      Icons.filter_alt,
-                      color: Colors.white,
-                      size: 20,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextButton.icon(
+                    onPressed: _clearFilters,
+                    icon: const Icon(Icons.clear_all, size: 18),
+                    label: const Text(
+                      'مسح الكل',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.indigo.shade700,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'فلاتر البحث المتقدم',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                      fontSize: 17,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  const Spacer(),
-                  // Clear filters button
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.grey.shade100, Colors.grey.shade200],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextButton.icon(
-                      onPressed: _clearFilters,
-                      icon: const Icon(Icons.clear_all, size: 18),
-                      label: const Text(
-                        'مسح الكل',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.indigo.shade700,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
-            // Search field with enhanced design
+            // Search Field - Full Width
             Container(
               decoration: BoxDecoration(
                 color: Colors.indigo.shade50.withOpacity(0.4),
@@ -1095,41 +1566,21 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Filter row 1 - Primary filters
+            // Filter Grid - Organized in rows
             Wrap(
               spacing: 12,
               runSpacing: 12,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _buildFilterChip(
-                  label: 'جهة الاستلام',
-                  value: _selectedRecipientDestination,
-                  options: recipientDestinationOptions,
+                  label: 'مدى الخطورة',
+                  value: _selectedSeriousStatus,
+                  options: seriousStatusOptions,
                   onChanged: (v) => setState(() {
-                    _selectedRecipientDestination = v;
+                    _selectedSeriousStatus = v;
                     _applyFilters(skipSetState: true);
                   }),
-                  icon: Icons.business_center,
-                ),
-                _buildFilterChip(
-                  label: 'الحي',
-                  value: _selectedNeighborhood,
-                  options: neighborhoodOptions,
-                  onChanged: (v) => setState(() {
-                    _selectedNeighborhood = v;
-                    _applyFilters(skipSetState: true);
-                  }),
-                  icon: Icons.location_city,
-                ),
-                _buildFilterChip(
-                  label: 'حالة الإصلاح',
-                  value: _selectedRepairStatus,
-                  options: repairStatusOptions,
-                  onChanged: (v) => setState(() {
-                    _selectedRepairStatus = v;
-                    _applyFilters(skipSetState: true);
-                  }),
-                  icon: Icons.build,
+                  icon: Icons.warning_amber_rounded,
                 ),
                 _buildFilterChip(
                   label: 'حالة المتابعة',
@@ -1142,25 +1593,35 @@ class _ReportScreenState extends State<ReportScreen> {
                   icon: Icons.track_changes,
                 ),
                 _buildFilterChip(
-                  label: 'مدى الخطورة',
-                  value: _selectedSeriousStatus,
-                  options: seriousStatusOptions,
+                  label: 'حالة الإصلاح',
+                  value: _selectedRepairStatus,
+                  options: repairStatusOptions,
                   onChanged: (v) => setState(() {
-                    _selectedSeriousStatus = v;
+                    _selectedRepairStatus = v;
                     _applyFilters(skipSetState: true);
                   }),
-                  icon: Icons.warning_amber_rounded,
+                  icon: Icons.build,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Filter row 2 - Secondary filters
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
+                _buildFilterChip(
+                  label: 'الحي',
+                  value: _selectedNeighborhood,
+                  options: neighborhoodOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedNeighborhood = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.location_city,
+                ),
+                _buildFilterChip(
+                  label: 'جهة الاستلام',
+                  value: _selectedRecipientDestination,
+                  options: recipientDestinationOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedRecipientDestination = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.business_center,
+                ),
                 _buildFilterChip(
                   label: 'نوع الكسر',
                   value: _selectedOutageType,
@@ -1170,26 +1631,6 @@ class _ReportScreenState extends State<ReportScreen> {
                     _applyFilters(skipSetState: true);
                   }),
                   icon: Icons.settings,
-                ),
-                _buildFilterChip(
-                  label: 'نوع البلاغ',
-                  value: _selectedComplaintType,
-                  options: complaintTypeOptions,
-                  onChanged: (v) => setState(() {
-                    _selectedComplaintType = v;
-                    _applyFilters(skipSetState: true);
-                  }),
-                  icon: Icons.label,
-                ),
-                _buildFilterChip(
-                  label: 'القطاع',
-                  value: _selectedSectorName,
-                  options: sectorNameOptions,
-                  onChanged: (v) => setState(() {
-                    _selectedSectorName = v;
-                    _applyFilters(skipSetState: true);
-                  }),
-                  icon: Icons.account_tree,
                 ),
                 _buildFilterChip(
                   label: 'إسم المستخدم الحالي',
@@ -1211,22 +1652,43 @@ class _ReportScreenState extends State<ReportScreen> {
                   }),
                   icon: Icons.repeat,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Filter row 3 - Date filters
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _buildEnhancedDateFilter(
+                _buildFilterChip(
+                  label: 'القطاع',
+                  value: _selectedSectorName,
+                  options: sectorNameOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedSectorName = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.account_tree,
+                ),
+                _buildFilterChip(
+                  label: 'نوع البلاغ',
+                  value: _selectedComplaintType,
+                  options: complaintTypeOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedComplaintType = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.label,
+                ),
+                _buildFilterChip(
+                  label: 'رقم الاستعجال',
+                  value: _selectedUrgencyNumber,
+                  options: urgencyNumberOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedUrgencyNumber = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.bolt,
+                ),
+                // Date Filters
+                _buildDateFilter(
                   label: 'من تاريخ',
                   value: _fromDate,
                   isFrom: true,
                 ),
-                _buildEnhancedDateFilter(
+                _buildDateFilter(
                   label: 'إلى تاريخ',
                   value: _toDate,
                   isFrom: false,
@@ -1323,7 +1785,7 @@ class _ReportScreenState extends State<ReportScreen> {
     required IconData icon,
   }) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 200),
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 200),
       child: DropdownButtonFormField<String>(
         value: value,
         isExpanded: true,
@@ -1421,16 +1883,16 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ==========================================================================
-  // ENHANCED DATE FILTER - Better visual design
+  // IMPROVED DATE FILTER - Better visual design
   // ==========================================================================
 
-  Widget _buildEnhancedDateFilter({
+  Widget _buildDateFilter({
     required String label,
     required DateTime? value,
     required bool isFrom,
   }) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 170, maxWidth: 200),
+      constraints: const BoxConstraints(minWidth: 160, maxWidth: 200),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _pickDate(isFrom: isFrom),

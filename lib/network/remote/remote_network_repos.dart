@@ -1270,6 +1270,59 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
+  //NEW-EMERGENCY-COMPLAINTS
+  //http://localhost:9999/pick-location/api/v1/complaints/all
+  //46-- GET ALL EMERGENCY COMPLAINTS(REPORTS)
+  Future<List<Map<String, dynamic>>> getAllComplaints() async {
+    try {
+      final response = await dio.get(
+          'http://localhost:9999/pick-location/api/v1/complaints/all');
+      if (response.statusCode == 200) {
+        log("API Response: ${response.data}");
+        return List<Map<String, dynamic>>.from(response.data);
+      } else {
+        log('Request failed with status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      log('Error fetching tools: $e');
+      throw Exception('Failed to load tools: $e');
+    }
+  }
+  //47-- GET ALL OPENINGEMERGENCY COMPLAINTS(MONTOR-COMPLAINTS)
+  Future<List<Map<String, dynamic>>> getAllOpeningComplaints() async {
+    try {
+      final response = await dio.get(
+          'http://localhost:9999/pick-location/api/v1/complaints/status/مفتوح');
+      if (response.statusCode == 200) {
+        log("API Response: ${response.data}");
+        return List<Map<String, dynamic>>.from(response.data);
+      } else {
+        log('Request failed with status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      log('Error fetching tools: $e');
+      throw Exception('Failed to load tools: $e');
+    }
+  }
+  //48-- GET ALL OPENINGEMERGENCY COMPLAINTS(MONTOR-COMPLAINTS)
+  Future<List<Map<String, dynamic>>> getAllComplaintsNotFinished() async {
+    try {
+      final response = await dio.get(
+          'http://localhost:9999/pick-location/api/v1/complaints/finished/0');
+      if (response.statusCode == 200) {
+        log("API Response: ${response.data}");
+        return List<Map<String, dynamic>>.from(response.data);
+      } else {
+        log('Request failed with status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      log('Error fetching tools: $e');
+      throw Exception('Failed to load tools: $e');
+    }
+  }
 }
 
 // import 'dart:convert';
