@@ -3,13 +3,13 @@
 import 'dart:developer';
 
 import 'package:emergency_room/custom_widget/custom_browser_redirect.dart';
+import 'package:emergency_room/screens/widgets/reusable_widgets/update_complaint_custom_reusable_alert_dialog.dart';
+import 'package:emergency_room/screens/widgets/update_recipient_destination.dart';
+import 'package:emergency_room/screens/widgets/update_urgency_number.dart';
 import 'package:emergency_room/services/whatsapp_service.dart';
 import 'package:emergency_room/services/widget/whatsapp_dialog.dart';
-import 'package:emergency_room/utils/whatsapp/main_whatsapp_dialog.dart';
-import 'package:emergency_room/utils/whatsapp/main_whatsapp_service.dart';
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../custom_widget/no_internet_widget.dart';
 import '../custom_widget/offline_banner.dart';
@@ -700,25 +700,23 @@ class _MonitorOpeningComplaintsScreenState
     final lat = item['latitude']?.toString();
     final lng = item['longitude']?.toString();
     // const gisUrl = 'http://196.219.231.3:8000/lab-api/lab-marker/430';
-   final gisUrl = item['gisLink']?.toString();
+    final gisUrl = item['gisLink']?.toString();
     if (lat == null || lng == null || lat.isEmpty || lng.isEmpty) {
       _showActionSnackbar('لا يوجد إحداثيات مسجلة لهذا البلاغ', isError: true);
       return;
     }
-   debugPrint('gisUrl:--> $gisUrl');
+    debugPrint('gisUrl:--> $gisUrl');
 
-    if (gisUrl != null && gisUrl.isNotEmpty&& lng.isNotEmpty&& lat.isNotEmpty) {
+    if (gisUrl != null &&
+        gisUrl.isNotEmpty &&
+        lng.isNotEmpty &&
+        lat.isNotEmpty) {
       CustomBrowserRedirect.openInBrowser(gisUrl);
     } else {
       CustomBrowserRedirect.openInBrowser(
           'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-      
-   }
-    
+    }
   }
-
-
-
 
 // In your screen file - Use this handler
 
@@ -772,18 +770,101 @@ class _MonitorOpeningComplaintsScreenState
       }
     }
   }
+
   ///
   void _handleActivateComplaint(Map<String, dynamic> item) {
     _showActionSnackbar('تم تفعيل البلاغ رقم ${item['complaintId'] ?? ''}');
   }
 
-  void _handleMarkUrgent(Map<String, dynamic> item) {
-    _showActionSnackbar(
-        'تم تحديد البلاغ رقم ${item['complaintId'] ?? ''} كمستعجل');
-  }
+  // void _handleMarkUrgent(Map<String, dynamic> item) {
+  //   _showActionSnackbar(
+  //       'تم تحديد البلاغ رقم ${item['complaintId'] ?? ''} كمستعجل');
+  // }
+  //TODO: add mark urgent
+  // For updating urgency number
+  // void _handleMarkUrgent(Map<String, dynamic> item) {
+  //   context.showUpdateComplaintDialog(
+  //     id: item['complaintId']?.toString() ?? '',
+  //     currentValue: item['urgencyNumber']?.toString() ?? '0',
+  //     valueLabel: 'رقم الاستعجال',
+  //     dialogTitle: 'تحديث حالة الاستعجال',
+  //     complaintNote: item['complaintNote']?.toString() ?? '',
+  //     onUpdate: (newValue) async {
+  //       if (!mounted) return;
 
+  //       final online = await ConnectivityService.instance.hasConnection();
+  //       if (!mounted) return;
+
+  //       setState(() {
+  //         _isOnline = online;
+  //         _isOnlineChecked = true;
+  //       });
+
+  //       if (!online) {
+  //         setState(() {
+  //           _isLoading = false;
+  //         });
+  //         if (!_hasData) {
+  //           await ConnectionDialogService.showNoInternetDialog(
+  //             context,
+  //             onRetry: _fetchData,
+  //           );
+  //         }
+  //         return;
+  //       }
+
+  //       setState(() {
+  //         _isLoading = true;
+  //       });
+  //       try {
+  //         // Call the API to update urgency number
+  //         await DioNetworkRepos().updateComplaintByIdAndUrgencyNumber(
+  //           item['complaintId']?.toString() ?? '',
+  //           newValue,
+  //         );
+  //         _fetchData();
+  //       } catch (e) {
+  //         log("Error fetching data: $e");
+  //         if (!mounted) return;
+
+  //         final onlineAgain =
+  //             await ConnectivityService.instance.hasConnection();
+  //         if (!mounted) return;
+
+  //         setState(() {
+  //           _isOnline = onlineAgain;
+  //           _isLoading = false;
+  //           if (_sampleData.isEmpty) {
+  //             _hasData = false;
+  //           }
+  //         });
+
+  //         if (!onlineAgain && !_hasData) {
+  //           await ConnectionDialogService.showNoInternetDialog(
+  //             context,
+  //             onRetry: _fetchData,
+  //           );
+  //         }
+  //       }
+  //     },
+  //   );
+  // }
+
+//TODO: add mark urgent
+  void _handleMarkUrgent(Map<String, dynamic> item) {
+    handleMarkUrgent(
+      context,
+      item,
+      _fetchData,
+    );
+  }
+//TODO: add Reciept Destination 
   void _handleForwardComplaint(Map<String, dynamic> item) {
-    _showActionSnackbar('إعادة توجيه البلاغ رقم ${item['complaintId'] ?? ''}');
+    handleForwardComplaint(
+      context,
+      item,
+      _fetchData,
+    );
   }
 
   void _handleLinkAsInformant(Map<String, dynamic> item) {

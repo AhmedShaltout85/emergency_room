@@ -179,7 +179,11 @@ class DioNetworkRepos {
 //TODO: add handasahName BY GET IT FROM GIS SERVER(INPROGRESS-21-02-2026)
   Future<void> updateLocations(
       // String address, double longitude, double latitude, String url) async {
-      String address, double longitude, double latitude, String url, String handasahName) async {
+      String address,
+      double longitude,
+      double latitude,
+      String url,
+      String handasahName) async {
     try {
       var response = await dio.put(
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/address/$address",
@@ -190,7 +194,8 @@ class DioNetworkRepos {
             "gis_url": url,
             "is_finished": 0,
             "is_approved": 0,
-            "handasah_name": handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
+            "handasah_name":
+                handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
             "technical_name": "free",
             "broker_type": "لم يدرج نوع الكسر",
           });
@@ -230,8 +235,9 @@ class DioNetworkRepos {
       throw Exception(e);
     }
   }
+
   //TODO: add GET HANDASAH NAME AND GIS URL BY GET IT FROM GIS SERVER(INPROGRESS-21-02-2026-NOT_TESTED)
- Future<Map<String, dynamic>> createNewGisPointAndGetMapLinkAndHandasah(
+  Future<Map<String, dynamic>> createNewGisPointAndGetMapLinkAndHandasah(
       int id, String longitude, String latitude) async {
     final basicAuth =
         'Basic ${base64Encode(utf8.encode('$username:$password'))}';
@@ -415,7 +421,11 @@ class DioNetworkRepos {
   //TODO://ADD HANDSAH BY GET IT FROM GIS SERVER(INPORGRESS-21-02-2026)
   Future createNewLocation(
       // String address, double longitude, double latitude, String url) async {
-      String address, double longitude, double latitude, String url, String handasahName) async {
+      String address,
+      double longitude,
+      double latitude,
+      String url,
+      String handasahName) async {
     try {
       var response = await dio.post(
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc",
@@ -426,7 +436,8 @@ class DioNetworkRepos {
             "flag": 1,
             "gis_url": url,
             "is_finished": 0,
-            "handasah_name": handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
+            "handasah_name":
+                handasahName, //TODO:UPDATE IT BY GET IT FROM GIS SERVER(comment it for now-21-02-2026)
             "technical_name": "free",
             "caller_name": "لم يدرج",
             "caller_phone": "لم يدرج",
@@ -595,7 +606,6 @@ class DioNetworkRepos {
           // ✅ Add timeouts so it doesn't hang forever
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
-        
         ),
       );
 
@@ -908,7 +918,7 @@ class DioNetworkRepos {
   Future getLocByFlagAndIsFinishedForReports() async {
     var urlGetAllEndedReportsByFlagAndIsFinished =
         '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1';
-        // '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1/is-finished/1';
+    // '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/get-loc/flag/1/is-finished/1';
     try {
       var response = await dio.get(urlGetAllEndedReportsByFlagAndIsFinished);
       if (response.statusCode == 200) {
@@ -1244,7 +1254,7 @@ class DioNetworkRepos {
       int labCode, String testCode) async {
     final url =
         '$BASE_URI_IP_ADDRESS_LOCAL_HOST/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
-        // 'http://localhost:9999/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
+    // 'http://localhost:9999/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
 
     try {
       final response = await dio.get(url);
@@ -1270,13 +1280,14 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
+
   //NEW-EMERGENCY-COMPLAINTS
   //http://localhost:9999/pick-location/api/v1/complaints/all
   //46-- GET ALL EMERGENCY COMPLAINTS(REPORTS)
   Future<List<Map<String, dynamic>>> getAllComplaints() async {
     try {
-      final response = await dio.get(
-          'http://localhost:9999/pick-location/api/v1/complaints/all');
+      final response = await dio
+          .get('http://localhost:9999/pick-location/api/v1/complaints/all');
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
         return List<Map<String, dynamic>>.from(response.data);
@@ -1289,6 +1300,7 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
+
   //47-- GET ALL OPENINGEMERGENCY COMPLAINTS(MONTOR-COMPLAINTS)
   Future<List<Map<String, dynamic>>> getAllOpeningComplaints() async {
     try {
@@ -1306,6 +1318,7 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
+
   //48-- GET ALL OPENINGEMERGENCY COMPLAINTS(MONTOR-COMPLAINTS)
   Future<List<Map<String, dynamic>>> getAllComplaintsNotFinished() async {
     try {
@@ -1323,6 +1336,46 @@ class DioNetworkRepos {
       throw Exception('Failed to load tools: $e');
     }
   }
+
+  //49-- update Complaint By id and Urgency Number(Urgency Number)
+
+  Future updateComplaintByIdAndUrgencyNumber(
+      String complaintId, String urgencyNumber) async {
+    try {
+      final response = await dio.put(
+          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/urgency-number",
+          data: {
+            "urgencyNumber": urgencyNumber,
+          });
+      log(response.data.toString());
+      return response.data;
+    } catch (e) {
+      log(e.toString());
+      throw Exception(e);
+    }
+  }
+  //50-- update Complaint By id and recipient Destination and user Destination()
+
+  Future updateComplaintByIdAndRecieptAndUserDestination(
+  String complaintId,
+  String recieptionDestination,
+  // String userDestination
+  ) async {
+    try {
+      final response = await dio.put(
+          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/recipient",
+          data: {
+            "recipientDestination": recieptionDestination,
+            "recipientUser": "لم يدرج",
+          });
+      log(response.data.toString());
+      return response.data;
+    } catch (e) {
+      log(e.toString());
+      throw Exception(e);
+    }
+  }
+
 }
 
 // import 'dart:convert';
