@@ -295,7 +295,7 @@ class _ReportScreenState extends State<ReportScreen> {
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
-            item['reportNumber']?.toString() ?? '',
+            item['complaintId']?.toString() ?? '',
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
@@ -318,7 +318,7 @@ class _ReportScreenState extends State<ReportScreen> {
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
-            item['complaintId']?.toString() ?? '',
+            item['reportNumber']?.toString() ?? '',
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(

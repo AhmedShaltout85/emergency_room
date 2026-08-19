@@ -1,18 +1,17 @@
-
-import 'package:dio/dio.dart';
+ import 'package:dio/dio.dart';
+import 'package:emergency_room/network/remote/remote_network_repos.dart';
 import 'package:emergency_room/screens/widgets/reusable_widgets/update_complaint_custom_reusable_alertdialog_with_dropdown.dart';
 import 'package:emergency_room/services/connectivity_service.dart';
 import 'package:flutter/material.dart';
-import '../../network/remote/remote_network_repos.dart';
 
-void handleForwardComplaint(
+handleApprovalObtained(
   BuildContext context,
   Map<String, dynamic> item,
   Function refreshCallback,
 ) async {
   final complaintId = item['complaintId']?.toString() ?? '';
-  final currentRecipientDestination =
-      item['recipientDestination']?.toString() ?? ' لم يدرج';
+  final currentApprovalAuthority =
+      item['approvalAuthority']?.toString() ?? ' لم يدرج';
   final complaintNote = item['complaintNote']?.toString() ?? '';
 
   // Show loading indicator while fetching options
@@ -29,39 +28,13 @@ void handleForwardComplaint(
     }
 
     // Parse the response to List<String>
-    List<String> statusOptions = [];
+    List<String> statusOptions = await DioNetworkRepos().getApprovalNamesOnly();
 
-    if (response is List) {
-      // Direct list response
-      statusOptions = response.map((item) => item.toString()).toList();
-    } else if (response is Map<String, dynamic>) {
-      // Handle map response with data or items key
-      if (response.containsKey('data') && response['data'] is List) {
-        statusOptions =
-            (response['data'] as List).map((item) => item.toString()).toList();
-      } else if (response.containsKey('items') && response['items'] is List) {
-        statusOptions =
-            (response['items'] as List).map((item) => item.toString()).toList();
-      } else {
-        // Try to find any list in the map values
-        for (var value in response.values) {
-          if (value is List) {
-            statusOptions = value.map((item) => item.toString()).toList();
-            break;
-          }
-        }
-      }
-    } else if (response is String) {
-      // If response is a single string
-      statusOptions = [response];
-    } else {
-      // Fallback - try to convert to string
-      statusOptions = [response.toString()];
-    }
+ 
 
     // Log for debugging
     debugPrint('PARSED OPTIONS COUNT: ${statusOptions.length}');
-    debugPrint('CURRENT VALUE: $currentRecipientDestination');
+    debugPrint('CURRENT VALUE: $currentApprovalAuthority');
 
     // Check if we have options
     if (statusOptions.isEmpty) {
@@ -70,8 +43,8 @@ void handleForwardComplaint(
     }
 
     // Determine the default selected value
-    String selectedValue = currentRecipientDestination;
-    if (!statusOptions.contains(currentRecipientDestination)) {
+    String selectedValue = currentApprovalAuthority;
+    if (!statusOptions.contains(currentApprovalAuthority)) {
       selectedValue = statusOptions.first;
       debugPrint('Current value not found. Using: "$selectedValue"');
     }
@@ -115,8 +88,8 @@ void handleForwardComplaint(
 
           // Call the API to update complaint destination
           // Try with different field names that the API might expect
-          final result =
-              await DioNetworkRepos().updateComplaintByIdAndRecieptAndUserDestination(
+          final result = await DioNetworkRepos()
+              .updateComplaintByIdAndApprovalAuthorization(
             complaintId,
             newValue,
           );
@@ -128,7 +101,7 @@ void handleForwardComplaint(
 
           // Show success message
           _showSuccessSnackbar(context,
-              '✅ تم تحويل البلاغ رقم $complaintId من "$currentRecipientDestination" إلى "$newValue"');
+              '✅ تم الحصول على الموافقة للبلاغ رقم $complaintId من "$currentApprovalAuthority" إلى "$newValue"');
 
           // Refresh the list or update the item
           refreshCallback();
@@ -148,7 +121,7 @@ void handleForwardComplaint(
             debugPrint('STATUS CODE: $statusCode');
             debugPrint('RESPONSE DATA: $responseData');
 
-            String errorMessage = '❌ فشل تحويل البلاغ';
+            String errorMessage = '❌ فشل فى الحصول على الموافقة للبلاغ';
             if (responseData != null) {
               if (responseData is Map) {
                 if (responseData.containsKey('message')) {
@@ -184,7 +157,7 @@ void handleForwardComplaint(
     }
 
     // Handle error fetching dropdown options
-    String errorMessage = '❌ فشل تحميل خيارات التوجيه';
+    String errorMessage = '❌ فشل تحميل خيارات جهات الموافقة';
 
     if (e is DioException) {
       if (e.type == DioExceptionType.connectionTimeout ||
@@ -207,7 +180,7 @@ void handleForwardComplaint(
 
 // Error handling method
 void _handleError(BuildContext context, dynamic error, String complaintId) {
-  String errorMessage = '❌ فشل تحويل البلاغ';
+  String errorMessage = '❌ فشل فى الحصول على الموافقة للبلاغ';
 
   if (error is DioException) {
     switch (error.type) {

@@ -2,8 +2,13 @@
 
 import 'dart:developer';
 
+import 'package:dio/dio.dart';
 import 'package:emergency_room/custom_widget/custom_browser_redirect.dart';
 import 'package:emergency_room/screens/widgets/reusable_widgets/update_complaint_custom_reusable_alert_dialog.dart';
+import 'package:emergency_room/screens/widgets/update_close_complaint.dart';
+import 'package:emergency_room/screens/widgets/update_delete_complaint.dart';
+import 'package:emergency_room/screens/widgets/update_join_as_repeated_address.dart';
+import 'package:emergency_room/screens/widgets/update_obtain_approval.dart';
 import 'package:emergency_room/screens/widgets/update_recipient_destination.dart';
 import 'package:emergency_room/screens/widgets/update_urgency_number.dart';
 import 'package:emergency_room/services/whatsapp_service.dart';
@@ -450,7 +455,7 @@ class _MonitorOpeningComplaintsScreenState
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
-            item['reportNumber']?.toString() ?? '',
+            item['complaintId']?.toString() ?? '',
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
@@ -473,7 +478,7 @@ class _MonitorOpeningComplaintsScreenState
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
-            item['complaintId']?.toString() ?? '',
+            item['reportNumber']?.toString() ?? '',
             style: const TextStyle(color: Colors.indigo, fontFamily: 'Cairo'),
           )),
           DataCell(Text(
@@ -574,10 +579,10 @@ class _MonitorOpeningComplaintsScreenState
           label: 'إرسال إلى واتساب',
         ),
         _buildActionMenuItem(
-          value: 'activate',
-          icon: Icons.edit_note_outlined,
-          iconColor: Colors.indigo,
-          label: 'تفعيل البلاغ',
+          value: 'close',
+          icon: Icons.close_outlined,
+          iconColor: Colors.red.shade600,
+          label: 'غلق البلاغ',
         ),
         _buildActionMenuItem(
           value: 'urgent',
@@ -631,8 +636,8 @@ class _MonitorOpeningComplaintsScreenState
       case 'whatsapp':
         _handleSendToWhatsapp(item);
         break;
-      case 'activate':
-        _handleActivateComplaint(item);
+      case 'close':
+        _handleCloseComplaint(item);
         break;
       case 'urgent':
         _handleMarkUrgent(item);
@@ -699,7 +704,6 @@ class _MonitorOpeningComplaintsScreenState
   void _handleShowLocation(Map<String, dynamic> item) {
     final lat = item['latitude']?.toString();
     final lng = item['longitude']?.toString();
-    // const gisUrl = 'http://196.219.231.3:8000/lab-api/lab-marker/430';
     final gisUrl = item['gisLink']?.toString();
     if (lat == null || lng == null || lat.isEmpty || lng.isEmpty) {
       _showActionSnackbar('لا يوجد إحداثيات مسجلة لهذا البلاغ', isError: true);
@@ -771,9 +775,26 @@ class _MonitorOpeningComplaintsScreenState
     }
   }
 
-  ///
-  void _handleActivateComplaint(Map<String, dynamic> item) {
-    _showActionSnackbar('تم تفعيل البلاغ رقم ${item['complaintId'] ?? ''}');
+  //TODO: add close complaint
+  // void _handleCloseComplaint(Map<String, dynamic> item) async {
+  //   try {
+  //     final complaintId = item['complaintId'] ?? '';
+  //     // Parse to int if it's a valid number
+  //     final int complaintIdInt = int.tryParse(complaintId.toString()) ?? 0;
+  //     await DioNetworkRepos().closeComplaintByIsFinished(complaintIdInt);
+  //     _showActionSnackbar('تم غلق البلاغ رقم $complaintId');
+  //     _fetchData();
+  //   } catch (e) {
+  //     debugPrint(e.toString());
+  //   }
+  // }
+
+  void _handleCloseComplaint(Map<String, dynamic> item) {
+    handleCloseComplaint(
+      context,
+      item,
+      _fetchData,
+    );
   }
 
   // void _handleMarkUrgent(Map<String, dynamic> item) {
@@ -858,7 +879,8 @@ class _MonitorOpeningComplaintsScreenState
       _fetchData,
     );
   }
-//TODO: add Reciept Destination 
+
+//TODO: add Reciept Destination
   void _handleForwardComplaint(Map<String, dynamic> item) {
     handleForwardComplaint(
       context,
@@ -867,51 +889,96 @@ class _MonitorOpeningComplaintsScreenState
     );
   }
 
+//TODO: add link as repeated
   void _handleLinkAsInformant(Map<String, dynamic> item) {
-    _showActionSnackbar('تم ربط البلاغ رقم ${item['complaintId'] ?? ''} كمكرر');
-  }
-
-  void _handleApprovalObtained(Map<String, dynamic> item) {
-    _showActionSnackbar(
-        'تم تسجيل الحصول على الموافقة للبلاغ رقم ${item['complaintId'] ?? ''}');
-  }
-
-  Future<void> _handleDeleteComplaint(Map<String, dynamic> item) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          title: const Text(
-            'تأكيد الحذف',
-            style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'هل أنت متأكد من حذف هذا البلاغ؟ لا يمكن التراجع عن هذا الإجراء.',
-            style: TextStyle(fontFamily: 'Cairo'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('حذف', style: TextStyle(fontFamily: 'Cairo')),
-            ),
-          ],
-        ),
-      ),
+    handleLinkAsInformant(
+      context,
+      item,
+      _fetchData,
     );
-
-    if (confirmed != true || !mounted) return;
-
-    _showActionSnackbar('تم حذف البلاغ رقم ${item['complaintId'] ?? ''}');
   }
+
+//TODO: add approval obtained
+  void _handleApprovalObtained(Map<String, dynamic> item) {
+    handleApprovalObtained(
+      context,
+      item,
+      _fetchData,
+    );
+  }
+
+//TODO: add delete complaint
+void _handleDeleteComplaint(Map<String, dynamic> item) {
+  handleDeleteComplaint(
+    context,
+    item,
+    _fetchData,
+  );
+}
+  // Future<void> _handleDeleteComplaint(Map<String, dynamic> item) async {
+  //   final confirmed = await showDialog<bool>(
+  //     context: context,
+  //     builder: (dialogContext) => Directionality(
+  //       textDirection: TextDirection.rtl,
+  //       child: AlertDialog(
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(14),
+  //         ),
+  //         title: const Text(
+  //           'تأكيد الحذف',
+  //           style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+  //         ),
+  //         content: const Text(
+  //           'هل أنت متأكد من حذف هذا البلاغ؟ لا يمكن التراجع عن هذا الإجراء.',
+  //           style: TextStyle(fontFamily: 'Cairo'),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.of(dialogContext).pop(false),
+  //             child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo')),
+  //           ),
+  //           TextButton(
+  //             onPressed: () async {
+  //               try {
+  //                 // Check internet connection first
+  //                 final bool isConnected =
+  //                     await ConnectivityService.instance.hasConnection();
+
+  //                 if (!isConnected) {
+  //                   if (Navigator.canPop(dialogContext)) {
+  //                     Navigator.of(dialogContext).pop(false);
+  //                   }
+  //                   ConnectionDialogService.showNoInternetDialog(context,
+  //                       title: "لا يوجد اتصال بالإنترنت",
+  //                       message:
+  //                           '❌ لا يوجد اتصال بالإنترنت، يرجى التحقق من اتصالك والمحاولة مرة أخرى.');
+  //                   return;
+  //                 }
+  //                 final complaintId = item.entries
+  //                     .firstWhere((element) => element.key == 'complaintId')
+  //                     .value;
+  //                 await DioNetworkRepos()
+  //                     .deleteComplaintByIdAndUpdateIsFinishedAndIsDeleted(
+  //                   complaintId,
+  //                 );
+  //                 Navigator.of(dialogContext).pop(true);
+  //                 _fetchData();
+  //               } catch (e) {
+  //                 log(e.toString());
+  //               }
+  //             },
+  //             style: TextButton.styleFrom(foregroundColor: Colors.red),
+  //             child: const Text('حذف', style: TextStyle(fontFamily: 'Cairo')),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+
+  //   if (confirmed != true || !mounted) return;
+
+  //   _showActionSnackbar('تم حذف البلاغ رقم ${item['complaintId'] ?? ''}');
+  // }
 
   void _showActionSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;

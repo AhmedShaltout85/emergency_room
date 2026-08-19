@@ -173,6 +173,7 @@ class _UpdateComplaintCustomReusableAlertDialogWithDropDownState
                 ),
                 items: widget.options.map((String option) {
                   return DropdownMenuItem<String>(
+                    alignment: AlignmentDirectional.centerEnd,
                     value: option,
                     child: Text(
                       option,

@@ -934,17 +934,17 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                             textAlign: TextAlign.right,
                             style: const TextStyle(
                                 fontSize: 14, fontFamily: 'Cairo'),
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'بحث في جميع الحقول',
-                              labelStyle: const TextStyle(
+                              labelStyle: TextStyle(
                                 fontSize: 13,
                                 color: Colors.indigo,
                                 fontFamily: 'Cairo',
                               ),
-                              prefixIcon: const Icon(Icons.search,
+                              prefixIcon: Icon(Icons.search,
                                   size: 22, color: Colors.indigo),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
+                              contentPadding: EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                             ),
                             onChanged: (_) => _applyFilters(),
@@ -1535,7 +1535,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 13))),
                       DataColumn(
-                          label: Text('الرقم',
+                          label: Text('رقم البلاغ',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 13))),
                       DataColumn(
@@ -1622,7 +1622,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                item['reportNumber']?.toString() ?? '-',
+                                item['complaintId']?.toString() ?? '-',
                                 style: TextStyle(
                                   color: Colors.indigo.shade700,
                                   fontWeight: FontWeight.bold,

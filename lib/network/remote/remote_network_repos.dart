@@ -1357,9 +1357,9 @@ class DioNetworkRepos {
   //50-- update Complaint By id and recipient Destination and user Destination()
 
   Future updateComplaintByIdAndRecieptAndUserDestination(
-  String complaintId,
-  String recieptionDestination,
-  // String userDestination
+    String complaintId,
+    String recieptionDestination,
+    // String userDestination
   ) async {
     try {
       final response = await dio.put(
@@ -1375,7 +1375,101 @@ class DioNetworkRepos {
       throw Exception(e);
     }
   }
+  //51-- update Complaint By id and Repeat Complaint Number
 
+  Future updateComplaintByIdAndRepeatComplaintNumber(
+    String complaintId,
+    String repeatComplaintNumber,
+  ) async {
+    try {
+      final response = await dio.put(
+          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/repeat-complaint-number",
+          data: {"repeatComplaintNumber": repeatComplaintNumber});
+      log(response.data.toString());
+      return response.data;
+    } catch (e) {
+      log(e.toString());
+      throw Exception(e);
+    }
+  }
+  //52-- update Complaint By id and Approval Authority
+
+  Future updateComplaintByIdAndApprovalAuthorization(
+    String complaintId,
+    String approvalAuthority,
+  ) async {
+    try {
+      final response = await dio.put(
+          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/approval-authority",
+          data: {"approvalAuthority": approvalAuthority});
+      log(response.data.toString());
+      return response.data;
+    } catch (e) {
+      log(e.toString());
+      throw Exception(e);
+    }
+  }
+
+//53-- GET ALL APPROVAL NAMES(DROPDOWN-list)
+  Future<List<String>> getApprovalNamesOnly() async {
+    try {
+      final response = await dio.get(
+          'http://localhost:9999/pick-location/api/v1/approval-authorities/all'); // Replace with your actual endpoint
+      if (response.statusCode == 200) {
+        log("API Response: ${response.data}");
+
+        final List<dynamic> data = response.data;
+
+        // Extract only approvalName strings
+        final List<String> approvalNames = [];
+        for (var item in data) {
+          approvalNames.add(item['approvalName'] as String);
+        }
+
+        return approvalNames;
+      } else {
+        log('Request failed with status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      log('Error fetching approval names: $e');
+      throw Exception('Failed to load approval names: $e');
+    }
+  }
+
+  //54-- remove address from Locations
+  Future<void> closeComplaintByIsFinished(int complaintId) async {
+    try {
+      await dio.put(
+        'http://localhost:9999/pick-location/api/v1/complaints/$complaintId/finish',
+      );
+
+      log('Address finished successfully');
+    } on DioException catch (e) {
+      throw Exception('Dio error: ${e.message}');
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+  //55-- update Complaint By id and Approval Authority
+
+  Future deleteComplaintByIdAndUpdateIsFinishedAndIsDeleted(
+    int complaintId,
+  ) async {
+    try {
+      final response = await dio.put(
+          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/status-flags",
+          data: {
+            "isFinished": 1,
+            "isDeleted": 1,
+          });
+      log(response.data.toString());
+      return response.data;
+    } catch (e) {
+      log(e.toString());
+      throw Exception(e);
+    }
+  }
 }
 
 // import 'dart:convert';
