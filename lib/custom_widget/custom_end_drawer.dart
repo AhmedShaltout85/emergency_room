@@ -69,7 +69,7 @@ class _CustomEndDrawerState extends State<CustomEndDrawer> {
                 if (!snapshot.hasData ||
                     snapshot.data == null ||
                     snapshot.data!.isEmpty) {
-                  return const Center(child: Text("عفوا لا يوجد شكاوى جديده"));
+                  return const Center(child: Text("عفوا لا يوجد بلاغات جديده"));
                 }
 
                 return ListView.builder(

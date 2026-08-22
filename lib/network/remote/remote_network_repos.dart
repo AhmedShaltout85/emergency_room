@@ -1319,7 +1319,7 @@ class DioNetworkRepos {
     }
   }
 
-  //48-- GET ALL OPENINGEMERGENCY COMPLAINTS(MONTOR-COMPLAINTS)
+  //48-- GET ALL OPENING-EMERGENCY-COMPLAINTS(MONTOR-COMPLAINTS)
   Future<List<Map<String, dynamic>>> getAllComplaintsNotFinished() async {
     try {
       final response = await dio.get(
