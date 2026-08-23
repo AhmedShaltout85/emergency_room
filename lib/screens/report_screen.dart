@@ -55,6 +55,8 @@ class _ReportScreenState extends State<ReportScreen> {
   String? _selectedSectorName;
   // نوع البلاغ (complaintType)
   String? _selectedComplaintType;
+  // رقم الاستعجال (urgencyNumber)
+  String? _selectedUrgencyNumber;
 
   // من تاريخ / إلى تاريخ
   DateTime? _fromDate;
@@ -183,6 +185,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _onRefreshPressed() async {
+    if (!_isMounted) return;
+
     final online = await ConnectivityService.instance.hasConnection();
     if (!_isMounted) return;
 
@@ -365,6 +369,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _showDetailsDialog(Map<String, dynamic> item) {
+    if (!_isMounted) return;
+
     final entries = <MapEntry<String, String>>[
       MapEntry('رقم البلاغ', item['complaintId']?.toString() ?? ''),
       MapEntry('رقم البلاغ المرجعي', item['reportNumber']?.toString() ?? ''),
@@ -390,6 +396,7 @@ class _ReportScreenState extends State<ReportScreen> {
       MapEntry('خط الطول', item['longitude']?.toString() ?? ''),
       MapEntry('خط العرض', item['latitude']?.toString() ?? ''),
       MapEntry('القطاع', item['sectorName']?.toString() ?? ''),
+      MapEntry('رقم الاستعجال', item['urgencyNumber']?.toString() ?? ''),
       MapEntry('تاريخ الإنشاء', _formatDateOnly(item['createdAt'])),
       MapEntry('آخر تحديث', _formatDateOnly(item['updatedAt'])),
       MapEntry('تاريخ الانتهاء', _formatDateOnly(item['finishedAt'])),
@@ -508,6 +515,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _applyFilters({bool skipSetState = false}) {
+    if (!_isMounted) return;
+
     final query = _searchController.text.trim().toLowerCase();
 
     _filteredData = _sampleData.where((item) {
@@ -576,6 +585,11 @@ class _ReportScreenState extends State<ReportScreen> {
         return false;
       }
 
+      if (_selectedUrgencyNumber != null &&
+          (item['urgencyNumber']?.toString() ?? '') != _selectedUrgencyNumber) {
+        return false;
+      }
+
       if (_fromDate != null || _toDate != null) {
         final createdAt =
             DateTime.tryParse((item['createdAt'] ?? '').toString());
@@ -598,6 +612,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _clearFilters() {
+    if (!_isMounted) return;
+
     setState(() {
       _searchController.clear();
       _selectedRecipientDestination = null;
@@ -610,6 +626,7 @@ class _ReportScreenState extends State<ReportScreen> {
       _selectedRepeatComplaintNumber = null;
       _selectedSectorName = null;
       _selectedComplaintType = null;
+      _selectedUrgencyNumber = null;
       final today = DateTime.now();
       _fromDate = DateTime(today.year, 1, 1);
       _toDate = DateTime(today.year, today.month, today.day);
@@ -636,6 +653,13 @@ class _ReportScreenState extends State<ReportScreen> {
         .map((v) => v.toString())
         .toSet()
         .toList();
+
+    // For urgencyNumber and repeatComplaintNumber, remove '0' values
+    // since '0' means "الكل" (all)
+    if (key == 'urgencyNumber' || key == 'repeatComplaintNumber') {
+      values.removeWhere((v) => v == '0');
+    }
+
     final allNumeric = values.every((v) => num.tryParse(v) != null);
     if (allNumeric) {
       values.sort((a, b) => num.parse(a).compareTo(num.parse(b)));
@@ -646,6 +670,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _pickDate({required bool isFrom}) async {
+    if (!_isMounted) return;
+
     final initial = (isFrom ? _fromDate : _toDate) ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -653,6 +679,8 @@ class _ReportScreenState extends State<ReportScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
+    if (!_isMounted) return;
+
     if (picked == null) return;
     setState(() {
       if (isFrom) {
@@ -934,7 +962,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ==========================================================================
-  // ENHANCED FILTER BAR - Modern UI with improved organization
+  // IMPROVED FILTER BAR - Organized in 2 rows for better UI
   // ==========================================================================
 
   Widget _buildEnhancedFilterBar() {
@@ -949,6 +977,7 @@ class _ReportScreenState extends State<ReportScreen> {
         _distinctValuesAsString('repeatComplaintNumber');
     final sectorNameOptions = _distinctValues('sectorName');
     final complaintTypeOptions = _distinctValues('complaintType');
+    final urgencyNumberOptions = _distinctValuesAsString('urgencyNumber');
 
     return Card(
       color: Colors.white,
@@ -1013,7 +1042,6 @@ class _ReportScreenState extends State<ReportScreen> {
                     ),
                   ),
                   const Spacer(),
-                  // Clear filters button
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -1048,7 +1076,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Search field with enhanced design
+            // Search field
             Container(
               decoration: BoxDecoration(
                 color: Colors.indigo.shade50.withOpacity(0.4),
@@ -1095,7 +1123,9 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Filter row 1 - Primary filters
+            // ============================================================
+            // ROW 1 - Primary Filters (6 items)
+            // ============================================================
             Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -1151,16 +1181,6 @@ class _ReportScreenState extends State<ReportScreen> {
                   }),
                   icon: Icons.warning_amber_rounded,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Filter row 2 - Secondary filters
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
                 _buildFilterChip(
                   label: 'نوع الكسر',
                   value: _selectedOutageType,
@@ -1171,6 +1191,18 @@ class _ReportScreenState extends State<ReportScreen> {
                   }),
                   icon: Icons.settings,
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ============================================================
+            // ROW 2 - Secondary Filters (6 items)
+            // ============================================================
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
                 _buildFilterChip(
                   label: 'نوع البلاغ',
                   value: _selectedComplaintType,
@@ -1211,26 +1243,17 @@ class _ReportScreenState extends State<ReportScreen> {
                   }),
                   icon: Icons.repeat,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Filter row 3 - Date filters
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _buildEnhancedDateFilter(
-                  label: 'من تاريخ',
-                  value: _fromDate,
-                  isFrom: true,
+                _buildFilterChip(
+                  label: 'رقم الاستعجال',
+                  value: _selectedUrgencyNumber,
+                  options: urgencyNumberOptions,
+                  onChanged: (v) => setState(() {
+                    _selectedUrgencyNumber = v;
+                    _applyFilters(skipSetState: true);
+                  }),
+                  icon: Icons.bolt,
                 ),
-                _buildEnhancedDateFilter(
-                  label: 'إلى تاريخ',
-                  value: _toDate,
-                  isFrom: false,
-                ),
+                _buildDateFilterCombined(),
               ],
             ),
             const SizedBox(height: 16),
@@ -1312,7 +1335,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ==========================================================================
-  // IMPROVED FILTER CHIP - Modern design with icon
+  // FILTER CHIP - Modern design with icon
   // ==========================================================================
 
   Widget _buildFilterChip({
@@ -1323,7 +1346,7 @@ class _ReportScreenState extends State<ReportScreen> {
     required IconData icon,
   }) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 200),
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 190),
       child: DropdownButtonFormField<String>(
         value: value,
         isExpanded: true,
@@ -1421,77 +1444,82 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ==========================================================================
-  // ENHANCED DATE FILTER - Better visual design
+  // COMBINED DATE FILTER - Shows both dates in one compact widget
   // ==========================================================================
 
-  Widget _buildEnhancedDateFilter({
+  Widget _buildDateFilterCombined() {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 250, maxWidth: 320),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildCompactDateFilter(
+              label: 'من',
+              value: _fromDate,
+              isFrom: true,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildCompactDateFilter(
+              label: 'إلى',
+              value: _toDate,
+              isFrom: false,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactDateFilter({
     required String label,
     required DateTime? value,
     required bool isFrom,
   }) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 170, maxWidth: 200),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _pickDate(isFrom: isFrom),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: const TextStyle(
-              fontSize: 12,
-              color: Colors.indigo,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Cairo',
-            ),
-            floatingLabelStyle: const TextStyle(
-              fontSize: 13,
-              color: Colors.indigo,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
-            ),
-            isDense: true,
-            filled: true,
-            fillColor: Colors.indigo.shade50.withOpacity(0.4),
-            prefixIcon: const Icon(
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => _pickDate(isFrom: isFrom),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.indigo.shade50.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color:
+                value != null ? Colors.indigo.shade400 : Colors.indigo.shade200,
+            width: value != null ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
               Icons.calendar_month,
-              size: 18,
-              color: Colors.indigo,
+              size: 16,
+              color: value != null ? Colors.indigo : Colors.indigo.shade300,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: value != null
-                    ? Colors.indigo.shade400
-                    : Colors.indigo.shade200,
-                width: value != null ? 2 : 1,
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.indigo.shade600,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Cairo',
               ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: value != null
-                    ? Colors.indigo.shade400
-                    : Colors.indigo.shade200,
-                width: value != null ? 2 : 1,
+            const SizedBox(width: 4),
+            Text(
+              value == null ? '—' : _fmtDateArabic(value),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: value != null ? Colors.black87 : Colors.indigo.shade300,
+                fontFamily: 'Cairo',
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.indigo, width: 2),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          ),
-          child: Text(
-            value == null ? '—' : _fmtDateArabic(value),
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: value != null ? Colors.black87 : Colors.indigo.shade300,
-              fontFamily: 'Cairo',
-            ),
-          ),
+          ],
         ),
       ),
     );

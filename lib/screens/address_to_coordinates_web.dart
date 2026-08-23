@@ -5755,9 +5755,7 @@ import '../custom_widget/custom_bottom_sheet.dart';
 import '../custom_widget/custom_browser_redirect.dart';
 import '../custom_widget/custom_drawer.dart';
 import '../custom_widget/custom_end_drawer.dart';
-import '../custom_widget/custom_reusable_alter_dialog_drop_down_textfield.dart';
 import '../custom_widget/custom_text_button_drop_down_menu.dart';
-import '../custom_widget/cutom_texts_alert_dailog.dart';
 import '../custom_widget/no_internet_widget.dart';
 import '../custom_widget/offline_banner.dart';
 import '../labs/widget/convert_handasah_to_lab_code.dart';
@@ -6169,30 +6167,52 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     String handasahBranch,
   ) async {
     try {
-      final addressExists = await DioNetworkRepos().checkAddressExists(address);
-      log("addressExists: $addressExists");
+      // final addressExists = await DioNetworkRepos().checkAddressExists(address);
+      // log("addressExists: $addressExists");
 
-      if (addressExists == true) {
-        log("Address already exists — updating...");
-        await DioNetworkRepos().updateLocations(
-          address,
-          longitude,
-          latitude,
-          gisUrl,
-          handasahBranch,
-        );
-        log("Location updated successfully.");
-      } else {
-        log("Address not found — creating new location...");
-        await DioNetworkRepos().createNewLocation(
-          address,
-          longitude,
-          latitude,
-          gisUrl,
-          handasahBranch,
-        );
-        log("New location created successfully.");
-      }
+      // if (addressExists == true) {
+      //   log("Address already exists — updating...");
+      //   await DioNetworkRepos().updateLocations(
+      //     address,
+      //     longitude,
+      //     latitude,
+      //     gisUrl,
+      //     handasahBranch,
+      //   );
+      //   log("Location updated successfully.");
+      // } else {
+      log("Address not found — creating new location...");
+      await DioNetworkRepos().createNewComplaint(
+        complaintAddress: address,
+        gisLink: gisUrl,
+        longitude: longitude.toString(),
+        latitude: latitude.toString(),
+        currentUsername: StaticVariables.username,
+        recipientName: 'لم يدرج',
+        recipientDestination: handasahBranch ?? 'لم يدرج',
+        approvalAuthority: 'لم يدرج',
+        neighborhood: 'لم يدرج',
+        complaintSource: 'لم يدرج',
+        reporterName: 'لم يدرج',
+        reporterPhone: 'لم يدرج',
+        complaintRepairStatus: 'لم يدرج',
+        pumpDiameter: 'لم يدرج',
+        seriousStatus: 'لم يدرج',
+        complaintStatus: 'لم يدرج',
+        recipientUser: 'لم يدرج',
+        complaintType: 'لم يدرج',
+        sectorName: 'لم يدرج',
+      );
+      log("Complaint created successfully.$address ===> $gisUrl ==>$handasahBranch ==>$longitude ===> $latitude ===> ${StaticVariables.username}");
+      await DioNetworkRepos().createNewLocation(
+        address,
+        longitude,
+        latitude,
+        gisUrl,
+        handasahBranch,
+      );
+      log("New location created successfully.");
+      // }
     } catch (e) {
       log("_saveOrUpdateLocation error: $e");
     }
@@ -6724,7 +6744,11 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
 
                                                               Expanded(
                                                                 child: Padding(
-                                                                  padding: const EdgeInsets.only(right: 8.0),
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          right:
+                                                                              8.0),
                                                                   child: Text(
                                                                     textAlign:
                                                                         TextAlign
@@ -7012,7 +7036,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                               onPressed: () =>
                                                                   CustomBrowserRedirect
                                                                       .openInBrowser(
-                                                                          "https://meet.jit.si/${item['address']}"),
+                                                                          "https://meet.jit.si/${item['complaintAddress']}"),
                                                               icon: const Icon(
                                                                   Icons.call,
                                                                   color: Colors
