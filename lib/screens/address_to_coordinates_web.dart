@@ -5743,6 +5743,7 @@ import 'package:emergency_room/screens/widgets/update_join_as_repeated_address.d
 import 'package:emergency_room/screens/widgets/update_obtain_approval.dart';
 import 'package:emergency_room/screens/widgets/update_recipient_destination.dart';
 import 'package:emergency_room/screens/widgets/update_urgency_number.dart';
+import 'package:emergency_room/utils/cache_helper.dart';
 import 'package:emergency_room/utils/whatsapp/main_whatsapp_dialog.dart';
 import 'package:emergency_room/utils/whatsapp/main_whatsapp_service.dart';
 import 'package:flutter/material.dart';
@@ -5892,8 +5893,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       //TODO:UPDATE_COMPLAINTS
       final locsData = await DioNetworkRepos().getAllComplaintsNotFinished();
       // final locsData = await DioNetworkRepos().getAllComplaintsNotFinished();
-      final locsByHandasah = await DioNetworkRepos()
-          .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
+      // final locsByHandasah = await DioNetworkRepos()
+      //     .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
 
       final handasatItems =
           await DioNetworkRepos().fetchHandasatItemsDropdownMenu();
@@ -5907,7 +5908,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         _hotlineData = hotlineList;
         getAllHotLineAddresses = Future.value(hotlineList);
         getLocsAfterGetCoordinatesAndGis = Future.value(locsData);
-        getLocsByHandasahNameAndTechinicianName = Future.value(locsByHandasah);
+        // getLocsByHandasahNameAndTechinicianName = Future.value(locsByHandasah);
         handasatItemsDropdownMenu =
             handasatItems.map<String>((e) => e.toString()).toList();
         _hasData = hotlineList.isNotEmpty || locsHasData;
@@ -5941,7 +5942,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   //update in periodic time — refreshes silently, defers to the banner
   //instead of ever showing a blocking dialog on its own.
   void _startPeriodicFetch() {
-    const Duration fetchInterval = Duration(seconds: 10);
+    const Duration fetchInterval = Duration(seconds: 30);
     _timer = Timer.periodic(fetchInterval, (Timer timer) async {
       if (!mounted) {
         timer.cancel();
@@ -5963,8 +5964,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         setState(() {
           getLocsAfterGetCoordinatesAndGis =
               DioNetworkRepos().getAllComplaintsNotFinished();
-          getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
-              .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
+          // getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
+          //     .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
         });
       }
     });
@@ -6091,8 +6092,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       setState(() {
         getLocsAfterGetCoordinatesAndGis =
             DioNetworkRepos().getAllComplaintsNotFinished();
-        getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
-            .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
+        // getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
+        //     .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
         _isLoading = false;
       });
     } catch (e) {
@@ -6164,7 +6165,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   Future<void> _saveOrUpdateLocation(
     String address,
     String gisUrl,
-    String handasahBranch,
+    String handasahBranch ,
   ) async {
     try {
       // final addressExists = await DioNetworkRepos().checkAddressExists(address);
@@ -6181,13 +6182,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       //   );
       //   log("Location updated successfully.");
       // } else {
-      log("Address not found — creating new location...");
+      log("START creating new location...");
+
       await DioNetworkRepos().createNewComplaint(
         complaintAddress: address,
         gisLink: gisUrl,
         longitude: longitude.toString(),
         latitude: latitude.toString(),
-        currentUsername: StaticVariables.username,
+        currentUsername: CacheHelper.getData(key: 'username') ?? 'لم يدرج',
         recipientName: 'لم يدرج',
         recipientDestination: handasahBranch ?? 'لم يدرج',
         approvalAuthority: 'لم يدرج',
@@ -6203,7 +6205,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         complaintType: 'لم يدرج',
         sectorName: 'لم يدرج',
       );
-      log("Complaint created successfully.$address ===> $gisUrl ==>$handasahBranch ==>$longitude ===> $latitude ===> ${StaticVariables.username}");
+      log("Complaint created successfully. \n ADDRESS $address \n ===> GIS-LINK $gisUrl \n ===> RECIPIENT-DESTINATION $handasahBranch \n ==> LOGINTUDE $longitude \n ===> LATITUDE $latitude \n ===> USERNAME ${CacheHelper.getData(key: username)}\n");
       await DioNetworkRepos().createNewLocation(
         address,
         longitude,
@@ -6392,33 +6394,33 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                     ? NoInternetWidget(onRetry: fetchData)
                     : Row(
                         children: [
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 8),
-                              width: 220,
-                              height: MediaQuery.of(context).size.height,
-                              child: CustomEndDrawer(
-                                title: 'تخصيص بلاغات الهندسة',
-                                getLocs:
-                                    getLocsByHandasahNameAndTechinicianName,
-                                stringListItems: handasatItemsDropdownMenu,
-                                onPressed: () {
-                                  setState(() {
-                                    getLocsByHandasahNameAndTechinicianName =
-                                        DioNetworkRepos()
-                                            .getLocByHandasahAndTechnician(
-                                                "لم يدرج", "لم يدرج");
-                                    getLocsAfterGetCoordinatesAndGis =
-                                        DioNetworkRepos()
-                                            .getAllComplaintsNotFinished();
-                                  });
-                                },
-                                hintText: 'فضلا أختار الهندسة',
-                              ),
-                            ),
-                          ),
+                          // Expanded(
+                          //   flex: 1,
+                          //   child: Container(
+                          //     margin: const EdgeInsets.symmetric(
+                          //         horizontal: 8, vertical: 8),
+                          //     width: 220,
+                          //     height: MediaQuery.of(context).size.height,
+                          //     child: CustomEndDrawer(
+                          //       title: 'تخصيص بلاغات الهندسة',
+                          //       getLocs:
+                          //           getLocsByHandasahNameAndTechinicianName,
+                          //       stringListItems: handasatItemsDropdownMenu,
+                          //       onPressed: () {
+                          //         setState(() {
+                          //           // getLocsByHandasahNameAndTechinicianName =
+                          //           //     DioNetworkRepos()
+                          //           //         .getLocByHandasahAndTechnician(
+                          //           //             "لم يدرج", "لم يدرج");
+                          //           getLocsAfterGetCoordinatesAndGis =
+                          //               DioNetworkRepos()
+                          //                   .getAllComplaintsNotFinished();
+                          //         });
+                          //       },
+                          //       hintText: 'فضلا أختار الهندسة',
+                          //     ),
+                          //   ),
+                          // ),
                           Expanded(
                             flex: 3,
                             child: Padding(
@@ -6545,11 +6547,11 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                 getLocsAfterGetCoordinatesAndGis =
                                                     DioNetworkRepos()
                                                         .getAllComplaintsNotFinished();
-                                                getLocsByHandasahNameAndTechinicianName =
-                                                    DioNetworkRepos()
-                                                        .getLocByHandasahAndTechnician(
-                                                            "لم يدرج",
-                                                            "لم يدرج");
+                                                // getLocsByHandasahNameAndTechinicianName =
+                                                //     DioNetworkRepos()
+                                                //         .getLocByHandasahAndTechnician(
+                                                //             "لم يدرج",
+                                                //             "لم يدرج");
                                               });
                                             },
                                             icon: const CircleAvatar(
@@ -7439,8 +7441,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             getLocsAfterGetCoordinatesAndGis =
                 DioNetworkRepos().getAllComplaintsNotFinished();
             // DioNetworkRepos().getAllComplaintsNotFinished();
-            getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
-                .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
+            // getLocsByHandasahNameAndTechinicianName = DioNetworkRepos()
+            //     .getLocByHandasahAndTechnician("لم يدرج", "لم يدرج");
           } catch (e) {
             log(e.toString());
           }

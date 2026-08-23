@@ -65,6 +65,7 @@ dependencies:
   webview_flutter: ^4.2.1
   webview_flutter_web: null
   connectivity_plus: ^7.0.0
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_lints: ^4.0.0

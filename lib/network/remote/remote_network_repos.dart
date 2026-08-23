@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:emergency_room/utils/cache_helper.dart';
 
 import '../../utils/app_constants.dart';
 
@@ -302,12 +303,19 @@ class DioNetworkRepos {
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/users/$username/$password");
       if (response.statusCode == 200) {
         log("${response.data} from loginByUsernameAndPassword");
-        final usernameResponse = response.data['username'];
+        final username = response.data['username'];
         final passwordResponse = response.data['password'];
         StaticVariables.userRole = response.data['role'];
         StaticVariables.handasahName = response.data['handasah_name'];
         StaticVariables.username = response.data['username'];
-        log('Login successful! Username: $usernameResponse, Password: $passwordResponse , ID: $StaticVariables.userRole');
+        CacheHelper.saveData(
+          key: 'username',
+          value: response.data['username'],
+        );
+         log("PRINTED DATA FROM API USERNAME FROM CACHE: ${CacheHelper.getData(
+          key: 'username',
+        )}");
+        log('Login successful! Username: $username, Password: $passwordResponse , ID: $StaticVariables.userRole');
         return true;
       } else {
         log('Login failed: ${response.data}');
@@ -338,9 +346,16 @@ class DioNetworkRepos {
         StaticVariables.username = response.data['username'];
         // handasahName = response.data['controlUnit'];
         // userName = response.data['username'];
+         CacheHelper.saveData(
+          key: 'username',
+          value: response.data['username'],
+        );
+        log("PRINTED DATA FROM API USERNAME FROM CACHE: ${CacheHelper.getData(
+          key: 'username',
+        )}");
         log("PRINTED DATA FROM API: ${response.data['role']}");
         log("PRINTED DATA FROM API: ${response.data['controlUnit']}");
-        log("PRINTED DATA FROM API: ${response.data['username']}");
+        log("PRINTED DATA FROM API REsponse: ${response.data['username']}");
         return {
           'success': true,
           'data': response.data,
