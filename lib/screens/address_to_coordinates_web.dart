@@ -5737,6 +5737,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:emergency_room/screens/widgets/reusable_widgets/create_reusable_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_close_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_delete_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_join_as_repeated_address.dart';
@@ -5755,7 +5756,6 @@ import '../custom_widget/custom_reusable_alert_dailog.dart';
 import '../custom_widget/custom_bottom_sheet.dart';
 import '../custom_widget/custom_browser_redirect.dart';
 import '../custom_widget/custom_drawer.dart';
-import '../custom_widget/custom_end_drawer.dart';
 import '../custom_widget/custom_text_button_drop_down_menu.dart';
 import '../custom_widget/no_internet_widget.dart';
 import '../custom_widget/offline_banner.dart';
@@ -6394,6 +6394,15 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                     ? NoInternetWidget(onRetry: fetchData)
                     : Row(
                         children: [
+                          Expanded(
+                            flex: 1,
+                            child: CreateReusableComplaint(
+                              onSave: (formData) {
+                                
+                              },
+                              initialData: null,
+                            ),
+                          ),
                           // Expanded(
                           //   flex: 1,
                           //   child: Container(
