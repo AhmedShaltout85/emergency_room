@@ -7558,17 +7558,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                 ),
                                                                 _buildPopupMenuItem(
                                                                   value:
-                                                                      'close',
-                                                                  icon: Icons
-                                                                      .close_outlined,
-                                                                  iconColor: Colors
-                                                                      .red
-                                                                      .shade600,
-                                                                  label:
-                                                                      'غلق البلاغ',
-                                                                ),
-                                                                _buildPopupMenuItem(
-                                                                  value:
                                                                       'urgent',
                                                                   icon: Icons
                                                                       .bolt_outlined,
@@ -7621,6 +7610,17 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                   child: Divider(
                                                                       height:
                                                                           1),
+                                                                ),
+                                                                _buildPopupMenuItem(
+                                                                  value:
+                                                                      'close',
+                                                                  icon: Icons
+                                                                      .close_outlined,
+                                                                  iconColor: Colors
+                                                                      .red
+                                                                      .shade600,
+                                                                  label:
+                                                                      'إغلاق البلاغ',
                                                                 ),
                                                                 _buildPopupMenuItem(
                                                                   value:

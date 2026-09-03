@@ -2177,12 +2177,7 @@ class _MonitorOpeningComplaintsScreenState
           iconColor: Colors.green,
           label: 'إرسال إلى واتساب',
         ),
-        _buildActionMenuItem(
-          value: 'close',
-          icon: Icons.close_outlined,
-          iconColor: Colors.red.shade600,
-          label: 'غلق البلاغ',
-        ),
+       
         _buildActionMenuItem(
           value: 'urgent',
           icon: Icons.bolt_outlined,
@@ -2212,6 +2207,12 @@ class _MonitorOpeningComplaintsScreenState
           height: 1,
           padding: EdgeInsets.zero,
           child: Divider(height: 1),
+        ),
+         _buildActionMenuItem(
+          value: 'close',
+          icon: Icons.close_outlined,
+          iconColor: Colors.red.shade600,
+          label: 'إغلاق البلاغ',
         ),
         _buildActionMenuItem(
           value: 'delete',
