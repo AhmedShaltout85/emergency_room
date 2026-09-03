@@ -34,6 +34,9 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
   final TextEditingController _pumpDiameterController = TextEditingController();
   final TextEditingController _recipientUserController =
       TextEditingController();
+  final TextEditingController _reportNumberController = TextEditingController();
+  final TextEditingController _complaintNoteController =
+      TextEditingController();
 
   // Dropdown selections
   String? _selectedApprovalAuthority;
@@ -134,6 +137,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
     _recipientUserController.text = data['recipientUser'] ?? '';
     _selectedComplaintType = data['complaintType'];
     _selectedSectorName = data['sectorName'];
+    _reportNumberController.text = data['reportNumber'] ?? '';
+    _complaintNoteController.text = data['complaintNote'] ?? '';
   }
 
   @override
@@ -146,6 +151,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
     _reporterPhoneController.dispose();
     _pumpDiameterController.dispose();
     _recipientUserController.dispose();
+    _reportNumberController.dispose();
+    _complaintNoteController.dispose();
     super.dispose();
   }
 
@@ -169,6 +176,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
         'recipientUser': _recipientUserController.text,
         'complaintType': _selectedComplaintType!,
         'sectorName': _selectedSectorName,
+        'reportNumber': _reportNumberController.text,
+        'complaintNote': _complaintNoteController.text
       };
 
       widget.onSave(formData);
@@ -404,8 +413,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                       ),
 
                       // _buildTextField(
-                      //   label: 'اسم مستلم البلاغ',
-                      //   controller: _recipientNameController,
+                      //   label: 'مستلم الهندسة',
+                      //   controller: _recipientUserController,
                       //   validator: (value) {
                       //     if (value == null || value.isEmpty) {
                       //       return 'يرجى إدخال اسم المستلم';
@@ -500,6 +509,26 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                         },
                         suffixIcon: const Icon(Icons.phone, color: Colors.grey),
                       ),
+                      _buildTextField(
+                        label: 'رقم الإشارة',
+                        controller: _reportNumberController,
+                        required: true,
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'يرجى إدخال رقم الإشارة';
+                          }
+                          return null;
+                        },
+                        suffixIcon:
+                            const Icon(Icons.numbers, color: Colors.grey),
+                      ),
+                      _buildTextField(
+                        label: 'ملاحظات',
+                        controller: _complaintNoteController ..text = 'ملاحظات البلاغ',
+                        required: false,
+                        suffixIcon: const Icon(Icons.note, color: Colors.grey),
+                      ),
 
                       const Divider(height: 32),
 
@@ -556,8 +585,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                       ),
 
                       _buildTextField(
-                        label: 'اسم المستلم',
-                        controller: _recipientUserController,
+                        label: 'اسم المستلم البلاغ',
+                        controller: _recipientNameController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'يرجى إدخال اسم المستلم';

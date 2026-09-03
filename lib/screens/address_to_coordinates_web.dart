@@ -5737,6 +5737,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:dio/dio.dart';
 import 'package:emergency_room/screens/widgets/reusable_widgets/create_reusable_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_close_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_delete_complaint.dart';
@@ -5774,6 +5775,8 @@ class AddressToCoordinates extends StatefulWidget {
 }
 
 class AddressToCoordinatesState extends State<AddressToCoordinates> {
+  //TODO: adding complaints
+
   String storeName = "";
   final Completer<GoogleMapController> _controller = Completer();
   bool _isMapControllerReady = false;
@@ -5902,7 +5905,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       if (!mounted) return;
 
       final hotlineList = (hotlineData as List).cast<Map<String, dynamic>>();
-      final bool locsHasData = locsData is List && locsData.isNotEmpty;
+      final bool locsHasData = locsData.isNotEmpty;
 
       setState(() {
         _hotlineData = hotlineList;
@@ -6165,7 +6168,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   Future<void> _saveOrUpdateLocation(
     String address,
     String gisUrl,
-    String handasahBranch ,
+    String handasahBranch,
   ) async {
     try {
       // final addressExists = await DioNetworkRepos().checkAddressExists(address);
@@ -6204,6 +6207,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         recipientUser: 'لم يدرج',
         complaintType: 'لم يدرج',
         sectorName: 'لم يدرج',
+        reportNumber: 'لم يدرج',
+        complaintNote: 'لم يدرج',
       );
       log("Complaint created successfully. \n ADDRESS $address \n ===> GIS-LINK $gisUrl \n ===> RECIPIENT-DESTINATION $handasahBranch \n ==> LOGINTUDE $longitude \n ===> LATITUDE $latitude \n ===> USERNAME ${CacheHelper.getData(key: username)}\n");
       await DioNetworkRepos().createNewLocation(
@@ -6296,6 +6301,235 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     return address;
   }
 
+//TODO: Handle adding complaint(2-9-2026)
+  // Enhanced method that uses all form data
+  Future<void> _handleSaveWithFullData(Map<String, dynamic> formData) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final String address = formData['complaintAddress'];
+
+      if (address.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "فضلاً أدخل العنوان",
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.center,
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Normalize address
+      final normalizedAddress = _normalizeAlexandriaAddress(address);
+
+      // Get coordinates and perform GIS integration
+      final result = await _getCoordinatesAndCreateComplaint(
+        normalizedAddress,
+        formData, // Pass all form data
+      );
+
+    
+
+      // Show success message
+      if (result) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "تم حفظ الشكوى بنجاح",
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.center,
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Optionally navigate back or reset form
+        // _controller.resetForm();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "تم حفظ الشكوى بنجاح بدون الاتصال ب GIS",
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        DioNetworkRepos().getAllComplaintsNotFinished();
+        _isLoading = false;
+
+      });
+    }
+  }
+
+  // Combined method that gets coordinates AND creates complaint with full data
+  Future<bool> _getCoordinatesAndCreateComplaint(
+    String address,
+    Map<String, dynamic> formData,
+  ) async {
+    // Your existing geocoding logic here
+    // But modified to use formData instead of default values
+    try {
+      // 1. Check connectivity
+      final online = await ConnectivityService.instance.hasConnection();
+      if (!online) {
+        await ConnectionDialogService.showNoInternetDialog(context);
+        return false;
+      }
+      log('ADDRESS: $address - FORM DATA: $formData before encoding');
+      // 2. Get coordinates from Google Maps
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$googleMapsApiKey',
+      );
+      log('URL: $url - ADDRESS: $address after encoding');
+
+      final response = await http.get(url);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch coordinates');
+      }
+
+      final data = json.decode(response.body);
+      if (data['results'] == null || data['results'].isEmpty) {
+        throw Exception('No results found for this address');
+      }
+
+      final location = data['results'][0]['geometry']['location'];
+      final latitude = location['lat'];
+      final longitude = location['lng'];
+      log('LATITUDE: $latitude - LONGITUDE: $longitude');
+      coordinates = "Latitude: $latitude, Longitude: $longitude";
+
+// TODO: PIN LOCATION TO MAP
+      pickMarkers.add(
+        Marker(
+          markerId: MarkerId(address),
+          position: LatLng(latitude, longitude),
+          infoWindow: InfoWindow(title: address, snippet: coordinates),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+        ),
+      );
+      // 3. Perform GIS integration
+      final lastRecordNumber = await DioNetworkRepos().getLastRecordNumberWeb();
+      final newRecordNumber = lastRecordNumber + 1;
+
+      final gisResult =
+          await DioNetworkRepos().createNewGisPointAndGetMapLinkAndHandasah(
+        newRecordNumber,
+        longitude.toString(),
+        latitude.toString(),
+      );
+
+      final gisUrl = gisResult['url'] as String? ?? 'لم يدرج';
+      final branch = gisResult['engineering_branch'] as String? ?? 'لم يدرج';
+      final handasahBranch =
+          convertGisHandasahNameToEmergencyHandasahName(branch);
+
+      // 4. Create complaint with ALL form data (not just defaults)
+      final username = CacheHelper.getData(key: 'username') ?? 'لم يدرج';
+
+      await DioNetworkRepos().createNewComplaint(
+        complaintAddress: address,
+        gisLink: gisUrl,
+        longitude: location['lng'].toString(),
+        latitude: location['lat'].toString(),
+        currentUsername: username,
+        recipientName: formData['recipientName'] ?? 'لم يدرج',
+        recipientDestination: handasahBranch ?? 'لم يدرج',
+        recipientUser: formData['recipientUser'] ?? 'لم يدرج',
+        approvalAuthority: formData['approvalAuthority'] ?? 'لم يدرج',
+        neighborhood: formData['neighborhood'] ?? 'لم يدرج',
+        complaintSource: formData['complaintSource'] ?? 'لم يدرج',
+        reporterName: formData['reporterName'] ?? 'لم يدرج',
+        reporterPhone: formData['reporterPhone'] ?? 'لم يدرج',
+        complaintRepairStatus: formData['complaintRepairStatus'] ?? 'لم يدرج',
+        pumpDiameter: formData['pumpDiameter'] ?? 'لم يدرج',
+        seriousStatus: formData['seriousStatus'] ?? 'لم يدرج',
+        complaintStatus: formData['complaintStatus'] ?? 'لم يدرج',
+        complaintType: formData['complaintType'] ?? 'لم يدرج',
+        sectorName: formData['sectorName'] ?? 'لم يدرج',
+        reportNumber: formData['reportNumber'] ?? '0',
+        complaintNote: formData['complaintNote'] ?? 'لم يدرج',
+      );
+
+      return true;
+    } catch (e) {
+      log("Error in _getCoordinatesAndCreateComplaint: $e");
+      // Fallback: create complaint with default GIS values
+      // 2. Get coordinates from Google Maps
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$googleMapsApiKey',
+      );
+      log('URL: $url - ADDRESS: $address after encoding');
+
+      final response = await http.get(url);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch coordinates');
+      }
+
+      final data = json.decode(response.body);
+      if (data['results'] == null || data['results'].isEmpty) {
+        throw Exception('No results found for this address');
+      }
+
+      final location = data['results'][0]['geometry']['location'];
+      final latitude = location['lat'];
+      final longitude = location['lng'];
+      log('LATITUDE FROM CATCH: $latitude - LONGITUDE FROM CATCH: $longitude');
+      coordinates = "Latitude: $latitude, Longitude: $longitude";
+
+//TODO: PIN LOCATION TO MAP
+      pickMarkers.add(
+        Marker(
+          markerId: MarkerId(address),
+          position: LatLng(latitude, longitude),
+          infoWindow: InfoWindow(title: address, snippet: coordinates),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+        ),
+      );
+      await DioNetworkRepos().createNewComplaint(
+        complaintAddress: address,
+        gisLink: 'لم يدرج',
+        longitude: longitude.toString(),
+        latitude: latitude.toString(),
+        currentUsername: CacheHelper.getData(key: 'username') ?? 'لم يدرج',
+        recipientName: formData['recipientName'] ?? 'لم يدرج',
+        recipientDestination: 'لم يدرج',
+        approvalAuthority: formData['approvalAuthority'] ?? 'لم يدرج',
+        neighborhood: formData['neighborhood'] ?? 'لم يدرج',
+        complaintSource: formData['complaintSource'] ?? 'لم يدرج',
+        reporterName: formData['reporterName'] ?? 'لم يدرج',
+        reporterPhone: formData['reporterPhone'] ?? 'لم يدرج',
+        complaintRepairStatus: formData['complaintRepairStatus'] ?? 'لم يدرج',
+        pumpDiameter: formData['pumpDiameter'] ?? 'لم يدرج',
+        seriousStatus: formData['seriousStatus'] ?? 'لم يدرج',
+        complaintStatus: formData['complaintStatus'] ?? 'لم يدرج',
+        recipientUser: 'لم يدرج',
+        complaintType: formData['complaintType'] ?? 'لم يدرج',
+        sectorName: formData['sectorName'] ?? 'لم يدرج',
+        complaintNote: formData['complaintNote'] ?? 'لم يدرج',
+        reportNumber: formData['reportNumber'] ?? '0',
+      );
+      rethrow;
+    }
+  }
+
+//
   @override
   Widget build(BuildContext context) {
     // Nothing useful is on screen only when we're offline AND we have no
@@ -6397,9 +6631,25 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                           Expanded(
                             flex: 1,
                             child: CreateReusableComplaint(
-                              onSave: (formData) {
-                                
-                              },
+                              onSave: _handleSaveWithFullData,
+                              // onSave: (formData) {
+                              //   log(formData['complaintAddress']);
+                              //   log(formData['recipientName']);
+                              //   log(formData['recipientDestination']);
+                              //   log(formData['approvalAuthority']);
+                              //   log(formData['neighborhood']);
+                              //   log(formData['complaintSource']);
+                              //   log(formData['reporterName']);
+                              //   log(formData['reporterPhone']);
+                              //   log(formData['complaintRepairStatus']);
+                              //   log(formData['pumpDiameter']);
+                              //   log(formData['seriousStatus']);
+                              //   log(formData['complaintStatus']);
+                              //   log(formData['recipientUser']);
+                              //   log(formData['complaintType']);
+                              //   log(formData['sectorName']);
+
+                              // },
                               initialData: null,
                             ),
                           ),
@@ -6472,110 +6722,110 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                       }
                                     },
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextField(
-                                            decoration: InputDecoration(
-                                              constraints: const BoxConstraints(
-                                                maxHeight: 70,
-                                                minWidth: 200,
-                                              ),
-                                              filled: true,
-                                              fillColor: Colors.white,
-                                              border: const OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                  Radius.circular(10.0),
-                                                ),
-                                              ),
-                                              hintText: "فضلا أدخل العنوان",
-                                              hintStyle: TextStyle(
-                                                color: Colors.indigo[200],
-                                                fontSize: 11,
-                                              ),
-                                              labelText:
-                                                  "61 طريق الحرية الاسكندرية",
-                                            ),
-                                            controller: addressController,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.indigo,
-                                            ),
-                                            cursorColor: Colors.indigo,
-                                            keyboardType: TextInputType.text,
-                                            maxLength: 250,
-                                            textAlign: TextAlign.right,
-                                            textDirection: TextDirection.rtl,
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              bottom: 17.0),
-                                          child: IconButton(
-                                            alignment: Alignment.center,
-                                            onPressed: () async {
-                                              if (addressController
-                                                  .text.isEmpty) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      " فضلا ادخل العنوان, ثم اضغط على البحث",
-                                                      textDirection:
-                                                          TextDirection.rtl,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                  ),
-                                                );
-                                                return;
-                                              }
+                                  // Padding(
+                                  //   padding: const EdgeInsets.all(8.0),
+                                  //   child: Row(
+                                  //     children: [
+                                  //       Expanded(
+                                  //         child: TextField(
+                                  //           decoration: InputDecoration(
+                                  //             constraints: const BoxConstraints(
+                                  //               maxHeight: 70,
+                                  //               minWidth: 200,
+                                  //             ),
+                                  //             filled: true,
+                                  //             fillColor: Colors.white,
+                                  //             border: const OutlineInputBorder(
+                                  //               borderRadius: BorderRadius.all(
+                                  //                 Radius.circular(10.0),
+                                  //               ),
+                                  //             ),
+                                  //             hintText: "فضلا أدخل العنوان",
+                                  //             hintStyle: TextStyle(
+                                  //               color: Colors.indigo[200],
+                                  //               fontSize: 11,
+                                  //             ),
+                                  //             labelText:
+                                  //                 "61 طريق الحرية الاسكندرية",
+                                  //           ),
+                                  //           controller: addressController,
+                                  //           style: const TextStyle(
+                                  //             fontSize: 13,
+                                  //             color: Colors.indigo,
+                                  //           ),
+                                  //           cursorColor: Colors.indigo,
+                                  //           keyboardType: TextInputType.text,
+                                  //           maxLength: 250,
+                                  //           textAlign: TextAlign.right,
+                                  //           textDirection: TextDirection.rtl,
+                                  //         ),
+                                  //       ),
+                                  //       Padding(
+                                  //         padding: const EdgeInsets.only(
+                                  //             bottom: 17.0),
+                                  //         child: IconButton(
+                                  //           alignment: Alignment.center,
+                                  //           onPressed: () async {
+                                  //             if (addressController
+                                  //                 .text.isEmpty) {
+                                  //               ScaffoldMessenger.of(context)
+                                  //                   .showSnackBar(
+                                  //                 const SnackBar(
+                                  //                   content: Text(
+                                  //                     " فضلا ادخل العنوان, ثم اضغط على البحث",
+                                  //                     textDirection:
+                                  //                         TextDirection.rtl,
+                                  //                     textAlign:
+                                  //                         TextAlign.center,
+                                  //                   ),
+                                  //                 ),
+                                  //               );
+                                  //               return;
+                                  //             }
 
-                                              // 1) Pure, synchronous normalization — no setState needed for this part
-                                              final normalizedAddress =
-                                                  _normalizeAlexandriaAddress(
-                                                      addressController.text);
+                                  //             // 1) Pure, synchronous normalization — no setState needed for this part
+                                  //             final normalizedAddress =
+                                  //                 _normalizeAlexandriaAddress(
+                                  //                     addressController.text);
 
-                                              // 2) Sync UI updates only
-                                              setState(() {
-                                                pickMarkers.clear();
-                                                address = normalizedAddress;
-                                              });
+                                  //             // 2) Sync UI updates only
+                                  //             setState(() {
+                                  //               pickMarkers.clear();
+                                  //               address = normalizedAddress;
+                                  //             });
 
-                                              addressController.clear();
+                                  //             addressController.clear();
 
-                                              // 3) Await the async geocode/connectivity call BEFORE touching state again
-                                              await _getCoordinatesFromAddress(
-                                                  address);
+                                  //             // 3) Await the async geocode/connectivity call BEFORE touching state again
+                                  //             await _getCoordinatesFromAddress(
+                                  //                 address);
 
-                                              // 4) Now safely refresh the futures, only after the above completes
-                                              if (!mounted) return;
-                                              setState(() {
-                                                getLocsAfterGetCoordinatesAndGis =
-                                                    DioNetworkRepos()
-                                                        .getAllComplaintsNotFinished();
-                                                // getLocsByHandasahNameAndTechinicianName =
-                                                //     DioNetworkRepos()
-                                                //         .getLocByHandasahAndTechnician(
-                                                //             "لم يدرج",
-                                                //             "لم يدرج");
-                                              });
-                                            },
-                                            icon: const CircleAvatar(
-                                              backgroundColor: Colors.indigo,
-                                              radius: 20,
-                                              child: Icon(
-                                                Icons.search_outlined,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  //             // 4) Now safely refresh the futures, only after the above completes
+                                  //             if (!mounted) return;
+                                  //             setState(() {
+                                  //               getLocsAfterGetCoordinatesAndGis =
+                                  //                   DioNetworkRepos()
+                                  //                       .getAllComplaintsNotFinished();
+                                  //               // getLocsByHandasahNameAndTechinicianName =
+                                  //               //     DioNetworkRepos()
+                                  //               //         .getLocByHandasahAndTechnician(
+                                  //               //             "لم يدرج",
+                                  //               //             "لم يدرج");
+                                  //             });
+                                  //           },
+                                  //           icon: const CircleAvatar(
+                                  //             backgroundColor: Colors.indigo,
+                                  //             radius: 20,
+                                  //             child: Icon(
+                                  //               Icons.search_outlined,
+                                  //               color: Colors.white,
+                                  //             ),
+                                  //           ),
+                                  //         ),
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  // ),
                                 ],
                               ),
                             ),
@@ -6848,7 +7098,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                             ),
                                                                           ),
                                                                         ),
-                                                                  item['technical_name'] ==
+                                                                  item['recipientUser'] ==
                                                                           "لم يدرج"
                                                                       ? Expanded(
                                                                           child:
@@ -7552,6 +7802,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     debugPrint('gisUrl:--> $gisUrl');
 
     if (gisUrl != null &&
+        gisUrl != 'لم يدرج' &&
         gisUrl.isNotEmpty &&
         lng.isNotEmpty &&
         lat.isNotEmpty) {
@@ -7695,7 +7946,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       MapEntry('الحالة', item['complaintStatus']?.toString() ?? ''),
       MapEntry('ملاحظات البلاغ', item['complaintNote']?.toString() ?? ''),
       MapEntry('جهة الاستلام', item['recipientDestination']?.toString() ?? ''),
-      MapEntry('المستلم', item['recipientUser']?.toString() ?? ''),
+      MapEntry('فنى الهندسة', item['recipientUser']?.toString() ?? ''),
       MapEntry('إسم المستلم', item['recipientName']?.toString() ?? ''),
       MapEntry(
           'إسم المستخدم الحالي', item['currentUsername']?.toString() ?? ''),

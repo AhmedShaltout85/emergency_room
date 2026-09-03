@@ -392,7 +392,7 @@ class _ReportScreenState extends State<ReportScreen> {
       MapEntry('إسم المستلم', item['recipientName']?.toString() ?? ''),
       MapEntry(
           'إسم المستخدم الحالي', item['currentUsername']?.toString() ?? ''),
-      MapEntry('رابط الخريطة (GIS)', item['gisLink']?.toString() ?? ''),
+      MapEntry('رابط الخريطة (GIS)', item['gisLink']?.toString()  ?? ''),
       MapEntry('خط الطول', item['longitude']?.toString() ?? ''),
       MapEntry('خط العرض', item['latitude']?.toString() ?? ''),
       MapEntry('القطاع', item['sectorName']?.toString() ?? ''),

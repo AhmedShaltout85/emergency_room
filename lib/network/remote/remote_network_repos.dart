@@ -1505,10 +1505,11 @@ class DioNetworkRepos {
     required String pumpDiameter,
     required String seriousStatus,
     required String complaintStatus,
-    String complaintNote = 'لم يدرج',
+    required String complaintNote ,
     required String recipientUser,
     required String complaintType,
     required String sectorName,
+    required String reportNumber,
   }) async {
     try {
       final response = await dio.post(
@@ -1533,8 +1534,8 @@ class DioNetworkRepos {
           "complaintNote": complaintNote,
           "recipientDestination": recipientDestination,
           "recipientUser": recipientUser,
-          "reportNumber": 12344,
-          "recipientName": recipientName,
+          "reportNumber": reportNumber, // Replace with the actual report number(رقم الاشارة)
+          "recipientName": recipientName, // Replace with the actual recipient name
           "gisLink": gisLink,
           "longitude": longitude,
           "latitude": latitude,

@@ -2312,6 +2312,7 @@ class _MonitorOpeningComplaintsScreenState
 
     if (gisUrl != null &&
         gisUrl.isNotEmpty &&
+        gisUrl != 'لم يدرج' &&
         lng.isNotEmpty &&
         lat.isNotEmpty) {
       CustomBrowserRedirect.openInBrowser(gisUrl);
@@ -2449,7 +2450,7 @@ class _MonitorOpeningComplaintsScreenState
       MapEntry('الحالة', item['complaintStatus']?.toString() ?? ''),
       MapEntry('ملاحظات البلاغ', item['complaintNote']?.toString() ?? ''),
       MapEntry('جهة الاستلام', item['recipientDestination']?.toString() ?? ''),
-      MapEntry('المستلم', item['recipientUser']?.toString() ?? ''),
+      MapEntry('فنى الهندسة', item['recipientUser']?.toString() ?? ''),
       MapEntry('إسم المستلم', item['recipientName']?.toString() ?? ''),
       MapEntry(
           'إسم المستخدم الحالي', item['currentUsername']?.toString() ?? ''),
