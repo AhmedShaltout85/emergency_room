@@ -648,14 +648,18 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
     final total = _filteredComplaints.length;
     final open = _filteredComplaints
         .where((e) =>
-            e['complaintStatus'] == 'مفتوح' ||
+            e['isFinished'] == 0 ||
             e['complaintStatus'] == 'عالى الأهمية' ||
-            e['complaintStatus'] == 'متوسط الأهمية')
+            e['complaintStatus'] == 'متوسط الأهمية' ||
+            e['complaintStatus'] == 'عادى') 
         .length;
     final processing = _filteredComplaints
         .where((e) =>
             e['complaintRepairStatus'] == 'جارى الاصلاح' ||
-            e['complaintRepairStatus'] == 'قيد المعالجة')
+            e['complaintRepairStatus'] == 'يخص الشركة' ||
+            e['complaintRepairStatus'] == 'يخص المالك' ||
+            e['complaintRepairStatus'] == 'لا يخص الشركة' ||
+            e['complaintRepairStatus'] == 'يلزم استخراج تصريح')
         .length;
     final deleted = _filteredComplaints
         .where((e) => e['isDeleted'] == 1 || e['isDeleted'] == true)
