@@ -6403,11 +6403,15 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "تم حفظ الشكوى بنجاح بدون الاتصال ب GIS",
+            "فضلا قم بتعيين الهندسة يدويا, نظرا لعدم التعيين من خلال GIS",
             textDirection: TextDirection.rtl,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+            ),
             textAlign: TextAlign.center,
           ),
-          backgroundColor: Colors.yellow,
+          backgroundColor: Colors.orange,
         ),
       );
     } finally {
@@ -6623,7 +6627,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               // Navigating to the Manage system Screen
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ManageSystemScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const ManageSystemScreen()),
               );
               // showDialog(
               //     context: context,
