@@ -1561,4 +1561,36 @@ class DioNetworkRepos {
       throw Exception('Error: $e');
     }
   }
+
+  //56-- GET ALL NEIGHBORHOOD NAMES(DROPDOWN-list)
+  Future<List<String>> getAllDropdownListNamesOnly(
+    String endPiont, 
+    String itemString
+    ) async {
+    try {
+      final response = await dio.get(
+          'http://localhost:9999/pick-location/api/v1/$endPiont/all'); // Replace with your actual endpoint
+          // 'http://localhost:9999/pick-location/api/v1/neighborhoods/all'); // Replace with your actual endpoint
+      if (response.statusCode == 200) {
+        log("API Response: ${response.data}");
+
+        final List<dynamic> data = response.data;
+
+        // Extract only neighborhoodName strings
+        final List<String> names = [];
+        for (var item in data) {
+          // names.add(item['neighborhood_name'] as String);
+          names.add(item[itemString] as String);
+        }
+
+        return names;
+      } else {
+        log('Request failed with status: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      log('Error fetching list names: $e');
+      throw Exception('Failed to load list names: $e');
+    }
+  }
 }

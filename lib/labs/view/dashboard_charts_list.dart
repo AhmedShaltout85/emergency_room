@@ -207,10 +207,10 @@
 //     );
 //   }
 // }
-import 'dart:developer';
+// import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:emergency_room/custom_widget/no_internet_widget.dart';
+// import 'package:emergency_room/custom_widget/no_internet_widget.dart';
 import 'package:emergency_room/custom_widget/offline_banner.dart';
 import 'package:emergency_room/labs/charts/bar_chart.dart';
 import 'package:emergency_room/labs/charts/doughnut_chart.dart';

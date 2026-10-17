@@ -5796,6 +5796,15 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   final TextEditingController addressController = TextEditingController();
   List<String> handasatItemsDropdownMenu = [];
   List<String> addHandasahToAddressList = [];
+  //TODO:all complaint dropdown lists
+  List<String> approvalAuthorities = [];
+  List<String> neighborhoodNames = [];
+  List<String> complaintRepairStatuses = [];
+  List<String> seriousStatuses = [];
+  List<String> complaintStatuses = [];
+  List<String> complaintTypes = [];
+  List<String> sectorNames = [];
+//
   Future<List<Map<String, dynamic>>> getAllHotLineAddresses = Future.value([]);
 
   // Replace with your actual Google Maps API key
@@ -5901,6 +5910,38 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
 
       final handasatItems =
           await DioNetworkRepos().fetchHandasatItemsDropdownMenu();
+      //TODO: load complaint all dropdown lists
+      log('before load all dropdown list ==================================>');
+      approvalAuthorities = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('approval-authorities', 'approvalName');
+      neighborhoodNames = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('neighborhoods', 'neighborhoodName');
+      complaintRepairStatuses = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('repaire-status', 'repaireType');
+      seriousStatuses = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('risk-status', 'riskName');
+      complaintStatuses = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('important-status', 'importantName');
+      complaintTypes = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('complaint-types', 'complaintName');
+      sectorNames = await DioNetworkRepos()
+          .getAllDropdownListNamesOnly('sectors', 'sectorName');
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(approvalAuthorities.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(neighborhoodNames.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(complaintRepairStatuses.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(seriousStatuses.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(complaintStatuses.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(complaintTypes.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log(sectorNames.toString());
+      log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log('after load all dropdown lists ==================================>');
 
       if (!mounted) return;
 
@@ -6262,6 +6303,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       context.go('/monitor-complaints');
     } else if (value == 'عرض لوحة التحكم') {
       context.go('/report-dashboard');
+    } else if (value == 'عرض تقرير الاسكادا') {
+      context.go('/dashboard');
     } else if (value == 'الربط مع الاسكادا') {
       CustomBrowserRedirect.openInBrowser(
         'http://41.33.226.211:8070/roundpoint',
@@ -6282,6 +6325,9 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       'الاسكندرية',
       'الإسكندرية',
       'الاسكندريه',
+      'اسكندرية',
+      'اسكندريه',
+      'إسكندرية',
       'الإسكندريه', // fixed: was missing leading "ال"
     ];
     const correct = 'الإسكندرية';
@@ -6337,8 +6383,6 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         formData, // Pass all form data
       );
 
-    
-
       // Show success message
       if (result) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -6362,14 +6406,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.center,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.yellow,
         ),
       );
     } finally {
       setState(() {
-        DioNetworkRepos().getAllComplaintsNotFinished();
+        //call get complaints again
+        fetchData();
         _isLoading = false;
-
       });
     }
   }
@@ -6631,6 +6675,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                           Expanded(
                             flex: 1,
                             child: CreateReusableComplaint(
+                              approvalAuthorities: approvalAuthorities,
+                              neighboorsName: neighborhoodNames,
+                              complaintRepairStatuses: complaintRepairStatuses,
+                              complaintStatuses: complaintStatuses,
+                              complaintTypes: complaintTypes,
+                              seriousStatuses: seriousStatuses,
+                              sectorNames: sectorNames,
+
                               onSave: _handleSaveWithFullData,
                               // onSave: (formData) {
                               //   log(formData['complaintAddress']);
@@ -7382,8 +7434,23 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                   DioNetworkRepos()
                                                                       .excuteTempStoreQty(
                                                                           storeName);
-                                                                  context.go(
-                                                                      '/integrate-with-stores/$storeName');
+                                                                  //TODO: 17-10-2026
+                                                                  storeName !=
+                                                                          ""
+                                                                      ? context.go(
+                                                                          '/integrate-with-stores/$storeName')
+                                                                      : ScaffoldMessenger.of(
+                                                                              context)
+                                                                          .showSnackBar(
+                                                                          const SnackBar(
+                                                                            content:
+                                                                                Text(
+                                                                              'عفوا, لايمكن إظهار جرد المخزن ',
+                                                                              textDirection: TextDirection.rtl,
+                                                                              textAlign: TextAlign.center,
+                                                                            ),
+                                                                          ),
+                                                                        );
                                                                 }
                                                               },
                                                               icon: const Icon(
@@ -7413,8 +7480,26 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                             .labCode);
                                                                 log("LAB_CODE: ${StaticVariables.labCode}");
                                                                 log("LAB_NAME: ${StaticVariables.labName}");
-                                                                context.go(
-                                                                    '/integration-with-labs');
+                                                                //TODO: 17-10-2026
+                                                                StaticVariables
+                                                                            .labName !=
+                                                                        ""
+                                                                    ? context.go(
+                                                                        '/integration-with-labs')
+                                                                    : ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                        const SnackBar(
+                                                                          content:
+                                                                              Text(
+                                                                            'عفوا, لايمكن إظهار بيانات هذا المعمل ',
+                                                                            textDirection:
+                                                                                TextDirection.rtl,
+                                                                            textAlign:
+                                                                                TextAlign.center,
+                                                                          ),
+                                                                        ),
+                                                                      );
                                                               },
                                                               icon: const Icon(
                                                                   Icons
@@ -7612,16 +7697,16 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                           1),
                                                                 ),
                                                                 _buildPopupMenuItem(
-                                                                  value:
-                                                                      'close',
-                                                                  icon: Icons
-                                                                      .close_outlined,
-                                                                  iconColor: Colors
-                                                                      .red
-                                                                      .shade600,
-                                                                  label:
-                                                                      'إغلاق البلاغ',
-                                                                ),
+                                                                    value:
+                                                                        'close',
+                                                                    icon: Icons
+                                                                        .close_outlined,
+                                                                    iconColor:
+                                                                        Colors
+                                                                            .red
+                                                                            .shade600,
+                                                                    label:
+                                                                        'إغلاق البلاغ'),
                                                                 _buildPopupMenuItem(
                                                                   value:
                                                                       'delete',

@@ -4,11 +4,25 @@ import 'package:flutter/services.dart';
 class CreateReusableComplaint extends StatefulWidget {
   final Function(Map<String, dynamic>) onSave;
   final Map<String, dynamic>? initialData;
+  final List<String> approvalAuthorities;
+  final List<String> neighboorsName;
+  final List<String> complaintRepairStatuses;
+  final List<String> seriousStatuses;
+  final List<String> complaintStatuses;
+  final List<String> complaintTypes;
+  final List<String> sectorNames;
 
   const CreateReusableComplaint({
     super.key,
     required this.onSave,
     this.initialData,
+    required this.neighboorsName,
+    required this.approvalAuthorities,
+    required this.complaintRepairStatuses,
+    required this.seriousStatuses,
+    required this.complaintStatuses,
+    required this.complaintTypes,
+    required this.sectorNames,
   });
 
   @override
@@ -47,77 +61,74 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
   String? _selectedComplaintType;
   String? _selectedSectorName;
 
-  // Dropdown options
-  final List<String> _approvalAuthorities = [
-    'نائب المحافظة',
-    'السكرتير العام',
-    'السكرتير العام المساعد',
-    'رئيس الحي',
-    'لم يدرج'
-  ];
+//   // Dropdown options
+//   final List<String> _approvalAuthorities = [
+//     'نائب المحافظة',
+//     'السكرتير العام',
+//     'السكرتير العام المساعد',
+//     'رئيس الحي',
+//     'لم يدرج'
+//   ];
+// final List<String> _neighborhoods =
+//   [
+//     'العجمي',
+//     'شرق',
+//     'عامرية أول',
+//     'عامرية ثان',
+//     'غرب',
+//     'مركز ومدينة برج العرب',
+//     'منتزه أول',
+//     'منتزه ثان',
 
-  final List<String> _neighborhoods = [
-    'العجمي',
-    'شرق',
-    'عامرية أول',
-    'عامرية ثان',
-    'غرب',
-    'مركز ومدينة برج العرب',
-    'منتزه أول',
-    'منتزه ثان',
-    'وسط'
-    // 'أبها'
-  ];
+//   ];
 
-  final List<String> _complaintRepairStatuses = [
-    'جاري الإصلاح',
-    'لا يخص الشركة',
-    'يخص الشركة',
-    'يخص المالك',
-    'يلزم استخراج تصريح'
-  ];
+//   final List<String> _complaintRepairStatuses = [
+//     'جاري الإصلاح',
+//     'لا يخص الشركة',
+//     'يخص الشركة',
+//     'يخص المالك',
+//     'يلزم استخراج تصريح'
+//   ];
 
-  final List<String> _seriousStatuses = ['مستقر', 'متوسط', 'عالى'];
+//   final List<String> _seriousStatuses = ['مستقر', 'متوسط', 'عالى'];
 
-  final List<String> _complaintStatuses = [
-    'عادى',
-    'متوسط الأهمية',
-    'عالى الأهمية'
-  ];
+//   final List<String> _complaintStatuses = [
+//     'عادى',
+//     'متوسط الأهمية',
+//     'عالى الأهمية'
+//   ];
 
-  final List<String> _complaintTypes = [
-    'ارسال معدة',
-    'انقطاع/ضعف مياه',
-    'سدد صرف صحي',
-    'نهضة مصر',
-    'انقطاع التيار الكهربائي',
-    'بدون غطاء',
-    'تانك مياه',
-    'كسر',
-    'كول أمني',
-    'معامل',
-    'مندوب إتصالات',
-    'مندوب صرف',
-    'مندوب غاز',
-    'مندوب كهرباء',
-    'مندوب مرور',
-    'مندوب مياه',
-    'هبوط',
-    'وصلة خلسة',
-  ];
+//   final List<String> _complaintTypes = [
+//     'ارسال معدة',
+//     'انقطاع/ضعف مياه',
+//     'سدد صرف صحي',
+//     'نهضة مصر',
+//     'انقطاع التيار الكهربائي',
+//     'بدون غطاء',
+//     'تانك مياه',
+//     'كسر',
+//     'كول أمني',
+//     'معامل',
+//     'مندوب إتصالات',
+//     'مندوب صرف',
+//     'مندوب غاز',
+//     'مندوب كهرباء',
+//     'مندوب مرور',
+//     'مندوب مياه',
+//     'هبوط',
+//     'وصلة خلسة',
+//   ];
 
-  final List<String> _sectorNames = [
-    'قطاع التكنولوجيا',
-    'قطاع المشروعات',
-    'لم يحدد'
-  ];
+//   final List<String> _sectorNames = [
+//     'قطاع التكنولوجيا',
+//     'قطاع المشروعات',
+//     'لم يحدد'
+//   ];
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialData != null) {
-      _populateFields(widget.initialData!);
-    }
+    if (widget.initialData != null) {}
   }
 
   void _populateFields(Map<String, dynamic> data) {
@@ -437,7 +448,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'جهة الموافقة',
-                        items: _approvalAuthorities,
+                        items: widget.approvalAuthorities,
                         selectedValue: _selectedApprovalAuthority,
                         required: false,
                         onChanged: (value) {
@@ -449,7 +460,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'الحي',
-                        items: _neighborhoods,
+                        items: widget.neighboorsName,
                         selectedValue: _selectedNeighborhood,
                         required: true,
                         onChanged: (value) {
@@ -525,7 +536,8 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                       ),
                       _buildTextField(
                         label: 'ملاحظات',
-                        controller: _complaintNoteController ..text = 'ملاحظات البلاغ',
+                        controller: _complaintNoteController
+                          ..text = 'ملاحظات البلاغ',
                         required: false,
                         suffixIcon: const Icon(Icons.note, color: Colors.grey),
                       ),
@@ -537,7 +549,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'حالة الإصلاح',
-                        items: _complaintRepairStatuses,
+                        items: widget.complaintRepairStatuses,
                         selectedValue: _selectedComplaintRepairStatus,
                         required: true,
                         onChanged: (value) {
@@ -562,7 +574,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'حالة الخطورة',
-                        items: _seriousStatuses,
+                        items: widget.seriousStatuses,
                         selectedValue: _selectedSeriousStatus,
                         required: true,
                         onChanged: (value) {
@@ -574,7 +586,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'حالة البلاغ',
-                        items: _complaintStatuses,
+                        items: widget.complaintStatuses,
                         selectedValue: _selectedComplaintStatus,
                         required: true,
                         onChanged: (value) {
@@ -599,7 +611,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'نوع البلاغ',
-                        items: _complaintTypes,
+                        items: widget.complaintTypes,
                         selectedValue: _selectedComplaintType,
                         required: true,
                         onChanged: (value) {
@@ -611,7 +623,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
 
                       _buildDropdownField(
                         label: 'اسم القطاع',
-                        items: _sectorNames,
+                        items: widget.sectorNames,
                         selectedValue: _selectedSectorName,
                         required: false,
                         onChanged: (value) {
