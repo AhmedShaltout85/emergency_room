@@ -1,4 +1,5 @@
 import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
+import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
 import 'package:emergency_room/screens/monitor_opening_complaints.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +64,8 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/dashboard',
-      builder: (context, state) => const StationsDashboard(),
+      builder: (context, state) => const ScadaDashboardScreen(),
+      // builder: (context, state) => const StationsDashboard(),
     ),
     GoRoute(
       path: '/report',

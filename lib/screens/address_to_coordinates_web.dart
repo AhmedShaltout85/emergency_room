@@ -5738,6 +5738,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_system_screen.dart';
 import 'package:emergency_room/screens/widgets/reusable_widgets/create_reusable_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_close_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_delete_complaint.dart';
@@ -6600,7 +6601,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
         actions: [
           IconButton(
             padding: const EdgeInsets.symmetric(horizontal: 5),
-            tooltip: "تحديث شكاوى الخط الساخن",
+            tooltip: "تحديث الشكاوى",
             hoverColor: Colors.yellow,
             onPressed: () {
               fetchData();
@@ -6612,28 +6613,33 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
           ),
           IconButton(
             padding: const EdgeInsets.symmetric(horizontal: 5),
-            tooltip: "إضافة مستخدمين الطوارئ",
+            tooltip: "الادارة والاعدادت",
             hoverColor: Colors.yellow,
             icon: const Icon(
-              Icons.person_add_alt,
+              Icons.miscellaneous_services,
               color: Colors.indigo,
             ),
             onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return CustomReusableAlertDialog(
-                        title: 'اضافة مستخدمين الطوارئ',
-                        fieldLabels: const [
-                          'اسم المستخدم',
-                          'كلمة المرور',
-                          'مطابقة كلمة المرور',
-                        ],
-                        onSubmit: (values) {
-                          DioNetworkRepos().createNewUser(
-                              values[0], values[1], 1, 'غرفة الطوارئ');
-                        });
-                  });
+              // Navigating to the Manage system Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ManageSystemScreen()),
+              );
+              // showDialog(
+              //     context: context,
+              //     builder: (context) {
+              //       return CustomReusableAlertDialog(
+              //           title: 'اضافة مستخدمين الطوارئ',
+              //           fieldLabels: const [
+              //             'اسم المستخدم',
+              //             'كلمة المرور',
+              //             'مطابقة كلمة المرور',
+              //           ],
+              //           onSubmit: (values) {
+              //             DioNetworkRepos().createNewUser(
+              //                 values[0], values[1], 1, 'غرفة الطوارئ');
+              //           });
+              //     });
             },
           ),
           TextButtonDropdown(

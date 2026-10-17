@@ -1562,7 +1562,7 @@ class DioNetworkRepos {
     }
   }
 
-  //56-- GET ALL NEIGHBORHOOD NAMES(DROPDOWN-list)
+  //56-- GET ALL dropdwon menu  NAMES list(DROPDOWN-list)
   Future<List<String>> getAllDropdownListNamesOnly(
     String endPiont, 
     String itemString
@@ -1570,16 +1570,14 @@ class DioNetworkRepos {
     try {
       final response = await dio.get(
           'http://localhost:9999/pick-location/api/v1/$endPiont/all'); // Replace with your actual endpoint
-          // 'http://localhost:9999/pick-location/api/v1/neighborhoods/all'); // Replace with your actual endpoint
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
 
         final List<dynamic> data = response.data;
 
-        // Extract only neighborhoodName strings
+        // Extract only names strings
         final List<String> names = [];
         for (var item in data) {
-          // names.add(item['neighborhood_name'] as String);
           names.add(item[itemString] as String);
         }
 
