@@ -29,7 +29,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         fontFamily: 'Cairo',
       ),
-      // home: const LandingScreen(),
 
       routerConfig: router,
     );

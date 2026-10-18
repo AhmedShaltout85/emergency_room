@@ -1,6 +1,30 @@
 import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
+import 'package:emergency_room/screens/manage_system/control/approval_authority_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/important_status_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/neighborhood_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/repaire_status_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/risk_status_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/sector_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
+import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/important_status_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/neighborhood_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/repaire_status_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/risk_status_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/sector_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/users_repo.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_approval_authorities_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_handasah_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_important_status_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_neighborhoods_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_repaire_status_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_risk_status_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_sectors_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_users_screen.dart';
 import 'package:emergency_room/screens/monitor_opening_complaints.dart';
 import 'package:flutter/material.dart';
 // import 'package:permission_handler/permission_handler.dart';
@@ -25,6 +49,7 @@ import 'package:emergency_room/screens/center_emergency/system_admin_screen.dart
 import 'package:emergency_room/screens/tracking.dart';
 import 'package:emergency_room/screens/user_request_tools.dart';
 import 'package:emergency_room/screens/user_screen.dart';
+import 'package:provider/provider.dart';
 
 import '../screens/address_to_coordinates_web.dart';
 
@@ -71,11 +96,13 @@ final router = GoRouter(
       path: '/report',
       builder: (context, state) => const ReportScreen(),
     ),
-    GoRoute( //complaints-report-12-08-2026
+    GoRoute(
+      //complaints-report-12-08-2026
       path: '/report-dashboard',
       builder: (context, state) => const ComplaintsReportDashboard(),
     ),
-    GoRoute( //open-complaints-report-13-08-2026
+    GoRoute(
+      //open-complaints-report-13-08-2026
       path: '/monitor-complaints',
       builder: (context, state) => const MonitorOpeningComplaintsScreen(),
     ),
@@ -173,8 +200,75 @@ final router = GoRouter(
     GoRoute(
       path: '/integration-with-labs',
       builder: (context, state) => const DashboardChartsList(),
-    )
+    ),
 
+    //TODO: ADD MANAGE HANDASAH ROUTE
+    GoRoute(
+      path: '/manage-handasah',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => HandasahProvider(HandasahRepo()),
+        child: const ManageHandasahScreen(),
+      ),
+    ),
+
+    //TODO: ADD MANAGE USERS ROUTE
+    GoRoute(
+      path: '/manage-users',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => UsersProvider(UsersRepo()),
+        child: const ManageUsersScreen(),
+      ),
+    ),
+    //TODO: ADD MANAGE APPROVAL AUTHORITIES ROUTE
+    GoRoute(
+      path: '/manage-approval-authorities',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ApprovalAuthorityProvider(ApprovalAuthorityRepo()),
+        child: const ManageApprovalAuthoritiesScreen(),
+      ),
+    ),
+//TODO: ADD MANAGE IMPORTANT STATUS ROUTE
+    GoRoute(
+      path: '/manage-important-status',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ImportantStatusProvider(ImportantStatusRepo()),
+        child: const ManageImportantStatusScreen(),
+      ),
+    ),
+//TODO: ADD MANAGE NEIGHBORHOODS ROUTE
+    GoRoute(
+      path: '/manage-neighborhoods',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => NeighborhoodProvider(NeighborhoodRepo()),
+        child: const ManageNeighborhoodsScreen(),
+      ),
+    ),
+//TODO: ADD MANAGE REPAIRE STATUS ROUTE
+    GoRoute(
+      path: '/manage-repaire-status',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => RepaireStatusProvider(RepaireStatusRepo()),
+        child: const ManageRepaireStatusScreen(),
+      ),
+    ),
+
+    //TODO: ADD MANAGE RISK STATUS ROUTE
+    GoRoute(
+      path: '/manage-risk-status',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => RiskStatusProvider(RiskStatusRepo()),
+        child: const ManageRiskStatusScreen(),
+      ),
+    ),
+
+    //TODO: ADD MANAGE SECTORS ROUTE
+    GoRoute(
+      path: '/manage-sectors',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => SectorProvider(SectorRepo()),
+        child: const ManageSectorsScreen(),
+      ),
+    ),
     // GoRoute(
     //   path: '/web-view-iframe/:url',
     //   builder: (context, state) {

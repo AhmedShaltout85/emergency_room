@@ -5738,6 +5738,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:emergency_room/screens/handasah_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_handasah_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_system_screen.dart';
 import 'package:emergency_room/screens/widgets/reusable_widgets/create_reusable_complaint.dart';
 import 'package:emergency_room/screens/widgets/update_close_complaint.dart';
@@ -6267,33 +6269,33 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     }
   }
 
-  //show bottom sheet Redirect to Handasat
-  void showCustomBottomSheet(
-      BuildContext context, String title, String message, String address) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: false,
-      builder: (context) {
-        return CustomBottomSheet(
-          title: title,
-          message: message,
-          hintText: "اختر الهندسة",
-          dropdownItems: handasatItemsDropdownMenu,
-          onItemSelected: (value) {
-            log("Selected: $value");
-            setState(() {
-              DioNetworkRepos().updateLocAddHandasah(address, value);
-            });
-          },
-          onPressed: () async {
-            Navigator.of(context).pop();
-            await DioNetworkRepos().updateLocAddTechnician(address, "لم يدرج");
-            await DioNetworkRepos().updateLocAddIsApproved(address, 0);
-          },
-        );
-      },
-    );
-  }
+  // //show bottom sheet Redirect to Handasat
+  // void showCustomBottomSheet(
+  //     BuildContext context, String title, String message, String address) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: false,
+  //     builder: (context) {
+  //       return CustomBottomSheet(
+  //         title: title,
+  //         message: message,
+  //         hintText: "اختر الهندسة",
+  //         dropdownItems: handasatItemsDropdownMenu,
+  //         onItemSelected: (value) {
+  //           log("Selected: $value");
+  //           setState(() {
+  //             DioNetworkRepos().updateLocAddHandasah(address, value);
+  //           });
+  //         },
+  //         onPressed: () async {
+  //           Navigator.of(context).pop();
+  //           await DioNetworkRepos().updateLocAddTechnician(address, "لم يدرج");
+  //           await DioNetworkRepos().updateLocAddIsApproved(address, 0);
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   //handle dropdown click
   void handleOptionClick(String value) {
@@ -6625,11 +6627,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             ),
             onPressed: () {
               // Navigating to the Manage system Screen
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ManageSystemScreen()),
-              );
+              // context.go('/manage-handasah'); // TODO: ADD MANAGE HANDASAH ROUTE
+              // context.go('/manage-users'); // TODO: ADD MANAGE USERS ROUTE
+              // context.go('/manage-approval-authorities'); // TODO: ADD MANAGE APPROVAL AUTHORITIES ROUTE
+              // context.go('/manage-important-status'); // TODO: ADD MANAGE IMPORTANT STATUS ROUTE
+              // context.go('/manage-neighborhoods'); // TODO: ADD MANAGE NEIGHBORHOODS ROUTE
+              // context.go('/manage-repaire-status'); // TODO: ADD MANAGE REPAIRE STATUS ROUTE
+              // context.go('/manage-risk-status'); // TODO: ADD MANAGE RISK STATUS ROUTE
+              context.go('/manage-sectors'); // TODO: ADD MANAGE SECTORS ROUTE
               // showDialog(
               //     context: context,
               //     builder: (context) {
