@@ -6634,7 +6634,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               // context.go('/manage-neighborhoods'); // TODO: ADD MANAGE NEIGHBORHOODS ROUTE
               // context.go('/manage-repaire-status'); // TODO: ADD MANAGE REPAIRE STATUS ROUTE
               // context.go('/manage-risk-status'); // TODO: ADD MANAGE RISK STATUS ROUTE
-              context.go('/manage-sectors'); // TODO: ADD MANAGE SECTORS ROUTE
+              // context.go('/manage-sectors'); // TODO: ADD MANAGE SECTORS ROUTE
+              context.go('/manage-complaint-types'); // TODO: ADD MANAGE COMPLAINT TYPES ROUTE
               // showDialog(
               //     context: context,
               //     builder: (context) {

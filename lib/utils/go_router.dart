@@ -2,6 +2,7 @@ import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
 import 'package:emergency_room/screens/manage_system/control/approval_authority_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/complaint_type_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/important_status_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/neighborhood_provider.dart';
@@ -10,6 +11,7 @@ import 'package:emergency_room/screens/manage_system/control/risk_status_provide
 import 'package:emergency_room/screens/manage_system/control/sector_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
 import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
+import 'package:emergency_room/screens/manage_system/repo/complaint_type_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/important_status_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/neighborhood_repo.dart';
@@ -18,6 +20,7 @@ import 'package:emergency_room/screens/manage_system/repo/risk_status_repo.dart'
 import 'package:emergency_room/screens/manage_system/repo/sector_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/users_repo.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_approval_authorities_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_complaint_types_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_handasah_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_important_status_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_neighborhoods_screen.dart';
@@ -251,7 +254,14 @@ final router = GoRouter(
         child: const ManageRepaireStatusScreen(),
       ),
     ),
-
+    //TODO:
+    GoRoute(
+      path: '/manage-complaint-types',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ComplaintTypeProvider(ComplaintTypeRepo()),
+        child: const ManageComplaintTypesScreen(),
+      ),
+    ),
     //TODO: ADD MANAGE RISK STATUS ROUTE
     GoRoute(
       path: '/manage-risk-status',
@@ -269,6 +279,8 @@ final router = GoRouter(
         child: const ManageSectorsScreen(),
       ),
     ),
+
+    
     // GoRoute(
     //   path: '/web-view-iframe/:url',
     //   builder: (context, state) {
