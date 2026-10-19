@@ -3,6 +3,7 @@ import 'package:emergency_room/screens/center_emergency/complaints_reports_scree
 import 'package:emergency_room/screens/center_emergency/labs_reports_dashboard_screen.dart';
 import 'package:emergency_room/screens/center_emergency/map_screen.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
+import 'package:emergency_room/screens/report_screen.dart';
 import 'package:emergency_room/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -137,7 +138,7 @@ class _SystemAdminScreenState extends State<SystemAdminScreen>
                     )),
                 _buildLazyTab(1, const ScadaDashboardScreen()),
                 _buildLazyTab(2, const LabsReportsDashboardScreen()),
-                _buildLazyTab(3, const ComplaintsReportsScreen()),
+                _buildLazyTab(3, const ReportScreen()),
               ],
             );
           },

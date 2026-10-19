@@ -539,7 +539,7 @@ class _LabsReportsDashboardScreenState extends State<LabsReportsDashboardScreen>
     final showNoInternetWidget =
         !_isOnline && _isOnlineChecked && _selectedLabCode == null;
 
-    return Container(
+    return Material(
       color: Colors.indigo.shade50,
       child: Column(
         children: [

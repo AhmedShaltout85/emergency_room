@@ -5793,7 +5793,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   // Initialized empty to avoid late-initialization errors before the
   // first fetchData() completes.
   Future getLocsAfterGetCoordinatesAndGis = Future.value([]);
-  Future getLocsByHandasahNameAndTechinicianName = Future.value([]);
+  // Future getLocsByHandasahNameAndTechinicianName = Future.value([]);
   final TextEditingController addressController = TextEditingController();
   List<String> handasatItemsDropdownMenu = [];
   List<String> addHandasahToAddressList = [];
@@ -6304,6 +6304,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
       context.go('/monitor-complaints');
     } else if (value == 'عرض لوحة التحكم') {
       context.go('/report-dashboard');
+    } else if (value == 'الربط مع المعامل') {
+      context.go('/integration-with-labs');
     } else if (value == 'عرض تقرير الاسكادا') {
       context.go('/dashboard');
     } else if (value == 'الربط مع الاسكادا') {
@@ -6658,6 +6660,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               'عرض البلاغات المفتوحة',
               'عرض التقارير',
               'عرض لوحة التحكم',
+              'الربط مع المعامل',
               'عرض تقرير الاسكادا',
               'الربط مع الاسكادا',
               'عرض المناطق المزدحمة بالبلاغات',
@@ -6790,110 +6793,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                       }
                                     },
                                   ),
-                                  // Padding(
-                                  //   padding: const EdgeInsets.all(8.0),
-                                  //   child: Row(
-                                  //     children: [
-                                  //       Expanded(
-                                  //         child: TextField(
-                                  //           decoration: InputDecoration(
-                                  //             constraints: const BoxConstraints(
-                                  //               maxHeight: 70,
-                                  //               minWidth: 200,
-                                  //             ),
-                                  //             filled: true,
-                                  //             fillColor: Colors.white,
-                                  //             border: const OutlineInputBorder(
-                                  //               borderRadius: BorderRadius.all(
-                                  //                 Radius.circular(10.0),
-                                  //               ),
-                                  //             ),
-                                  //             hintText: "فضلا أدخل العنوان",
-                                  //             hintStyle: TextStyle(
-                                  //               color: Colors.indigo[200],
-                                  //               fontSize: 11,
-                                  //             ),
-                                  //             labelText:
-                                  //                 "61 طريق الحرية الاسكندرية",
-                                  //           ),
-                                  //           controller: addressController,
-                                  //           style: const TextStyle(
-                                  //             fontSize: 13,
-                                  //             color: Colors.indigo,
-                                  //           ),
-                                  //           cursorColor: Colors.indigo,
-                                  //           keyboardType: TextInputType.text,
-                                  //           maxLength: 250,
-                                  //           textAlign: TextAlign.right,
-                                  //           textDirection: TextDirection.rtl,
-                                  //         ),
-                                  //       ),
-                                  //       Padding(
-                                  //         padding: const EdgeInsets.only(
-                                  //             bottom: 17.0),
-                                  //         child: IconButton(
-                                  //           alignment: Alignment.center,
-                                  //           onPressed: () async {
-                                  //             if (addressController
-                                  //                 .text.isEmpty) {
-                                  //               ScaffoldMessenger.of(context)
-                                  //                   .showSnackBar(
-                                  //                 const SnackBar(
-                                  //                   content: Text(
-                                  //                     " فضلا ادخل العنوان, ثم اضغط على البحث",
-                                  //                     textDirection:
-                                  //                         TextDirection.rtl,
-                                  //                     textAlign:
-                                  //                         TextAlign.center,
-                                  //                   ),
-                                  //                 ),
-                                  //               );
-                                  //               return;
-                                  //             }
-
-                                  //             // 1) Pure, synchronous normalization — no setState needed for this part
-                                  //             final normalizedAddress =
-                                  //                 _normalizeAlexandriaAddress(
-                                  //                     addressController.text);
-
-                                  //             // 2) Sync UI updates only
-                                  //             setState(() {
-                                  //               pickMarkers.clear();
-                                  //               address = normalizedAddress;
-                                  //             });
-
-                                  //             addressController.clear();
-
-                                  //             // 3) Await the async geocode/connectivity call BEFORE touching state again
-                                  //             await _getCoordinatesFromAddress(
-                                  //                 address);
-
-                                  //             // 4) Now safely refresh the futures, only after the above completes
-                                  //             if (!mounted) return;
-                                  //             setState(() {
-                                  //               getLocsAfterGetCoordinatesAndGis =
-                                  //                   DioNetworkRepos()
-                                  //                       .getAllComplaintsNotFinished();
-                                  //               // getLocsByHandasahNameAndTechinicianName =
-                                  //               //     DioNetworkRepos()
-                                  //               //         .getLocByHandasahAndTechnician(
-                                  //               //             "لم يدرج",
-                                  //               //             "لم يدرج");
-                                  //             });
-                                  //           },
-                                  //           icon: const CircleAvatar(
-                                  //             backgroundColor: Colors.indigo,
-                                  //             radius: 20,
-                                  //             child: Icon(
-                                  //               Icons.search_outlined,
-                                  //               color: Colors.white,
-                                  //             ),
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                  // ),
+                                 
                                 ],
                               ),
                             ),
@@ -6976,100 +6876,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                                       3.0),
                                                           child: Row(
                                                             children: [
-                                                              // IconButton(
-                                                              //   tooltip:
-                                                              //       "إضافة بيانات البلاغ",
-                                                              //   onPressed:
-                                                              //       () {
-                                                              //     showDialog(
-                                                              //       context:
-                                                              //           context,
-                                                              //       builder: (context) => CustomReusableAlertDialogWithDropdown(
-                                                              //           title: "تحديث بيانات البلاغ",
-                                                              //           fieldConfigs: const [
-                                                              //             FieldConfig(
-                                                              //               label: "إسم المبلغ",
-                                                              //               type: FieldType.textField,
-                                                              //             ),
-                                                              //             FieldConfig(
-                                                              //               label: "قطر الماسورة",
-                                                              //               type: FieldType.dropdown,
-                                                              //               dropdownItems: [
-                                                              //                 "``4",
-                                                              //                 "``6",
-                                                              //                 "``8",
-                                                              //                 "``10",
-                                                              //                 "``12",
-                                                              //                 "``20",
-                                                              //                 "``28",
-                                                              //                 "``40",
-                                                              //                 "``60"
-                                                              //               ],
-                                                              //             ),
-                                                              //             FieldConfig(
-                                                              //               label: "رقم الموبيل",
-                                                              //               type: FieldType.textField,
-                                                              //             ),
-                                                              //           ],
-                                                              //           onSubmit: (values) {
-                                                              //             log("User Input: $values");
-                                                              //             if (values[0] == "" ||
-                                                              //                 values[1] == "" ||
-                                                              //                 values[2] == "") {
-                                                              //               ScaffoldMessenger.of(context).showSnackBar(
-                                                              //                 const SnackBar(
-                                                              //                   content: Text(
-                                                              //                     "يرجى ملء جميع الحقول",
-                                                              //                     textDirection: TextDirection.rtl,
-                                                              //                     textAlign: TextAlign.center,
-                                                              //                   ),
-                                                              //                 ),
-                                                              //               );
-                                                              //             } else {
-                                                              //               DioNetworkRepos().updateLocationBrokenByAddress(item['address'], values[0], values[1], values[2]);
-                                                              //               log("User Input: updated Caller Name, Phone, And Borken Number");
-                                                              //               pipDim = values[1];
-                                                              //               // Update affected people based on pipe diameter
-                                                              //               if (values[1] == "``4") {
-                                                              //                 numberOfAffectedPeople = 2000;
-                                                              //                 aproxTimeFixing = 2;
-                                                              //               } else if (values[1] == "``6") {
-                                                              //                 numberOfAffectedPeople = 2500;
-                                                              //                 aproxTimeFixing = 2;
-                                                              //               } else if (values[1] == "``8") {
-                                                              //                 numberOfAffectedPeople = 4000;
-                                                              //                 aproxTimeFixing = 3;
-                                                              //               } else if (values[1] == "``10") {
-                                                              //                 numberOfAffectedPeople = 4200;
-                                                              //                 aproxTimeFixing = 3;
-                                                              //               } else if (values[1] == "``12") {
-                                                              //                 numberOfAffectedPeople = 5000;
-                                                              //                 aproxTimeFixing = 4;
-                                                              //               } else if (values[1] == "``20") {
-                                                              //                 numberOfAffectedPeople = 10000;
-                                                              //                 aproxTimeFixing = 5;
-                                                              //               } else if (values[1] == "``28") {
-                                                              //                 numberOfAffectedPeople = 15000;
-                                                              //                 aproxTimeFixing = 6;
-                                                              //               } else if (values[1] == "``40") {
-                                                              //                 numberOfAffectedPeople = 50000;
-                                                              //                 aproxTimeFixing = 8;
-                                                              //               } else if (values[1] == "``60") {
-                                                              //                 numberOfAffectedPeople = 100000;
-                                                              //                 aproxTimeFixing = 24;
-                                                              //               }
-                                                              //             }
-                                                              //           }),
-                                                              //     );
-                                                              //   },
-                                                              //   icon:
-                                                              //       const Icon(
-                                                              //     Icons
-                                                              //         .add_circle_outlined,
-                                                              //     color: Colors
-                                                              //         .indigo,
-                                                              //   ),
-                                                              // ),
+                                                             
 
                                                               Expanded(
                                                                 child: Padding(
@@ -7477,53 +7284,53 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                                             ),
                                                           ),
                                                           // Labs Integration
-                                                          Expanded(
-                                                            child: IconButton(
-                                                              tooltip:
-                                                                  'الربط مع المعامل',
-                                                              hoverColor:
-                                                                  Colors.yellow,
-                                                              onPressed: () {
-                                                                StaticVariables
-                                                                        .labCode =
-                                                                    convertHandasahToLabCode(
-                                                                        item[
-                                                                            'recipientUser']);
-                                                                StaticVariables
-                                                                        .labName =
-                                                                    convertLabCodeToLabName(
-                                                                        StaticVariables
-                                                                            .labCode);
-                                                                log("LAB_CODE: ${StaticVariables.labCode}");
-                                                                log("LAB_NAME: ${StaticVariables.labName}");
-                                                                //TODO: 17-10-2026
-                                                                StaticVariables
-                                                                            .labName !=
-                                                                        ""
-                                                                    ? context.go(
-                                                                        '/integration-with-labs')
-                                                                    : ScaffoldMessenger.of(
-                                                                            context)
-                                                                        .showSnackBar(
-                                                                        const SnackBar(
-                                                                          content:
-                                                                              Text(
-                                                                            'عفوا, لايمكن إظهار بيانات هذا المعمل ',
-                                                                            textDirection:
-                                                                                TextDirection.rtl,
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                              },
-                                                              icon: const Icon(
-                                                                  Icons
-                                                                      .report_gmailerrorred,
-                                                                  color: Colors
-                                                                      .cyan),
-                                                            ),
-                                                          ),
+                                                          // Expanded(
+                                                          //   child: IconButton(
+                                                          //     tooltip:
+                                                          //         'الربط مع المعامل',
+                                                          //     hoverColor:
+                                                          //         Colors.yellow,
+                                                          //     onPressed: () {
+                                                          //       StaticVariables
+                                                          //               .labCode =
+                                                          //           convertHandasahToLabCode(
+                                                          //               item[
+                                                          //                   'recipientUser']);
+                                                          //       StaticVariables
+                                                          //               .labName =
+                                                          //           convertLabCodeToLabName(
+                                                          //               StaticVariables
+                                                          //                   .labCode);
+                                                          //       log("LAB_CODE: ${StaticVariables.labCode}");
+                                                          //       log("LAB_NAME: ${StaticVariables.labName}");
+                                                          //       //TODO: 17-10-2026
+                                                          //       StaticVariables
+                                                          //                   .labName !=
+                                                          //               ""
+                                                          //           ? context.go(
+                                                          //               '/integration-with-labs')
+                                                          //           : ScaffoldMessenger.of(
+                                                          //                   context)
+                                                          //               .showSnackBar(
+                                                          //               const SnackBar(
+                                                          //                 content:
+                                                          //                     Text(
+                                                          //                   'عفوا, لايمكن إظهار بيانات هذا المعمل ',
+                                                          //                   textDirection:
+                                                          //                       TextDirection.rtl,
+                                                          //                   textAlign:
+                                                          //                       TextAlign.center,
+                                                          //                 ),
+                                                          //               ),
+                                                          //             );
+                                                          //     },
+                                                          //     icon: const Icon(
+                                                          //         Icons
+                                                          //             .report_gmailerrorred,
+                                                          //         color: Colors
+                                                          //             .cyan),
+                                                          //   ),
+                                                          // ),
                                                           // GPS Car Tracking
                                                           Expanded(
                                                             child: IconButton(
