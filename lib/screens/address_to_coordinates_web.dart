@@ -6764,6 +6764,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                                     ),
                                     onMapCreated:
                                         (GoogleMapController controller) {
+                                          if (!mounted) return;
                                       if (!_controller.isCompleted) {
                                         _controller.complete(controller);
                                       }

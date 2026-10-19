@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:emergency_room/utils/cache_helper.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../utils/app_constants.dart';
 
@@ -19,7 +20,8 @@ class DioNetworkRepos {
     BaseOptions(
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      sendTimeout: const Duration(seconds: 10),
+      sendTimeout: kIsWeb ? null : const Duration(seconds: 10),
+
     ),
   );
 

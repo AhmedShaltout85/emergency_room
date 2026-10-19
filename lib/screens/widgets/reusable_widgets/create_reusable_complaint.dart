@@ -525,6 +525,9 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                         controller: _reportNumberController,
                         required: true,
                         keyboardType: TextInputType.number,
+                         inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'يرجى إدخال رقم الإشارة';

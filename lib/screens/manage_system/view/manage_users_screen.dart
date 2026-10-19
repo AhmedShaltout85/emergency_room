@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../model/user_model.dart';
-// TODO: fix these imports to your real paths
 import '../control/users_provider.dart';
 import '../control/handasah_provider.dart' show LoadState;
 import '../../../services/connection_dialog_service.dart';
@@ -480,7 +479,7 @@ class _DetailsSheet extends StatelessWidget {
             if (user.id != null)
               _InfoRow(
                   icon: Icons.tag_rounded,
-                  label: 'المعرّف',
+                  label: 'المسلسل',
                   value: '${user.id}'),
             const SizedBox(height: 16),
             SizedBox(
