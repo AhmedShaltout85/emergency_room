@@ -10,7 +10,8 @@ class ConnectivityService {
   static final ConnectivityService instance = ConnectivityService._();
   factory ConnectivityService() => instance;
   ConnectivityService._() {
-    _connectionController = StreamController<bool>();
+    // _connectionController = StreamController<bool>();
+    _connectionController = StreamController<bool>.broadcast();
     _initConnectivityMonitoring();
   }
 

@@ -27,6 +27,7 @@ import 'package:emergency_room/screens/manage_system/view/manage_neighborhoods_s
 import 'package:emergency_room/screens/manage_system/view/manage_repaire_status_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_risk_status_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_sectors_screen.dart';
+import 'package:emergency_room/screens/manage_system/view/manage_system_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_users_screen.dart';
 import 'package:emergency_room/screens/monitor_opening_complaints.dart';
 import 'package:flutter/material.dart';
@@ -279,8 +280,12 @@ final router = GoRouter(
         child: const ManageSectorsScreen(),
       ),
     ),
+    //TODO: ADD MANAGE SYSTEM ROUTE
+    GoRoute(
+      path: '/manage-system',
+      builder: (context, state) => const ManageSystemScreen(),
+    ),
 
-    
     // GoRoute(
     //   path: '/web-view-iframe/:url',
     //   builder: (context, state) {
