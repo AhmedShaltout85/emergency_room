@@ -38,7 +38,6 @@ import 'package:emergency_room/common_services/webrtc_config/video_call_screen.d
 // import 'package:emergency_room/custom_widget/custom_web_view_iframe.dart';
 import 'package:emergency_room/screens/caller_mobile_screen.dart';
 import 'package:emergency_room/screens/caller_screen.dart';
-import 'package:emergency_room/screens/dashboard_screen.dart';
 import 'package:emergency_room/screens/gis_map.dart';
 import 'package:emergency_room/screens/handasah_screen.dart';
 import 'package:emergency_room/screens/integration_with_stores_get_all_qty.dart';
