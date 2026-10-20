@@ -1179,8 +1179,21 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             size: 17,
           ),
           actions: [
+            IconButton(iconSize: 30,
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              tooltip: "تغيير كلمة المرور",
+              hoverColor: Colors.yellow,
+              onPressed: () {
+                context.go('/change-user-password');
+              },
+              icon: const Icon(
+                Icons.password,
+                color: Colors.indigo,
+                size: 30,
+              ),
+            ),
             IconButton(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               tooltip: "تحديث الشكاوى",
               hoverColor: Colors.yellow,
               onPressed: () {
@@ -1189,15 +1202,17 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               icon: const Icon(
                 Icons.refresh,
                 color: Colors.indigo,
+                size: 30,
               ),
             ),
             IconButton(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              tooltip: "الادارة والاعدادت",
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              tooltip: "الادارة والاعدادت",iconSize: 30,
               hoverColor: Colors.yellow,
               icon: const Icon(
                 Icons.miscellaneous_services,
                 color: Colors.indigo,
+                // size: 30,
               ),
               onPressed: () {
                 // Navigating to the Manage system Screen

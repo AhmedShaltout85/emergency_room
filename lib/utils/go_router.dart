@@ -1,5 +1,6 @@
 import 'package:emergency_room/screens/center_emergency/labs_reports_dashboard_screen.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
+import 'package:emergency_room/screens/change_user_password.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
 import 'package:emergency_room/screens/emeregency_room/controller/complaint_provider.dart';
 import 'package:emergency_room/screens/emeregency_room/repo/complaint_repo.dart';
@@ -303,6 +304,15 @@ final router = GoRouter(
       builder: (context, state) => const ManageSystemScreen(),
     ),
 
+   //TODO: ADD MANAGE USERS ROUTE
+    GoRoute(
+      path: '/change-user-password',
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => UsersProvider(UsersRepo()),
+        child: const ChangeUserPassword(),
+      ),
+    ),
+   
     // GoRoute(
     //   path: '/web-view-iframe/:url',
     //   builder: (context, state) {
