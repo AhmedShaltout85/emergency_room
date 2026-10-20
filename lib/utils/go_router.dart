@@ -2,6 +2,8 @@ import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
 import 'package:emergency_room/screens/center_emergency/labs_reports_dashboard_screen.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
+import 'package:emergency_room/screens/emeregency_room/controller/complaint_provider.dart';
+import 'package:emergency_room/screens/emeregency_room/repo/complaint_repo.dart';
 import 'package:emergency_room/screens/manage_system/control/approval_authority_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/complaint_type_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart';
@@ -31,6 +33,7 @@ import 'package:emergency_room/screens/manage_system/view/manage_sectors_screen.
 import 'package:emergency_room/screens/manage_system/view/manage_system_screen.dart';
 import 'package:emergency_room/screens/manage_system/view/manage_users_screen.dart';
 import 'package:emergency_room/screens/monitor_opening_complaints.dart';
+import 'package:emergency_room/screens/stores_qty.dart';
 import 'package:flutter/material.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
@@ -67,9 +70,17 @@ final router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
+    // GoRoute(
+    //   path: '/emergency',
+    //   builder: (context, state) => const AddressToCoordinates(),
+    // ),
+    //TODO: ADD COMPLAINTS SCREEN(20-10-2026--NOT_TESTED)
     GoRoute(
       path: '/emergency',
-      builder: (context, state) => const AddressToCoordinates(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ComplaintProvider(ComplaintRepo()),
+        child: const AddressToCoordinates(),
+      ),
     ),
     GoRoute(
       path: '/handasah',
@@ -201,6 +212,12 @@ final router = GoRouter(
         );
       },
     ),
+    //TODO: STORES Qty ROUTE(20-10-2026)
+    GoRoute(
+      path: '/stores-qty',
+      builder: (context, state) => const StoresQty(),
+    ),
+
     GoRoute(
       path: '/integration-with-labs',
       builder: (context, state) => const LabsReportsDashboardScreen(),

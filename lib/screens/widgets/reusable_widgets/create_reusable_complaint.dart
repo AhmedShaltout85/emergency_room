@@ -662,7 +662,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                                   Text(
                                     'حفظ البلاغ',
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo',
                                     ),
@@ -705,7 +705,7 @@ class _CreateReusableComplaintState extends State<CreateReusableComplaint> {
                               child: const Text(
                                 'إعادة تعيين',
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo',
                                 ),
