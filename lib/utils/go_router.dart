@@ -13,7 +13,6 @@ import 'package:emergency_room/screens/manage_system/control/repaire_status_prov
 import 'package:emergency_room/screens/manage_system/control/risk_status_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/sector_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
-import 'package:emergency_room/screens/manage_system/model/user_model.dart';
 import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/complaint_type_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
