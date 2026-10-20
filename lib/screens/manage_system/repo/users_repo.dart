@@ -59,6 +59,23 @@ class UsersRepo {
         return res.data?.toString() ?? '';
       });
 
+  /// PUT /change-password
+  Future<String> changePassword({
+    required String userName,
+    required String oldPassword,
+    required String newPassword,
+  }) =>
+      _guard(() async {
+        final res = await _dio.put(
+          '$baseUrl/change-password',
+          data: {
+            'userName': userName,
+            'oldPassword': oldPassword,
+            'newPassword': newPassword,
+          },
+        );
+        return res.data?.toString() ?? '';
+      });
   // ---------------------------------------------------------------------
 
   Future<T> _guard<T>(Future<T> Function() call) async {
@@ -113,6 +130,18 @@ class UsersRepo {
       case DioExceptionType.badResponse:
         final code = e.response?.statusCode;
         final serverMsg = _serverMessage(e);
+        if (code == 401) {
+          return AppFailure(
+            serverMsg ?? 'كلمة المرور الحالية غير صحيحة',
+            statusCode: code,
+          );
+        }
+        if (code == 400) {
+          return AppFailure(
+            serverMsg ?? 'البيانات غير صحيحة',
+            statusCode: code,
+          );
+        }
         if (code == 404) {
           return AppFailure(
             serverMsg ?? 'المسار أو العنصر غير موجود (404)',

@@ -13,6 +13,7 @@ import 'package:emergency_room/screens/manage_system/control/repaire_status_prov
 import 'package:emergency_room/screens/manage_system/control/risk_status_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/sector_provider.dart';
 import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
+import 'package:emergency_room/screens/manage_system/model/user_model.dart';
 import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/complaint_type_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
@@ -304,15 +305,23 @@ final router = GoRouter(
       builder: (context, state) => const ManageSystemScreen(),
     ),
 
-   //TODO: ADD MANAGE USERS ROUTE
-    GoRoute(
+    //TODO: ADD MANAGE USERS ROUTE
+GoRoute(
       path: '/change-user-password',
-      builder: (context, state) => ChangeNotifierProvider(
-        create: (_) => UsersProvider(UsersRepo()),
-        child: const ChangeUserPassword(),
-      ),
+      name: 'changeUserPassword',
+      builder: (context, state) {
+        final userName = state.extra as String?;
+        if (userName == null || userName.isEmpty) {
+          return const Scaffold(
+            body: Center(child: Text('لم يتم تحديد المستخدم')),
+          );
+        }
+        return ChangeNotifierProvider(
+          create: (_) => UsersProvider(UsersRepo()),
+          child: ChangeUserPassword(userName: userName),
+        );
+      },
     ),
-   
     // GoRoute(
     //   path: '/web-view-iframe/:url',
     //   builder: (context, state) {

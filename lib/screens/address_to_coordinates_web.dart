@@ -8,6 +8,8 @@ import 'package:emergency_room/screens/emeregency_room/controller/complaint_prov
 import 'package:emergency_room/screens/emeregency_room/model/complaint_model.dart';
 import 'package:emergency_room/screens/emeregency_room/repo/complaint_repo.dart';
 import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart';
+import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
+import 'package:emergency_room/screens/manage_system/model/user_model.dart';
 import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/complaint_type_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
@@ -1179,12 +1181,16 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             size: 17,
           ),
           actions: [
-            IconButton(iconSize: 30,
+            //TODO: ADD CHANGE PASSWORD ROUTE(20-10-2026-NOT_TESTED)
+            IconButton(
+              iconSize: 30,
               padding: const EdgeInsets.symmetric(horizontal: 15),
               tooltip: "تغيير كلمة المرور",
               hoverColor: Colors.yellow,
               onPressed: () {
-                context.go('/change-user-password');
+                final userName = CacheHelper.getData(key: 'username');
+                if (userName.isEmpty) return;
+                context.push<bool>('/change-user-password', extra: userName);
               },
               icon: const Icon(
                 Icons.password,
@@ -1207,7 +1213,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
             ),
             IconButton(
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              tooltip: "الادارة والاعدادت",iconSize: 30,
+              tooltip: "الادارة والاعدادت",
+              iconSize: 30,
               hoverColor: Colors.yellow,
               icon: const Icon(
                 Icons.miscellaneous_services,
@@ -1246,7 +1253,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                       fontSize: 14,
                     ),
                   ),
-                   SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Icon(
                     Icons.logout,
                     color: Colors.red,

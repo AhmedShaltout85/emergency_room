@@ -89,6 +89,20 @@ class UsersProvider extends ChangeNotifier {
     return true;
   }
 
+//TODO: change
+  Future<bool> changePassword({
+    required String userName,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final result = await _run(() => _repo.changePassword(
+          userName: userName,
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+        ));
+    return result != null;
+  }
+
   Future<bool> remove(UserModel user) async {
     final id = user.id;
     if (id == null) return false;
