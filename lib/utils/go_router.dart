@@ -1,4 +1,3 @@
-import 'package:emergency_room/labs/view/dashboard_charts_list.dart';
 import 'package:emergency_room/screens/center_emergency/labs_reports_dashboard_screen.dart';
 import 'package:emergency_room/screens/center_emergency/scada_dashboard_screen.dart';
 import 'package:emergency_room/screens/complaints_report_dashboard.dart';
