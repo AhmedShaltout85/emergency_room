@@ -8,8 +8,6 @@ import 'package:emergency_room/screens/emeregency_room/controller/complaint_prov
 import 'package:emergency_room/screens/emeregency_room/model/complaint_model.dart';
 import 'package:emergency_room/screens/emeregency_room/repo/complaint_repo.dart';
 import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart';
-import 'package:emergency_room/screens/manage_system/control/users_provider.dart';
-import 'package:emergency_room/screens/manage_system/model/user_model.dart';
 import 'package:emergency_room/screens/manage_system/repo/approval_authority_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/complaint_type_repo.dart';
 import 'package:emergency_room/screens/manage_system/repo/handasah_repo.dart';
