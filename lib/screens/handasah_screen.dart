@@ -1903,6 +1903,33 @@ class _HandasahScreenState extends State<HandasahScreen> {
                 );
               },
             ),
+                    IconButton(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              tooltip: "تسجيل الخروج",
+              hoverColor: Colors.yellow,
+              icon: const Row(
+                children: [
+                  Text(
+                    'تسجيل الخروج',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Icon(
+                    Icons.logout,
+                    color: Colors.red,
+                  ),
+                ],
+              ),
+              onPressed: () {
+                CacheHelper.removeData(key: 'username');
+                CacheHelper.removeData(key: 'handasahName');
+                CacheHelper.clearAllData();
+                context.go('/login');
+              },
+            ),
             const SizedBox(width: 8),
           ],
         ),
