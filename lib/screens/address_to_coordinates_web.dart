@@ -112,6 +112,7 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   List<Map<String, dynamic>> _hotlineData = [];
 
   @override
+  @override
   void dispose() {
     addressController.dispose();
     _complaints.dispose();
@@ -1259,6 +1260,9 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
                 ],
               ),
               onPressed: () {
+                CacheHelper.removeData(key: 'username');
+                CacheHelper.removeData(key: 'handasahName');
+                CacheHelper.clearAllData();
                 context.go('/login');
               },
             ),

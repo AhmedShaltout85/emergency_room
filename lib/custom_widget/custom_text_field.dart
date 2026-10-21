@@ -28,7 +28,7 @@ class CustomTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         textInputAction: textInputAction,
-        style: const TextStyle(fontSize: 10),
+        style: const TextStyle(fontSize: 8),
         obscureText: obscureText,
         decoration: InputDecoration(
           prefixIcon: prefixIcon,

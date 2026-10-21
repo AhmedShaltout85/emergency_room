@@ -89,6 +89,7 @@ class _CustomAlertDailogCreateHandasahUsersState
             suffixIcon: const SizedBox.shrink(),
             obscureText: false,
             textInputAction: TextInputAction.next,
+            
           ),
           const SizedBox(height: 20),
           Align(

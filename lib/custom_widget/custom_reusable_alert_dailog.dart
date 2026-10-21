@@ -45,7 +45,7 @@ class _CustomReusableAlertDialogState extends State<CustomReusableAlertDialog> {
         widget.title,
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 15,
+          fontSize: 11,
           color: Colors.indigo,
         ),
       ),

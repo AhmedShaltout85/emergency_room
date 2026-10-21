@@ -314,6 +314,9 @@ class DioNetworkRepos {
           key: 'username',
           value: response.data['username'],
         );
+         StaticVariables.handasahName = response.data['controlUnit'];
+        CacheHelper.saveData(
+            key: 'handasahName', value: response.data['controlUnit']);
          log("PRINTED DATA FROM API USERNAME FROM CACHE: ${CacheHelper.getData(
           key: 'username',
         )}");
@@ -352,6 +355,8 @@ class DioNetworkRepos {
           key: 'username',
           value: response.data['username'],
         );
+        StaticVariables.handasahName = response.data['controlUnit'];
+        CacheHelper.saveData(key: 'handasahName', value: response.data['controlUnit']);
         log("PRINTED DATA FROM API USERNAME FROM CACHE: ${CacheHelper.getData(
           key: 'username',
         )}");
