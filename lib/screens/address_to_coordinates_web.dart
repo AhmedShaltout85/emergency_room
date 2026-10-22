@@ -113,25 +113,32 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   List<Map<String, dynamic>> _hotlineData = [];
 
   //
-     // field, next to _complaints
-   final ComplaintLiveUpdates _live = ComplaintLiveUpdates();
+  // field, next to _complaints
+  final ComplaintLiveUpdates _live = ComplaintLiveUpdates();
 
-  
-
-  
-
-  @override
   @override
   void dispose() {
     addressController.dispose();
     _complaints.dispose();
+    _live.stop();
     if (!_controller.isCompleted) {
+      _controller.future.ignore(); // nobody awaiting → don't report it
       _controller.completeError('Widget disposed');
     }
-     // dispose(), before super.dispose();
-    _live.stop();
     super.dispose();
   }
+
+  // @override
+  // void dispose() {
+  //   addressController.dispose();
+  //   _complaints.dispose();
+  //   if (!_controller.isCompleted) {
+  //     _controller.completeError('Widget disposed');
+  //   }
+  //    // dispose(), before super.dispose();
+  //   _live.stop();
+  //   super.dispose();
+  // }
 
   //TODO:convert GIS-HANDASAH-NAME-TO-EMERGENCY-HANDASAH-NAME(inprogress-21-02-2026)
   String convertGisHandasahNameToEmergencyHandasahName(
@@ -341,11 +348,25 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   @override
   void initState() {
     super.initState();
-     // initState(), after _startPeriodicFetch();
-   _live.start(() {
-     if (mounted) _complaints.refreshQuietly();
-   });
+    Timer? _fallbackTimer; // field, next to _live
+
+    // initState(), replace the _live.start(...) block with:
+    _live.start(() {
+      if (mounted && !_isLoading) _complaints.refreshQuietly();
+    });
+    _fallbackTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (mounted) _complaints.refreshQuietly();
+    });
     fetchData();
+
+    // dispose(): add
+    _fallbackTimer?.cancel();
+
+    //    // initState(), after _startPeriodicFetch();
+    //  _live.start(() {
+    //    if (mounted) _complaints.refreshQuietly();
+    //  });
+    //   fetchData();
   }
 
   // ==================== UI: _getCoordinatesFromAddress ====================
@@ -1202,7 +1223,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               tooltip: "تغيير كلمة المرور",
               hoverColor: Colors.yellow,
               onPressed: () {
-                final userName = CacheHelper.getData(key: 'username');
+                final userName =
+                    (CacheHelper.getData(key: 'username') ?? '').toString();
                 if (userName.isEmpty) return;
                 context.push<bool>('/change-user-password', extra: userName);
               },

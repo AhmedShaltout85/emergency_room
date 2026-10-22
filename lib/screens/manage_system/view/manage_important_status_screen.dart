@@ -141,6 +141,7 @@ class _ManageImportantStatusScreenState
               : null,
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: null, // ← add this to EVERY FloatingActionButton
           onPressed: p.isBusy ? null : () => _openForm(),
           icon: const Icon(Icons.add_rounded),
           label: const Text('إضافة حالة مهمة'),

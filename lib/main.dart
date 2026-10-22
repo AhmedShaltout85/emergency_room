@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:emergency_room/utils/cache_helper.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +11,12 @@ import 'utils/go_router.dart';
 void main() async {
   setPathUrlStrategy(); // Removes the # from URLs
 await CacheHelper.init();
+  PlatformDispatcher.instance.onError = (error, stack) {
+    // returning true = handled (silenced)
+    return error
+        .toString()
+        .contains('Maps cannot be retrieved before calling buildView');
+  };
   runApp(
     const MyApp(),
   );

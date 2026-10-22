@@ -1270,6 +1270,7 @@ class _TrackingState extends State<Tracking> {
         children: [
           // Zoom to fit button
           FloatingActionButton.small(
+            
             onPressed: _fitBounds,
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
@@ -1283,6 +1284,7 @@ class _TrackingState extends State<Tracking> {
           // Current location button
           if (_currentLatitude != 0 && _currentLongitude != 0)
             FloatingActionButton.small(
+              
               onPressed: () {
                 if (_mapController != null) {
                   LatLng target;

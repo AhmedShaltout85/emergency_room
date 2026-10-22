@@ -133,6 +133,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               : null,
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: null, // ← add this to EVERY FloatingActionButton
+
           onPressed: p.isBusy ? null : _openCreate,
           icon: const Icon(Icons.person_add_alt_1_rounded),
           label: const Text('إضافة مستخدم'),
