@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:emergency_room/network/remote/remote_network_repos.dart';
 import 'package:emergency_room/screens/manage_system/model/handasah_model.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 
 
 /// A user-friendly failure the UI/provider can display.
@@ -29,7 +30,7 @@ class HandasahRepo {
 
   // Android emulator → http://10.0.2.2:9999 ; real device → your PC's LAN IP.
   static const String baseUrl =
-      'http://localhost:9999/pick-location/api/v1/handasah';
+      '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/handasah';
 
   /// GET /all → list of handasah names
   Future<List<String>> getAllNames() => _guard(() async {

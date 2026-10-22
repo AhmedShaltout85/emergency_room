@@ -2,6 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:emergency_room/network/remote/remote_network_repos.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 import 'package:flutter/foundation.dart';
 
 import '../model/sector_model.dart';
@@ -14,7 +15,7 @@ class SectorRepo {
 
   // Android emulator → http://10.0.2.2:9999 ; real device → your PC's LAN IP.
   static const String baseUrl =
-      'http://localhost:9999/pick-location/api/v1/sectors';
+      '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/sectors';
 
   /// GET /all
   Future<List<SectorModel>> getAll() => _guard(() async {

@@ -48,7 +48,7 @@ const String CMS_BASE_URI_IP_ADDRESS_RESOLVER =
 
 /////////    ONLINE SERVER ///////
 const String WEBRTC_BASE_URI_IP_ADDRESS_WEB_SOCKET =
-    'ws://dr.awcoprod.com:5090'; // publish WEBRTC WEB SOCKET ONLINE server
+    'ws://dr.awcoprod.com:8099'; // publish WEBRTC WEB SOCKET ONLINE server
 const String BASE_URI_IP_ADDRESS_LOCAL_HOST =
     "http://dr.awcoprod.com:8099"; //publish and handheld online server(resolver-name-OR-DOMAIN-name)
 // "http://41.33.226.211:8099"; //publish and handheld online server

@@ -8,6 +8,7 @@
 // pubspec.yaml:  web_socket_channel: ^3.0.1
 
 import 'dart:async';
+import 'package:emergency_room/utils/app_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -17,7 +18,7 @@ class ComplaintLiveUpdates {
   /// Same host / port / context path as ComplaintRepo.baseUrl, but ws://
   /// (use wss:// when the API is served over https).
   static const String defaultUrl =
-      'ws://localhost:9999/pick-location/ws/complaints';
+      '$WEBRTC_BASE_URI_IP_ADDRESS_WEB_SOCKET/pick-location/ws/complaints';
 
   final String _url;
 

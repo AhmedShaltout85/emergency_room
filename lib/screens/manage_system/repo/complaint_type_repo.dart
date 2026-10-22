@@ -2,6 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:emergency_room/network/remote/remote_network_repos.dart';
+import 'package:emergency_room/utils/app_constants.dart';
 import 'package:flutter/foundation.dart';
 
 import '../model/complaint_type_model.dart';
@@ -14,7 +15,7 @@ class ComplaintTypeRepo {
 
   // Android emulator → http://10.0.2.2:9999 ; real device → your PC's LAN IP.
   static const String baseUrl =
-      'http://localhost:9999/pick-location/api/v1/complaint-types';
+      '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaint-types';
 
   /// GET /all
   Future<List<ComplaintTypeModel>> getAll() => _guard(() async {

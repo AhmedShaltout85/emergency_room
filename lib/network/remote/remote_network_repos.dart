@@ -1081,7 +1081,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          // "http://localhost:9999/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
+          // "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
           "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/users-requests-tools/address/$address/tool-name/$toolName",
           data: {
             "toolQty": toolQty,
@@ -1277,7 +1277,7 @@ class DioNetworkRepos {
       int labCode, String testCode) async {
     final url =
         '$BASE_URI_IP_ADDRESS_LOCAL_HOST/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
-    // 'http://localhost:9999/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
+    // '$BASE_URI_IP_ADDRESS_LOCAL_HOST/labs-integration-with-emergency/api/v1/labs-w-emergency/test-values-last/$labCode/$testCode';
 
     try {
       final response = await dio.get(url);
@@ -1305,12 +1305,12 @@ class DioNetworkRepos {
   }
 
   //NEW-EMERGENCY-COMPLAINTS
-  //http://localhost:9999/pick-location/api/v1/complaints/all
+  //$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/all
   //46-- GET ALL EMERGENCY COMPLAINTS(REPORTS)
   Future<List<Map<String, dynamic>>> getAllComplaints() async {
     try {
       final response = await dio
-          .get('http://localhost:9999/pick-location/api/v1/complaints/all');
+          .get('$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/all');
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
         return List<Map<String, dynamic>>.from(response.data);
@@ -1328,7 +1328,7 @@ class DioNetworkRepos {
   Future<List<Map<String, dynamic>>> getAllOpeningComplaints() async {
     try {
       final response = await dio.get(
-          'http://localhost:9999/pick-location/api/v1/complaints/status/مفتوح');
+          '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/status/مفتوح');
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
         return List<Map<String, dynamic>>.from(response.data);
@@ -1346,7 +1346,7 @@ class DioNetworkRepos {
   Future<List<Map<String, dynamic>>> getAllComplaintsNotFinished() async {
     try {
       final response = await dio.get(
-          'http://localhost:9999/pick-location/api/v1/complaints/finished/0');
+          '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/finished/0');
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
         return List<Map<String, dynamic>>.from(response.data);
@@ -1366,7 +1366,7 @@ class DioNetworkRepos {
       String complaintId, String urgencyNumber) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/urgency-number",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/urgency-number",
           data: {
             "urgencyNumber": urgencyNumber,
           });
@@ -1386,7 +1386,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/recipient",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/recipient",
           data: {
             "recipientDestination": recieptionDestination,
             "recipientUser": "لم يدرج",
@@ -1406,7 +1406,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/repeat-complaint-number",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/repeat-complaint-number",
           data: {"repeatComplaintNumber": repeatComplaintNumber});
       log(response.data.toString());
       return response.data;
@@ -1423,7 +1423,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/approval-authority",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/approval-authority",
           data: {"approvalAuthority": approvalAuthority});
       log(response.data.toString());
       return response.data;
@@ -1437,7 +1437,7 @@ class DioNetworkRepos {
   Future<List<String>> getApprovalNamesOnly() async {
     try {
       final response = await dio.get(
-          'http://localhost:9999/pick-location/api/v1/approval-authorities/all'); // Replace with your actual endpoint
+          '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/approval-authorities/all'); // Replace with your actual endpoint
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
 
@@ -1464,7 +1464,7 @@ class DioNetworkRepos {
   Future<void> closeComplaintByIsFinished(int complaintId) async {
     try {
       await dio.put(
-        'http://localhost:9999/pick-location/api/v1/complaints/$complaintId/finish',
+        '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/finish',
       );
 
       log('Address finished successfully');
@@ -1481,7 +1481,7 @@ class DioNetworkRepos {
   ) async {
     try {
       final response = await dio.put(
-          "http://localhost:9999/pick-location/api/v1/complaints/$complaintId/status-flags",
+          "$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/$complaintId/status-flags",
           data: {
             "isFinished": 1,
             "isDeleted": 1,
@@ -1520,7 +1520,7 @@ class DioNetworkRepos {
   }) async {
     try {
       final response = await dio.post(
-        'http://localhost:9999/pick-location/api/v1/complaints/create', // Update with your endpoint
+        '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/complaints/create', // Update with your endpoint
 
         options: Options(
           headers: {
@@ -1576,7 +1576,7 @@ class DioNetworkRepos {
     ) async {
     try {
       final response = await dio.get(
-          'http://localhost:9999/pick-location/api/v1/$endPiont/all'); // Replace with your actual endpoint
+          'BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/$endPiont/all'); // Replace with your actual endpoint
       if (response.statusCode == 200) {
         log("API Response: ${response.data}");
 
