@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:emergency_room/screens/emeregency_room/controller/complaint_live_updates.dart';
 import 'package:emergency_room/screens/emeregency_room/controller/complaint_provider.dart';
 import 'package:emergency_room/screens/emeregency_room/model/complaint_model.dart';
 import 'package:emergency_room/screens/emeregency_room/repo/complaint_repo.dart';
@@ -111,6 +112,14 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   bool _hasData = false;
   List<Map<String, dynamic>> _hotlineData = [];
 
+  //
+     // field, next to _complaints
+   final ComplaintLiveUpdates _live = ComplaintLiveUpdates();
+
+  
+
+  
+
   @override
   @override
   void dispose() {
@@ -119,6 +128,8 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
     if (!_controller.isCompleted) {
       _controller.completeError('Widget disposed');
     }
+     // dispose(), before super.dispose();
+    _live.stop();
     super.dispose();
   }
 
@@ -330,6 +341,10 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
   @override
   void initState() {
     super.initState();
+     // initState(), after _startPeriodicFetch();
+   _live.start(() {
+     if (mounted) _complaints.refreshQuietly();
+   });
     fetchData();
   }
 
