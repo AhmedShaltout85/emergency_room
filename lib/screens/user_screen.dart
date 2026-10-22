@@ -1430,7 +1430,6 @@ import '../network/remote/remote_network_repos.dart';
 import 'package:emergency_room/screens/manage_system/control/handasah_provider.dart'
     show LoadState;
 
-
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
 
@@ -1999,7 +1998,8 @@ class _UserScreenState extends State<UserScreen> {
                         Icons.open_in_browser,
                         Colors.blue,
                         'اظهار الموقع على الخريطة GIS Map',
-                        () => _openGisMap(item.gisLink, item.complaintAddress),
+                        () => _openGisMap(item.gisLink, item.complaintAddress,
+                            item.latitude, item.longitude),
                       ),
                       _buildIconButton(
                         Icons.phone,
@@ -2054,13 +2054,15 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  void _openGisMap(String url, String title) {
+  void _openGisMap(String url, String title, String lat, String lng) {
     log("Start Gis Map $url");
     final link = url.trim();
     if (link.isEmpty || link == 'لم يدرج' || link == 'free') {
       // Shown in the real centre of the screen (fluttertoast ignores
       // ToastGravity.CENTER on web).
       showCenterToast(context, "لا يوجد رابط GIS Map");
+      CustomBrowserRedirect.openInBrowser(
+          'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
     } else {
       // if (kIsWeb) {
       CustomBrowserRedirect.openInBrowser(url);
