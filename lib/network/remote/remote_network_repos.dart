@@ -720,25 +720,52 @@ class DioNetworkRepos {
   }
 
   //24-- Get location for tracking By address And Technician (FETCH-LocationToBackend)
-  Future getLocationByAddressAndTechnician(
+  // Future getLocationByAddressAndTechnician(
+  //     String address, String technicianName) async {
+  //   var urlGetCertainLocationByAddressAndTechnician =
+  //       '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/track-location/address/$address/tech-name/$technicianName';
+  //   try {
+  //     var response = await dio.get(urlGetCertainLocationByAddressAndTechnician);
+  //     if (response.statusCode == 200) {
+  //       log("PRINTED DATA FROM API:  ${response.data}");
+  //       return response.data;
+  //     } else {
+  //       log('List is empty');
+  //       return [];
+  //     }
+  //   } catch (e) {
+  //     log(e.toString());
+  //     // throw Exception(e);
+  //   }
+  // }
+//24-- Get location for tracking By address And Technician
+  /// Returns the tracking row as a Map, or null when there is no tracking
+  /// record yet (404). Real failures (timeout, 500, no network) are rethrown
+  /// so the caller can show "خطأ في جلب الموقع".
+  Future<Map<String, dynamic>?> getLocationByAddressAndTechnician(
       String address, String technicianName) async {
-    var urlGetCertainLocationByAddressAndTechnician =
-        '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/track-location/address/$address/tech-name/$technicianName';
+    final url = '$BASE_URI_IP_ADDRESS_LOCAL_HOST/pick-location/api/v1/'
+        'track-location/address/${Uri.encodeComponent(address)}'
+        '/tech-name/${Uri.encodeComponent(technicianName)}';
+
     try {
-      var response = await dio.get(urlGetCertainLocationByAddressAndTechnician);
-      if (response.statusCode == 200) {
-        log("PRINTED DATA FROM API:  ${response.data}");
-        return response.data;
-      } else {
-        log('List is empty');
-        return [];
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data is Map) {
+        return Map<String, dynamic>.from(response.data as Map);
       }
-    } catch (e) {
-      log(e.toString());
-      // throw Exception(e);
+
+      log('No tracking data (status ${response.statusCode})');
+      return null;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        log('No tracking row yet for $address / $technicianName');
+        return null;
+      }
+      log('getLocationByAddressAndTechnician failed: $e');
+      rethrow;
     }
   }
-
   //25-- CHECK if address exists(checkAddressExistsInTracking)
   Future<bool> checkAddressExistsInTracking(String address) async {
     String encodedAddress = Uri.encodeComponent(address);

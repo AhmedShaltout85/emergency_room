@@ -52,6 +52,12 @@ class _TrackingState extends State<Tracking> {
   bool _mapReady = false;
   bool _hasRoute = false;
 
+  /// Prevents overlapping requests if the server is slow (timer fires every 30s).
+  bool _isFetchingLocation = false;
+
+  /// True once the destination camera move was done (no tracking data case).
+  bool _destinationFocused = false;
+
   List<LatLng> _routePoints = [];
   int _polylineCounter = 0;
 
@@ -59,8 +65,10 @@ class _TrackingState extends State<Tracking> {
   static const double _infoCardMaxWidth = 500;
   static const double _infoCardMinWidth = 300;
 
-  static const String _googleMapsApiKey =
-      'AIzaSyDRaJJnyvmDSU8OgI8M20C5nmwHNc_AMvk';
+  // NOTE: The Google Maps API key was removed from source code.
+  // For Flutter web, put it in web/index.html and restrict it by HTTP referrer.
+  // For Android/iOS, put it in AndroidManifest.xml / AppDelegate and restrict it by app ID.
+
   static const Duration _locationUpdateInterval = Duration(seconds: 30);
 
   DateTime? _lastLocationUpdateTime;
@@ -71,6 +79,14 @@ class _TrackingState extends State<Tracking> {
   bool _isSimulating = false;
   double _simulationProgress = 0.0;
   LatLng? _simulatedPosition;
+
+  /// Destination parsed safely (null if the complaint has invalid coordinates).
+  LatLng? get _destination {
+    final lat = _parseDouble(widget.latitude);
+    final lng = _parseDouble(widget.longitude);
+    if (lat == null || lng == null) return null;
+    return LatLng(lat, lng);
+  }
 
   @override
   void initState() {
@@ -95,17 +111,13 @@ class _TrackingState extends State<Tracking> {
     // Don't dispose the controller on web to avoid the assertion error
     try {
       if (_mapController != null) {
-        // For web platform, we need to handle this differently
-        // due to a bug in google_maps_flutter_web
         if (!kIsWeb) {
-          // Only dispose on mobile platforms
           _mapController!.dispose();
         }
         _mapController = null;
       }
     } catch (error) {
       debugPrint('⚠️ Error during map controller cleanup: $error');
-      // Ignore the error and continue with disposal
     }
 
     super.dispose();
@@ -117,12 +129,15 @@ class _TrackingState extends State<Tracking> {
     });
 
     await _loadCustomMarkers();
+    if (!mounted) return;
     _startPulseAnimation();
 
     // Get initial location with delay to ensure everything is ready
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
     await _getCurrentLocation();
 
+    if (!mounted) return;
     _startLocationTracking();
   }
 
@@ -157,8 +172,6 @@ class _TrackingState extends State<Tracking> {
     }
 
     try {
-      // Technician marker (red with person)
-      // _technicianIcon = await _createTechnicianMarker();
       _technicianIcon =
           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
       debugPrint('✅ Technician marker created');
@@ -267,16 +280,33 @@ class _TrackingState extends State<Tracking> {
 
   void _startLocationTracking() {
     _locationTimer = Timer.periodic(_locationUpdateInterval, (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       debugPrint('🔄 Periodic location update');
       _getCurrentLocation();
     });
   }
 
+  // ==========================================================================
+  // FIXED: safe location fetching.
+  //
+  // The repo returns null when the server answers 404 (no tracking row yet,
+  // e.g. the technician has not accepted the complaint). Previously the code
+  // did locationData['currentLatitude'] on that null → NoSuchMethodError.
+  //
+  // Now the response is typed as `dynamic` and checked with `is Map`, so this
+  // works whatever the repo returns (null, Map, or something unexpected).
+  // ==========================================================================
   Future<void> _getCurrentLocation() async {
+    if (_isFetchingLocation) return;
+    _isFetchingLocation = true;
+
     try {
       debugPrint('📡 Fetching location from API...');
 
-      final locationData =
+      final dynamic raw =
           await DioNetworkRepos().getLocationByAddressAndTechnician(
         widget.address,
         widget.technicianName,
@@ -287,6 +317,14 @@ class _TrackingState extends State<Tracking> {
         return;
       }
 
+      // No tracking record yet (404 / null / unexpected shape).
+      if (raw is! Map) {
+        debugPrint('ℹ️ No tracking data for this complaint yet');
+        await _handleNoTrackingData();
+        return;
+      }
+
+      final Map locationData = raw;
       debugPrint('📦 API Response received');
 
       final newLat = _parseDouble(locationData['currentLatitude']);
@@ -294,6 +332,7 @@ class _TrackingState extends State<Tracking> {
 
       if (newLat == null || newLng == null) {
         debugPrint('❌ Invalid location data received');
+        await _handleNoTrackingData();
         return;
       }
 
@@ -315,9 +354,15 @@ class _TrackingState extends State<Tracking> {
           _currentLatitude = newLat;
           _currentLongitude = newLng;
           _lastLocationUpdateTime = DateTime.now();
+          if (_apiStatus == 'لم يبدأ التتبع بعد' ||
+              _apiStatus == 'خطأ في جلب الموقع' ||
+              _apiStatus == 'جاهز') {
+            _apiStatus = 'متابعة مباشرة';
+          }
         });
 
         await _updateMarkers();
+        if (!mounted) return;
 
         if (!_hasRoute) {
           await _calculateRealisticRoute();
@@ -329,6 +374,40 @@ class _TrackingState extends State<Tracking> {
       if (mounted) {
         setState(() => _apiStatus = 'خطأ في جلب الموقع');
       }
+    } finally {
+      _isFetchingLocation = false;
+    }
+  }
+
+  /// Normal state when the technician has no tracking record yet:
+  /// show the destination on the map and a friendly status, no error.
+  Future<void> _handleNoTrackingData() async {
+    if (!mounted) return;
+
+    setState(() {
+      _apiStatus = 'لم يبدأ التتبع بعد';
+      if (!_hasRoute) {
+        _routeDistance = '--';
+        _routeDuration = '--';
+      }
+    });
+
+    await _updateMarkers();
+    if (!mounted) return;
+
+    // Focus the camera on the destination once.
+    final dest = _destination;
+    if (!_destinationFocused &&
+        dest != null &&
+        _mapReady &&
+        _mapController != null) {
+      _destinationFocused = true;
+      try {
+        await _mapController!
+            .animateCamera(CameraUpdate.newLatLngZoom(dest, 15));
+      } catch (error) {
+        debugPrint('⚠️ Error moving camera to destination: $error');
+      }
     }
   }
 
@@ -336,17 +415,16 @@ class _TrackingState extends State<Tracking> {
     if (value == null) return null;
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value);
+    if (value is String) return double.tryParse(value.trim());
     return null;
   }
 
   Future<void> _updateMarkers() async {
     if (!mounted) return;
 
-    final destLat = _parseDouble(widget.latitude);
-    final destLng = _parseDouble(widget.longitude);
+    final dest = _destination;
 
-    if (destLat == null || destLng == null) {
+    if (dest == null) {
       debugPrint('⚠️ Invalid destination coordinates');
       return;
     }
@@ -359,7 +437,7 @@ class _TrackingState extends State<Tracking> {
       // Destination marker
       _markers[const MarkerId('destination')] = Marker(
         markerId: const MarkerId('destination'),
-        position: LatLng(destLat, destLng),
+        position: dest,
         infoWindow: InfoWindow(
           title: '📍 الوجهة',
           snippet: 'العنوان: ${widget.address}',
@@ -432,22 +510,21 @@ class _TrackingState extends State<Tracking> {
       return;
     }
 
-    final destLat = _parseDouble(widget.latitude);
-    final destLng = _parseDouble(widget.longitude);
+    final destination = _destination;
 
-    if (destLat == null || destLng == null) {
+    if (destination == null) {
       debugPrint('❌ ABORT: Destination is invalid');
       return;
     }
 
     final source = LatLng(_currentLatitude, _currentLongitude);
-    final destination = LatLng(destLat, destLng);
 
     debugPrint(
         '📍 المصدر: ${source.latitude.toStringAsFixed(6)}, ${source.longitude.toStringAsFixed(6)}');
     debugPrint(
         '📍 الوجهة: ${destination.latitude.toStringAsFixed(6)}, ${destination.longitude.toStringAsFixed(6)}');
 
+    if (!mounted) return;
     setState(() {
       _isLoadingRoute = true;
       _apiStatus = 'جاري حساب المسار...';
@@ -458,11 +535,13 @@ class _TrackingState extends State<Tracking> {
     // Calculate realistic route
     await _createRealisticRoute(source, destination);
 
+    if (!mounted) return;
     setState(() => _isLoadingRoute = false);
 
     if (_mapReady && _mapController != null && _routePoints.isNotEmpty) {
       debugPrint('📷 جاري ضبط الكاميرا لعرض المسار...');
       await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
       _fitBounds();
     }
 
@@ -485,6 +564,7 @@ class _TrackingState extends State<Tracking> {
       final estimatedMinutes = ((distance / 30.0) * 60).ceil();
       final estimatedTime = '$estimatedMinutes دقيقة';
 
+      if (!mounted) return;
       setState(() {
         _routeDistance = '${distance.toStringAsFixed(1)} كم';
         _routeDuration = estimatedTime;
@@ -506,6 +586,7 @@ class _TrackingState extends State<Tracking> {
       final distance = _calculateDistance(origin, destination);
       final time = _estimateTime(distance);
 
+      if (!mounted) return;
       setState(() {
         _routeDistance = '${distance.toStringAsFixed(1)} كم';
         _routeDuration = '~$time دقيقة';
@@ -524,9 +605,6 @@ class _TrackingState extends State<Tracking> {
 
     // Add starting point (current technician location)
     points.add(start);
-
-    // Calculate intermediate points for a realistic Alexandria street route
-    // These points simulate common Alexandria streets and turns
 
     // Point 1: Initial turn
     final point1 = LatLng(
@@ -592,7 +670,7 @@ class _TrackingState extends State<Tracking> {
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         jointType: JointType.round,
-        geodesic: false, // Follows street curves
+        geodesic: false,
         consumeTapEvents: true,
         zIndex: 2,
       );
@@ -611,7 +689,7 @@ class _TrackingState extends State<Tracking> {
         zIndex: 1,
       );
 
-      setState(() {});
+      if (mounted) setState(() {});
       debugPrint('✅ تم إنشاء مسار واقعي يتبع شوارع الإسكندرية');
     } catch (error, stackTrace) {
       debugPrint('❌ خطأ في رسم المسار: $error');
@@ -622,6 +700,12 @@ class _TrackingState extends State<Tracking> {
   void _startSimulation() {
     if (_simulatedRoute.isEmpty) {
       debugPrint('❌ لا يوجد مسار للمحاكاة');
+      return;
+    }
+
+    final dest = _destination;
+    if (dest == null) {
+      debugPrint('❌ إحداثيات الوجهة غير صالحة');
       return;
     }
 
@@ -649,8 +733,7 @@ class _TrackingState extends State<Tracking> {
           // Update distance and time during simulation
           final remainingDistance = _calculateDistance(
             _simulatedPosition!,
-            LatLng(
-                double.parse(widget.latitude), double.parse(widget.longitude)),
+            dest,
           );
           final remainingTime = ((remainingDistance / 30.0) * 60).ceil();
 
@@ -712,15 +795,18 @@ class _TrackingState extends State<Tracking> {
     _stopSimulation();
     _simulationIndex = 0;
     _simulationProgress = 0.0;
+
+    final dest = _destination;
+    if (dest == null || _currentLatitude == 0.0 || _currentLongitude == 0.0) {
+      return;
+    }
+
+    final distance =
+        _calculateDistance(LatLng(_currentLatitude, _currentLongitude), dest);
+
     setState(() {
-      _routeDistance = '${_calculateDistance(
-        LatLng(_currentLatitude, _currentLongitude),
-        LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
-      ).toStringAsFixed(1)} كم';
-      _routeDuration = '~${_estimateTime(_calculateDistance(
-        LatLng(_currentLatitude, _currentLongitude),
-        LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
-      ))} دقيقة';
+      _routeDistance = '${distance.toStringAsFixed(1)} كم';
+      _routeDuration = '~${_estimateTime(distance)} دقيقة';
       _apiStatus = 'مسار على شوارع الإسكندرية';
     });
     debugPrint('🔄 إعادة تعيين المحاكاة');
@@ -745,7 +831,20 @@ class _TrackingState extends State<Tracking> {
   int _estimateTime(double km) => ((km / 30.0) * 60).ceil().clamp(5, 120);
 
   void _fitBounds() {
-    if (_routePoints.isEmpty || _mapController == null) return;
+    if (_mapController == null) return;
+
+    // No route yet (no tracking data): just focus on the destination.
+    if (_routePoints.isEmpty) {
+      final dest = _destination;
+      if (dest != null) {
+        try {
+          _mapController!.animateCamera(CameraUpdate.newLatLngZoom(dest, 15));
+        } catch (error) {
+          debugPrint('⚠️ Error focusing destination: $error');
+        }
+      }
+      return;
+    }
 
     try {
       // Calculate bounds from all route points
@@ -770,13 +869,11 @@ class _TrackingState extends State<Tracking> {
       minLng -= lngPadding;
       maxLng += lngPadding;
 
-      // Create bounds
       final bounds = LatLngBounds(
         southwest: LatLng(minLat, minLng),
         northeast: LatLng(maxLat, maxLng),
       );
 
-      // Animate camera to show the entire route with padding
       _mapController!.animateCamera(
         CameraUpdate.newLatLngBounds(bounds, 50),
       );
@@ -786,21 +883,17 @@ class _TrackingState extends State<Tracking> {
       debugPrint('❌ خطأ في ضبط الحدود: $error');
 
       // Fallback to simple view
-      if (_currentLatitude != 0 && _currentLongitude != 0) {
-        final destLat = _parseDouble(widget.latitude);
-        final destLng = _parseDouble(widget.longitude);
-
-        if (destLat != null && destLng != null) {
-          _mapController!.animateCamera(
-            CameraUpdate.newLatLngZoom(
-              LatLng(
-                (_currentLatitude + destLat) / 2,
-                (_currentLongitude + destLng) / 2,
-              ),
-              14,
+      final dest = _destination;
+      if (_currentLatitude != 0 && _currentLongitude != 0 && dest != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(
+              (_currentLatitude + dest.latitude) / 2,
+              (_currentLongitude + dest.longitude) / 2,
             ),
-          );
-        }
+            14,
+          ),
+        );
       }
     }
   }
@@ -810,12 +903,29 @@ class _TrackingState extends State<Tracking> {
     setState(() => _mapReady = true);
     debugPrint('✅ الخريطة جاهزة');
 
-    // If we have location, calculate route
     if (_currentLatitude != 0.0 && _currentLongitude != 0.0) {
+      // We have a location: calculate the route.
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted && !_hasRoute) {
           debugPrint('🎯 الخريطة جاهزة - جاري حساب المسار');
           _calculateRealisticRoute();
+        }
+      });
+    } else {
+      // No tracking data (yet): show the destination.
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted && _currentLatitude == 0.0 && _currentLongitude == 0.0) {
+          _updateMarkers();
+          final dest = _destination;
+          if (dest != null && !_destinationFocused && _mapController != null) {
+            _destinationFocused = true;
+            try {
+              _mapController!
+                  .animateCamera(CameraUpdate.newLatLngZoom(dest, 15));
+            } catch (error) {
+              debugPrint('⚠️ Error moving camera to destination: $error');
+            }
+          }
         }
       });
     }
@@ -869,7 +979,6 @@ class _TrackingState extends State<Tracking> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 70,
             left: 20,
-            // right: 20,
             child: Center(
               child: _buildInfoCard(cardWidth),
             ),
@@ -999,12 +1108,12 @@ class _TrackingState extends State<Tracking> {
                 _apiStatus,
                 style: TextStyle(
                   fontSize: 9,
-                  color: _apiStatus.contains('جاري')
+                  color: _apiStatus.contains('جاري') ||
+                          _apiStatus.contains('خطأ') ||
+                          _apiStatus.contains('تقريبي') ||
+                          _apiStatus.contains('لم يبدأ')
                       ? Colors.orange
-                      : _apiStatus.contains('خطأ') ||
-                              _apiStatus.contains('تقريبي')
-                          ? Colors.orange
-                          : Colors.green,
+                      : Colors.green,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1182,6 +1291,8 @@ class _TrackingState extends State<Tracking> {
       return Icons.arrow_forward;
     } else if (_apiStatus.contains('جاري حساب')) {
       return Icons.refresh;
+    } else if (_apiStatus.contains('لم يبدأ')) {
+      return Icons.hourglass_empty;
     } else if (_apiStatus.contains('جاهز')) {
       return Icons.schedule;
     } else {
@@ -1198,6 +1309,8 @@ class _TrackingState extends State<Tracking> {
       return Colors.orange;
     } else if (_apiStatus.contains('جاري حساب')) {
       return Colors.blue;
+    } else if (_apiStatus.contains('لم يبدأ')) {
+      return Colors.orange;
     } else if (_apiStatus.contains('جاهز')) {
       return Colors.grey;
     } else {
@@ -1270,7 +1383,6 @@ class _TrackingState extends State<Tracking> {
         children: [
           // Zoom to fit button
           FloatingActionButton.small(
-            
             onPressed: _fitBounds,
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
@@ -1284,7 +1396,6 @@ class _TrackingState extends State<Tracking> {
           // Current location button
           if (_currentLatitude != 0 && _currentLongitude != 0)
             FloatingActionButton.small(
-              
               onPressed: () {
                 if (_mapController != null) {
                   LatLng target;
@@ -1311,6 +1422,1320 @@ class _TrackingState extends State<Tracking> {
     );
   }
 }
+
+// import 'dart:async';
+// import 'dart:math';
+// import 'dart:ui' as ui;
+
+// import 'package:flutter/foundation.dart';
+// import 'package:flutter/material.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:emergency_room/network/remote/remote_network_repos.dart';
+// import 'package:http/http.dart' as http;
+
+// class Tracking extends StatefulWidget {
+//   final String latitude;
+//   final String longitude;
+//   final String address;
+//   final String technicianName;
+
+//   const Tracking({
+//     super.key,
+//     required this.latitude,
+//     required this.longitude,
+//     required this.address,
+//     required this.technicianName,
+//   });
+
+//   @override
+//   State<Tracking> createState() => _TrackingState();
+// }
+
+// class _TrackingState extends State<Tracking> {
+//   Timer? _locationTimer;
+//   Timer? _pulseTimer;
+//   Timer? _simulationTimer;
+//   GoogleMapController? _mapController;
+//   final http.Client _httpClient = http.Client();
+
+//   static const LatLng _alexandriaCoordinates = LatLng(31.205753, 29.924526);
+//   double _currentLatitude = 0.0;
+//   double _currentLongitude = 0.0;
+//   double _startLatitude = 0.0;
+//   double _startLongitude = 0.0;
+
+//   final Map<MarkerId, Marker> _markers = {};
+//   final Map<PolylineId, Polyline> _polylines = {};
+//   BitmapDescriptor? _destinationIcon;
+//   BitmapDescriptor? _technicianIcon;
+
+//   String _routeDistance = 'جاري الحساب...';
+//   String _routeDuration = 'جاري الحساب...';
+//   String _apiStatus = 'جاهز';
+//   bool _isLoadingRoute = false;
+//   bool _isPulsing = false;
+//   bool _mapReady = false;
+//   bool _hasRoute = false;
+
+//   List<LatLng> _routePoints = [];
+//   int _polylineCounter = 0;
+
+//   double _infoCardWidth = 400;
+//   static const double _infoCardMaxWidth = 500;
+//   static const double _infoCardMinWidth = 300;
+
+//   static const String _googleMapsApiKey =
+//       'AIzaSyDRaJJnyvmDSU8OgI8M20C5nmwHNc_AMvk';
+//   static const Duration _locationUpdateInterval = Duration(seconds: 30);
+
+//   DateTime? _lastLocationUpdateTime;
+
+//   // Simulation variables
+//   List<LatLng> _simulatedRoute = [];
+//   int _simulationIndex = 0;
+//   bool _isSimulating = false;
+//   double _simulationProgress = 0.0;
+//   LatLng? _simulatedPosition;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     debugPrint('🚀 Tracking widget initialized');
+//     _initializeTracking();
+//   }
+
+//   @override
+//   void dispose() {
+//     debugPrint('🛑 Disposing tracking widget');
+
+//     // Cancel all timers
+//     _locationTimer?.cancel();
+//     _pulseTimer?.cancel();
+//     _simulationTimer?.cancel();
+
+//     // Close HTTP client
+//     _httpClient.close();
+
+//     // Workaround for Google Maps Web plugin bug
+//     // Don't dispose the controller on web to avoid the assertion error
+//     try {
+//       if (_mapController != null) {
+//         // For web platform, we need to handle this differently
+//         // due to a bug in google_maps_flutter_web
+//         if (!kIsWeb) {
+//           // Only dispose on mobile platforms
+//           _mapController!.dispose();
+//         }
+//         _mapController = null;
+//       }
+//     } catch (error) {
+//       debugPrint('⚠️ Error during map controller cleanup: $error');
+//       // Ignore the error and continue with disposal
+//     }
+
+//     super.dispose();
+//   }
+
+//   Future<void> _initializeTracking() async {
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _calculateInfoCardWidth();
+//     });
+
+//     await _loadCustomMarkers();
+//     _startPulseAnimation();
+
+//     // Get initial location with delay to ensure everything is ready
+//     await Future.delayed(const Duration(milliseconds: 500));
+//     await _getCurrentLocation();
+
+//     _startLocationTracking();
+//   }
+
+//   void _calculateInfoCardWidth() {
+//     if (!mounted) return;
+//     final addressLength = widget.address.length;
+//     final screenWidth = MediaQuery.of(context).size.width;
+
+//     if (addressLength < 50) {
+//       _infoCardWidth = _infoCardMinWidth;
+//     } else if (addressLength < 100) {
+//       _infoCardWidth = 350;
+//     } else if (addressLength < 150) {
+//       _infoCardWidth = 400;
+//     } else {
+//       _infoCardWidth = _infoCardMaxWidth;
+//     }
+
+//     _infoCardWidth = min(_infoCardWidth, screenWidth * 0.9);
+//     _infoCardWidth = max(_infoCardWidth, _infoCardMinWidth);
+//   }
+
+//   Future<void> _loadCustomMarkers() async {
+//     try {
+//       // Destination marker (green pin)
+//       _destinationIcon = await _createDestinationMarker();
+//       debugPrint('✅ Destination marker loaded');
+//     } catch (error) {
+//       debugPrint('⚠️ Error loading destination marker: $error');
+//       _destinationIcon =
+//           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+//     }
+
+//     try {
+//       // Technician marker (red with person)
+//       // _technicianIcon = await _createTechnicianMarker();
+//       _technicianIcon =
+//           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+//       debugPrint('✅ Technician marker created');
+//     } catch (error) {
+//       debugPrint('⚠️ Error creating technician marker: $error');
+//       _technicianIcon =
+//           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+//     }
+//   }
+
+//   Future<BitmapDescriptor> _createDestinationMarker() async {
+//     const size = 48.0;
+//     final pictureRecorder = ui.PictureRecorder();
+//     final canvas = Canvas(pictureRecorder);
+
+//     // Draw pin shape
+//     final paint = Paint()
+//       ..color = Colors.green
+//       ..style = PaintingStyle.fill;
+
+//     // Pin body (rounded rectangle)
+//     final rRect = RRect.fromRectAndRadius(
+//       const Rect.fromLTWH(0, 0, size * 0.6, size * 0.8),
+//       const Radius.circular(10),
+//     );
+//     canvas.drawRRect(rRect, paint);
+
+//     // Pin head (circle)
+//     canvas.drawCircle(
+//       const Offset(size * 0.3, size * 0.8),
+//       size * 0.12,
+//       paint,
+//     );
+
+//     // White dot in center
+//     canvas.drawCircle(
+//       const Offset(size * 0.3, size * 0.3),
+//       size * 0.08,
+//       Paint()..color = Colors.white,
+//     );
+
+//     final picture = pictureRecorder.endRecording();
+//     final image = await picture.toImage(size.toInt(), size.toInt());
+//     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+
+//     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+//   }
+
+//   Future<BitmapDescriptor> _createTechnicianMarker() async {
+//     const size = 48.0;
+//     final pictureRecorder = ui.PictureRecorder();
+//     final canvas = Canvas(pictureRecorder);
+
+//     // Draw background circle with gradient
+//     final gradient = RadialGradient(
+//       center: Alignment.center,
+//       colors: [Colors.red.shade600, Colors.red],
+//       radius: 0.5,
+//     );
+
+//     final paint = Paint()
+//       ..shader = gradient.createShader(Rect.fromCircle(
+//         center: const Offset(size / 2, size / 2),
+//         radius: size / 2,
+//       ));
+
+//     canvas.drawCircle(const Offset(size / 2, size / 2), size / 2, paint);
+
+//     // Draw white border
+//     canvas.drawCircle(
+//       const Offset(size / 2, size / 2),
+//       size / 2 - 2,
+//       Paint()
+//         ..color = Colors.white
+//         ..style = PaintingStyle.stroke
+//         ..strokeWidth = 2,
+//     );
+
+//     // Draw person icon
+//     final textPainter = TextPainter(
+//       textDirection: TextDirection.ltr,
+//       text: const TextSpan(
+//         text: '👷',
+//         style: TextStyle(fontSize: 20),
+//       ),
+//     );
+//     textPainter.layout();
+//     textPainter.paint(
+//       canvas,
+//       Offset(
+//           size / 2 - textPainter.width / 2, size / 2 - textPainter.height / 2),
+//     );
+
+//     final picture = pictureRecorder.endRecording();
+//     final image = await picture.toImage(size.toInt(), size.toInt());
+//     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+
+//     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+//   }
+
+//   void _startPulseAnimation() {
+//     _pulseTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+//       if (mounted) setState(() => _isPulsing = !_isPulsing);
+//     });
+//   }
+
+//   void _startLocationTracking() {
+//     _locationTimer = Timer.periodic(_locationUpdateInterval, (timer) {
+//       debugPrint('🔄 Periodic location update');
+//       _getCurrentLocation();
+//     });
+//   }
+
+//   Future<void> _getCurrentLocation() async {
+//     try {
+//       debugPrint('📡 Fetching location from API...');
+
+//       final locationData =
+//           await DioNetworkRepos().getLocationByAddressAndTechnician(
+//         widget.address,
+//         widget.technicianName,
+//       );
+
+//       if (!mounted) {
+//         debugPrint('⚠️ Widget not mounted, aborting');
+//         return;
+//       }
+
+//       debugPrint('📦 API Response received');
+
+//       final newLat = _parseDouble(locationData['currentLatitude']);
+//       final newLng = _parseDouble(locationData['currentLongitude']);
+
+//       if (newLat == null || newLng == null) {
+//         debugPrint('❌ Invalid location data received');
+//         return;
+//       }
+
+//       // Initialize start location
+//       if (_startLatitude == 0.0 || _startLongitude == 0.0) {
+//         _startLatitude = _parseDouble(locationData['startLatitude']) ?? newLat;
+//         _startLongitude =
+//             _parseDouble(locationData['startLongitude']) ?? newLng;
+//         debugPrint('📍 Start location initialized');
+//       }
+
+//       // Always update to simulate movement if not already simulating
+//       if (_currentLatitude == 0.0 ||
+//           _currentLongitude == 0.0 ||
+//           !_isSimulating) {
+//         debugPrint('📍 Location updated: $newLat, $newLng');
+
+//         setState(() {
+//           _currentLatitude = newLat;
+//           _currentLongitude = newLng;
+//           _lastLocationUpdateTime = DateTime.now();
+//         });
+
+//         await _updateMarkers();
+
+//         if (!_hasRoute) {
+//           await _calculateRealisticRoute();
+//         }
+//       }
+//     } catch (error, stackTrace) {
+//       debugPrint('❌ Error fetching location: $error');
+//       debugPrint('Stack trace: $stackTrace');
+//       if (mounted) {
+//         setState(() => _apiStatus = 'خطأ في جلب الموقع');
+//       }
+//     }
+//   }
+
+//   double? _parseDouble(dynamic value) {
+//     if (value == null) return null;
+//     if (value is double) return value;
+//     if (value is int) return value.toDouble();
+//     if (value is String) return double.tryParse(value);
+//     return null;
+//   }
+
+//   Future<void> _updateMarkers() async {
+//     if (!mounted) return;
+
+//     final destLat = _parseDouble(widget.latitude);
+//     final destLng = _parseDouble(widget.longitude);
+
+//     if (destLat == null || destLng == null) {
+//       debugPrint('⚠️ Invalid destination coordinates');
+//       return;
+//     }
+
+//     debugPrint('🎯 Creating markers...');
+
+//     setState(() {
+//       _markers.clear();
+
+//       // Destination marker
+//       _markers[const MarkerId('destination')] = Marker(
+//         markerId: const MarkerId('destination'),
+//         position: LatLng(destLat, destLng),
+//         infoWindow: InfoWindow(
+//           title: '📍 الوجهة',
+//           snippet: 'العنوان: ${widget.address}',
+//         ),
+//         icon: _destinationIcon ??
+//             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+//         anchor: const Offset(0.5, 0.9),
+//         zIndex: 3,
+//         draggable: false,
+//         flat: true,
+//       );
+
+//       // Current location marker (use simulated position if simulating)
+//       LatLng technicianPosition;
+//       if (_isSimulating && _simulatedPosition != null) {
+//         technicianPosition = _simulatedPosition!;
+//       } else {
+//         technicianPosition = LatLng(_currentLatitude, _currentLongitude);
+//       }
+
+//       if (_currentLatitude != 0.0 && _currentLongitude != 0.0) {
+//         final updateTime = _lastLocationUpdateTime != null
+//             ? 'آخر تحديث: ${_formatTime(_lastLocationUpdateTime!)}'
+//             : 'جاري التحديث...';
+
+//         _markers[const MarkerId('technician')] = Marker(
+//           markerId: const MarkerId('technician'),
+//           position: technicianPosition,
+//           infoWindow: InfoWindow(
+//             title: '👷 ${widget.technicianName}',
+//             snippet: '$updateTime${_isSimulating ? ' | محاكاة' : ''}',
+//           ),
+//           icon: _technicianIcon ??
+//               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+//           anchor: const Offset(0.5, 0.5),
+//           rotation: _isPulsing ? 0 : 360,
+//           zIndex: 4,
+//           flat: true,
+//           consumeTapEvents: true,
+//         );
+//       }
+//     });
+
+//     debugPrint('✅ Created ${_markers.length} markers');
+//   }
+
+//   String _formatTime(DateTime time) {
+//     final now = DateTime.now();
+//     final difference = now.difference(time);
+
+//     if (difference.inSeconds < 60) {
+//       return 'منذ ${difference.inSeconds} ثانية';
+//     } else if (difference.inMinutes < 60) {
+//       return 'منذ ${difference.inMinutes} دقيقة';
+//     } else if (difference.inHours < 24) {
+//       return 'منذ ${difference.inHours} ساعة';
+//     } else {
+//       return time.toString().substring(0, 16);
+//     }
+//   }
+
+//   Future<void> _calculateRealisticRoute() async {
+//     debugPrint('');
+//     debugPrint('═══════════════════════════════════════');
+//     debugPrint('🔄 CALCULATING REALISTIC ROUTE');
+//     debugPrint('═══════════════════════════════════════');
+
+//     if (_currentLatitude == 0.0 || _currentLongitude == 0.0) {
+//       debugPrint('❌ ABORT: Current location is 0,0');
+//       return;
+//     }
+
+//     final destLat = _parseDouble(widget.latitude);
+//     final destLng = _parseDouble(widget.longitude);
+
+//     if (destLat == null || destLng == null) {
+//       debugPrint('❌ ABORT: Destination is invalid');
+//       return;
+//     }
+
+//     final source = LatLng(_currentLatitude, _currentLongitude);
+//     final destination = LatLng(destLat, destLng);
+
+//     debugPrint(
+//         '📍 المصدر: ${source.latitude.toStringAsFixed(6)}, ${source.longitude.toStringAsFixed(6)}');
+//     debugPrint(
+//         '📍 الوجهة: ${destination.latitude.toStringAsFixed(6)}, ${destination.longitude.toStringAsFixed(6)}');
+
+//     setState(() {
+//       _isLoadingRoute = true;
+//       _apiStatus = 'جاري حساب المسار...';
+//     });
+
+//     debugPrint('🌐 جاري إنشاء مسار واقعي...');
+
+//     // Calculate realistic route
+//     await _createRealisticRoute(source, destination);
+
+//     setState(() => _isLoadingRoute = false);
+
+//     if (_mapReady && _mapController != null && _routePoints.isNotEmpty) {
+//       debugPrint('📷 جاري ضبط الكاميرا لعرض المسار...');
+//       await Future.delayed(const Duration(milliseconds: 500));
+//       _fitBounds();
+//     }
+
+//     debugPrint('═══════════════════════════════════════');
+//     debugPrint('✅ ROUTE CALCULATION COMPLETE');
+//     debugPrint('═══════════════════════════════════════');
+//     debugPrint('');
+//   }
+
+//   Future<void> _createRealisticRoute(LatLng origin, LatLng destination) async {
+//     try {
+//       // Calculate actual distance
+//       final distance = _calculateDistance(origin, destination);
+
+//       // Generate a realistic street-like path
+//       _routePoints = _generateAlexandriaStreetPath(origin, destination);
+//       _simulatedRoute = List.from(_routePoints); // Copy for simulation
+
+//       // Calculate realistic time based on Alexandria traffic (average 30 km/h)
+//       final estimatedMinutes = ((distance / 30.0) * 60).ceil();
+//       final estimatedTime = '$estimatedMinutes دقيقة';
+
+//       setState(() {
+//         _routeDistance = '${distance.toStringAsFixed(1)} كم';
+//         _routeDuration = estimatedTime;
+//         _apiStatus = 'مسار مباشر';
+//         _hasRoute = true;
+//       });
+
+//       debugPrint('📏 المسافة: ${distance.toStringAsFixed(1)} كم');
+//       debugPrint('⏱️ الوقت المقدر: $estimatedTime');
+//       debugPrint('📍 عدد نقاط المسار: ${_routePoints.length}');
+
+//       // Draw the realistic route
+//       _drawRealisticRoute(_routePoints);
+//     } catch (error, stackTrace) {
+//       debugPrint('❌ خطأ في حساب المسار: $error');
+//       debugPrint('Stack trace: $stackTrace');
+
+//       // Fallback
+//       final distance = _calculateDistance(origin, destination);
+//       final time = _estimateTime(distance);
+
+//       setState(() {
+//         _routeDistance = '${distance.toStringAsFixed(1)} كم';
+//         _routeDuration = '~$time دقيقة';
+//         _apiStatus = 'مسار مباشر';
+//         _hasRoute = true;
+//       });
+
+//       _routePoints = [origin, destination];
+//       _simulatedRoute = List.from(_routePoints);
+//       _drawRealisticRoute(_routePoints);
+//     }
+//   }
+
+//   List<LatLng> _generateAlexandriaStreetPath(LatLng start, LatLng end) {
+//     final List<LatLng> points = [];
+
+//     // Add starting point (current technician location)
+//     points.add(start);
+
+//     // Calculate intermediate points for a realistic Alexandria street route
+//     // These points simulate common Alexandria streets and turns
+
+//     // Point 1: Initial turn
+//     final point1 = LatLng(
+//       start.latitude + (end.latitude - start.latitude) * 0.2,
+//       start.longitude + (end.longitude - start.longitude) * 0.2,
+//     );
+//     points.add(LatLng(point1.latitude + 0.001, point1.longitude - 0.0005));
+//     points.add(point1);
+
+//     // Point 2: Street curve
+//     final point2 = LatLng(
+//       start.latitude + (end.latitude - start.latitude) * 0.4,
+//       start.longitude + (end.longitude - start.longitude) * 0.4,
+//     );
+//     points.add(LatLng(point2.latitude - 0.0005, point2.longitude + 0.001));
+//     points.add(point2);
+//     points.add(LatLng(point2.latitude + 0.0005, point2.longitude));
+
+//     // Point 3: Another turn
+//     final point3 = LatLng(
+//       start.latitude + (end.latitude - start.latitude) * 0.6,
+//       start.longitude + (end.longitude - start.longitude) * 0.6,
+//     );
+//     points.add(LatLng(point3.latitude, point3.longitude - 0.0008));
+//     points.add(point3);
+//     points.add(LatLng(point3.latitude - 0.001, point3.longitude + 0.0005));
+
+//     // Point 4: Final approach
+//     final point4 = LatLng(
+//       start.latitude + (end.latitude - start.latitude) * 0.8,
+//       start.longitude + (end.longitude - start.longitude) * 0.8,
+//     );
+//     points.add(LatLng(point4.latitude + 0.0007, point4.longitude));
+//     points.add(point4);
+//     points.add(LatLng(point4.latitude, point4.longitude + 0.0007));
+
+//     // Add ending point (destination)
+//     points.add(end);
+
+//     return points;
+//   }
+
+//   void _drawRealisticRoute(List<LatLng> points) {
+//     debugPrint('🎨 جاري رسم مسار واقعي بـ ${points.length} نقطة');
+
+//     _polylineCounter++;
+//     _polylines.clear();
+
+//     if (points.length < 2) {
+//       debugPrint('⚠️ نقاط غير كافية للرسم');
+//       return;
+//     }
+
+//     try {
+//       // Main realistic street route (Google Maps blue)
+//       final routeId = PolylineId('real_street_route_$_polylineCounter');
+
+//       _polylines[routeId] = Polyline(
+//         polylineId: routeId,
+//         points: points,
+//         color: const Color(0xFF4285F4), // Google Maps blue
+//         width: 6,
+//         startCap: Cap.roundCap,
+//         endCap: Cap.roundCap,
+//         jointType: JointType.round,
+//         geodesic: false, // Follows street curves
+//         consumeTapEvents: true,
+//         zIndex: 2,
+//       );
+
+//       // Add a subtle white outline for better visibility
+//       final outlineId = PolylineId('outline_$_polylineCounter');
+//       _polylines[outlineId] = Polyline(
+//         polylineId: outlineId,
+//         points: points,
+//         color: Colors.white,
+//         width: 8,
+//         startCap: Cap.roundCap,
+//         endCap: Cap.roundCap,
+//         jointType: JointType.round,
+//         geodesic: false,
+//         zIndex: 1,
+//       );
+
+//       setState(() {});
+//       debugPrint('✅ تم إنشاء مسار واقعي يتبع شوارع الإسكندرية');
+//     } catch (error, stackTrace) {
+//       debugPrint('❌ خطأ في رسم المسار: $error');
+//       debugPrint('Stack trace: $stackTrace');
+//     }
+//   }
+
+//   void _startSimulation() {
+//     if (_simulatedRoute.isEmpty) {
+//       debugPrint('❌ لا يوجد مسار للمحاكاة');
+//       return;
+//     }
+
+//     _simulationTimer?.cancel();
+//     _simulationIndex = 0;
+//     _simulationProgress = 0.0;
+//     _isSimulating = true;
+
+//     debugPrint('▶️ بدء محاكاة حركة الفني');
+
+//     _simulationTimer =
+//         Timer.periodic(const Duration(milliseconds: 200), (timer) {
+//       if (!mounted) {
+//         timer.cancel();
+//         return;
+//       }
+
+//       if (_simulationIndex < _simulatedRoute.length) {
+//         setState(() {
+//           _simulatedPosition = _simulatedRoute[_simulationIndex];
+//           _simulationProgress =
+//               (_simulationIndex / _simulatedRoute.length) * 100;
+//           _simulationIndex++;
+
+//           // Update distance and time during simulation
+//           final remainingDistance = _calculateDistance(
+//             _simulatedPosition!,
+//             LatLng(
+//                 double.parse(widget.latitude), double.parse(widget.longitude)),
+//           );
+//           final remainingTime = ((remainingDistance / 30.0) * 60).ceil();
+
+//           _routeDistance = '${remainingDistance.toStringAsFixed(1)} كم متبقي';
+//           _routeDuration = '~$remainingTime دقيقة';
+//         });
+
+//         // Update markers with new position
+//         _updateMarkers();
+
+//         // Follow the technician during simulation
+//         if (_mapController != null && mounted) {
+//           try {
+//             _mapController!.animateCamera(
+//               CameraUpdate.newLatLng(_simulatedPosition!),
+//             );
+//           } catch (error) {
+//             debugPrint('⚠️ Error animating camera: $error');
+//           }
+//         }
+//       } else {
+//         // Simulation complete
+//         timer.cancel();
+//         if (mounted) {
+//           _isSimulating = false;
+//           setState(() {
+//             _simulatedPosition = null;
+//             _simulationProgress = 100.0;
+//             _routeDistance = 'وصل إلى الوجهة';
+//             _routeDuration = '0 دقيقة';
+//             _apiStatus = 'تم الوصول';
+//           });
+//           _updateMarkers();
+//           debugPrint('✅ انتهت المحاكاة - الفني وصل إلى الوجهة');
+
+//           // Show completion message
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(
+//               content:
+//                   Text('${widget.technicianName} وصل إلى ${widget.address}'),
+//               backgroundColor: Colors.green,
+//               duration: const Duration(seconds: 3),
+//             ),
+//           );
+//         }
+//       }
+//     });
+//   }
+
+//   void _stopSimulation() {
+//     _simulationTimer?.cancel();
+//     _isSimulating = false;
+//     _simulatedPosition = null;
+//     _updateMarkers();
+//     debugPrint('⏹️ توقفت المحاكاة');
+//   }
+
+//   void _resetSimulation() {
+//     _stopSimulation();
+//     _simulationIndex = 0;
+//     _simulationProgress = 0.0;
+//     setState(() {
+//       _routeDistance = '${_calculateDistance(
+//         LatLng(_currentLatitude, _currentLongitude),
+//         LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
+//       ).toStringAsFixed(1)} كم';
+//       _routeDuration = '~${_estimateTime(_calculateDistance(
+//         LatLng(_currentLatitude, _currentLongitude),
+//         LatLng(double.parse(widget.latitude), double.parse(widget.longitude)),
+//       ))} دقيقة';
+//       _apiStatus = 'مسار على شوارع الإسكندرية';
+//     });
+//     debugPrint('🔄 إعادة تعيين المحاكاة');
+//   }
+
+//   double _calculateDistance(LatLng p1, LatLng p2) {
+//     const R = 6371.0;
+//     final lat1 = p1.latitude * pi / 180;
+//     final lon1 = p1.longitude * pi / 180;
+//     final lat2 = p2.latitude * pi / 180;
+//     final lon2 = p2.longitude * pi / 180;
+
+//     final dlat = lat2 - lat1;
+//     final dlon = lon2 - lon1;
+
+//     final a = sin(dlat / 2) * sin(dlat / 2) +
+//         cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
+
+//     return R * 2 * atan2(sqrt(a), sqrt(1 - a));
+//   }
+
+//   int _estimateTime(double km) => ((km / 30.0) * 60).ceil().clamp(5, 120);
+
+//   void _fitBounds() {
+//     if (_routePoints.isEmpty || _mapController == null) return;
+
+//     try {
+//       // Calculate bounds from all route points
+//       double minLat = _routePoints.first.latitude;
+//       double maxLat = _routePoints.first.latitude;
+//       double minLng = _routePoints.first.longitude;
+//       double maxLng = _routePoints.first.longitude;
+
+//       for (final point in _routePoints) {
+//         minLat = min(minLat, point.latitude);
+//         maxLat = max(maxLat, point.latitude);
+//         minLng = min(minLng, point.longitude);
+//         maxLng = max(maxLng, point.longitude);
+//       }
+
+//       // Add padding (15% of the range)
+//       final latPadding = (maxLat - minLat) * 0.15;
+//       final lngPadding = (maxLng - minLng) * 0.15;
+
+//       minLat -= latPadding;
+//       maxLat += latPadding;
+//       minLng -= lngPadding;
+//       maxLng += lngPadding;
+
+//       // Create bounds
+//       final bounds = LatLngBounds(
+//         southwest: LatLng(minLat, minLng),
+//         northeast: LatLng(maxLat, maxLng),
+//       );
+
+//       // Animate camera to show the entire route with padding
+//       _mapController!.animateCamera(
+//         CameraUpdate.newLatLngBounds(bounds, 50),
+//       );
+
+//       debugPrint('📷 تم ضبط الكاميرا لعرض المسار الكامل');
+//     } catch (error) {
+//       debugPrint('❌ خطأ في ضبط الحدود: $error');
+
+//       // Fallback to simple view
+//       if (_currentLatitude != 0 && _currentLongitude != 0) {
+//         final destLat = _parseDouble(widget.latitude);
+//         final destLng = _parseDouble(widget.longitude);
+
+//         if (destLat != null && destLng != null) {
+//           _mapController!.animateCamera(
+//             CameraUpdate.newLatLngZoom(
+//               LatLng(
+//                 (_currentLatitude + destLat) / 2,
+//                 (_currentLongitude + destLng) / 2,
+//               ),
+//               14,
+//             ),
+//           );
+//         }
+//       }
+//     }
+//   }
+
+//   void _onMapCreated(GoogleMapController controller) {
+//     _mapController = controller;
+//     setState(() => _mapReady = true);
+//     debugPrint('✅ الخريطة جاهزة');
+
+//     // If we have location, calculate route
+//     if (_currentLatitude != 0.0 && _currentLongitude != 0.0) {
+//       Future.delayed(const Duration(milliseconds: 1500), () {
+//         if (mounted && !_hasRoute) {
+//           debugPrint('🎯 الخريطة جاهزة - جاري حساب المسار');
+//           _calculateRealisticRoute();
+//         }
+//       });
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     final screenHeight = MediaQuery.of(context).size.height;
+//     final isPortrait = screenHeight > screenWidth;
+//     final now = DateTime.now();
+
+//     _calculateInfoCardWidth();
+
+//     double cardWidth = screenWidth < 600
+//         ? screenWidth * 0.92
+//         : min(_infoCardWidth, screenWidth * 0.6);
+//     cardWidth = max(cardWidth, _infoCardMinWidth);
+
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: _buildAppBar(),
+//       body: Stack(
+//         children: [
+//           GoogleMap(
+//             onMapCreated: _onMapCreated,
+//             initialCameraPosition: const CameraPosition(
+//               target: _alexandriaCoordinates,
+//               zoom: 13,
+//               tilt: 0,
+//               bearing: 0,
+//             ),
+//             markers: Set.of(_markers.values),
+//             polylines: Set.of(_polylines.values),
+//             zoomControlsEnabled: false,
+//             myLocationButtonEnabled: false,
+//             myLocationEnabled: false,
+//             tiltGesturesEnabled: true,
+//             buildingsEnabled: true,
+//             indoorViewEnabled: false,
+//             trafficEnabled: true,
+//             mapToolbarEnabled: false,
+//             rotateGesturesEnabled: true,
+//             scrollGesturesEnabled: true,
+//             zoomGesturesEnabled: true,
+//             compassEnabled: true,
+//             mapType: MapType.normal,
+//           ),
+
+//           // Info Card
+//           Positioned(
+//             top: MediaQuery.of(context).padding.top + 70,
+//             left: 20,
+//             // right: 20,
+//             child: Center(
+//               child: _buildInfoCard(cardWidth),
+//             ),
+//           ),
+
+//           // Loading Overlay
+//           if (_isLoadingRoute) _buildLoadingOverlay(),
+
+//           // Control Buttons
+//           _buildControlButtons(isPortrait),
+//         ],
+//       ),
+//       bottomNavigationBar: _buildBottomBar(now),
+//     );
+//   }
+
+//   /// Build AppBar
+//   PreferredSizeWidget _buildAppBar() {
+//     return AppBar(
+//       centerTitle: true,
+//       elevation: 7,
+//       title: Text(
+//         'تتبع الفني: ${widget.technicianName}',
+//         style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+//       ),
+//       backgroundColor: Colors.white,
+//       iconTheme: const IconThemeData(color: Colors.blue),
+//       actions: [
+//         Container(
+//           margin: const EdgeInsets.only(right: 16),
+//           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//           decoration: BoxDecoration(
+//             color: _isPulsing
+//                 ? Colors.green.withOpacity(0.8)
+//                 : Colors.blue.withOpacity(0.8),
+//             borderRadius: BorderRadius.circular(20),
+//           ),
+//           child: Row(
+//             children: [
+//               Icon(
+//                 _isPulsing ? Icons.location_on : Icons.location_searching,
+//                 size: 16,
+//                 color: Colors.white,
+//               ),
+//               const SizedBox(width: 6),
+//               const Text(
+//                 'متابعة مباشرة',
+//                 style: TextStyle(fontSize: 12, color: Colors.white),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   /// Build bottom navigation bar
+//   Widget _buildBottomBar(DateTime now) {
+//     return Container(
+//       height: 50,
+//       decoration: BoxDecoration(
+//         color: Colors.grey[100],
+//         border: const Border(top: BorderSide(color: Colors.grey, width: 0.5)),
+//       ),
+//       padding: const EdgeInsets.symmetric(horizontal: 16),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [
+//           Flexible(
+//             child: Row(
+//               children: [
+//                 Container(
+//                   width: 24,
+//                   height: 24,
+//                   decoration: BoxDecoration(
+//                     color: Colors.red.withOpacity(0.1),
+//                     borderRadius: BorderRadius.circular(12),
+//                     border: Border.all(color: Colors.red, width: 1.5),
+//                   ),
+//                   child: const Center(
+//                     child: Icon(Icons.person, size: 12, color: Colors.red),
+//                   ),
+//                 ),
+//                 const SizedBox(width: 10),
+//                 Flexible(
+//                   child: Column(
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Text(
+//                         widget.technicianName,
+//                         style: const TextStyle(
+//                           fontSize: 11,
+//                           fontWeight: FontWeight.bold,
+//                         ),
+//                         maxLines: 1,
+//                         overflow: TextOverflow.ellipsis,
+//                       ),
+//                       Text(
+//                         '${_currentLatitude.toStringAsFixed(5)}, '
+//                         '${_currentLongitude.toStringAsFixed(5)}',
+//                         style: const TextStyle(fontSize: 9, color: Colors.grey),
+//                         maxLines: 1,
+//                         overflow: TextOverflow.ellipsis,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             crossAxisAlignment: CrossAxisAlignment.end,
+//             children: [
+//               Text(
+//                 '${now.hour.toString().padLeft(2, '0')}:'
+//                 '${now.minute.toString().padLeft(2, '0')}:'
+//                 '${now.second.toString().padLeft(2, '0')}',
+//                 style: const TextStyle(
+//                   fontSize: 11,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.blue,
+//                 ),
+//               ),
+//               Text(
+//                 _apiStatus,
+//                 style: TextStyle(
+//                   fontSize: 9,
+//                   color: _apiStatus.contains('جاري')
+//                       ? Colors.orange
+//                       : _apiStatus.contains('خطأ') ||
+//                               _apiStatus.contains('تقريبي')
+//                           ? Colors.orange
+//                           : Colors.green,
+//                 ),
+//                 maxLines: 1,
+//                 overflow: TextOverflow.ellipsis,
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildInfoCard(double width) {
+//     return AnimatedContainer(
+//       duration: const Duration(milliseconds: 300),
+//       width: width,
+//       padding: const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(16),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.15),
+//             blurRadius: 20,
+//             offset: const Offset(0, 10),
+//           ),
+//         ],
+//         border: Border.all(color: Colors.grey.shade200, width: 1),
+//       ),
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Address section
+//           Row(
+//             children: [
+//               Container(
+//                 padding: const EdgeInsets.all(8),
+//                 decoration: BoxDecoration(
+//                   color: Colors.blue.withOpacity(0.1),
+//                   borderRadius: BorderRadius.circular(10),
+//                 ),
+//                 child: const Icon(Icons.location_pin,
+//                     color: Colors.blue, size: 20),
+//               ),
+//               const SizedBox(width: 12),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text(
+//                       'الوجهة',
+//                       style: TextStyle(
+//                         fontSize: 12,
+//                         color: Colors.grey,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 2),
+//                     Text(
+//                       widget.address,
+//                       style: const TextStyle(
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.blue,
+//                       ),
+//                       maxLines: 2,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 16),
+
+//           // Stats section
+//           Container(
+//             padding: const EdgeInsets.all(12),
+//             decoration: BoxDecoration(
+//               color: Colors.grey[50],
+//               borderRadius: BorderRadius.circular(12),
+//             ),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 _buildStatItem(
+//                     Icons.directions, _routeDistance, 'المسافة', Colors.blue),
+//                 Container(
+//                   width: 1,
+//                   height: 30,
+//                   color: Colors.grey[300],
+//                 ),
+//                 _buildStatItem(
+//                     Icons.timer, _routeDuration, 'الوقت', Colors.green),
+//                 Container(
+//                   width: 1,
+//                   height: 30,
+//                   color: Colors.grey[300],
+//                 ),
+//                 _buildStatItem(
+//                     _getStatusIcon(), _apiStatus, 'الحالة', _getStatusColor()),
+//               ],
+//             ),
+//           ),
+
+//           // Last update time and simulation status
+//           Padding(
+//             padding: const EdgeInsets.only(top: 12),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.center,
+//               children: [
+//                 Icon(
+//                   _isSimulating ? Icons.directions_car : Icons.update,
+//                   size: 12,
+//                   color: _isSimulating ? Colors.orange : Colors.grey,
+//                 ),
+//                 const SizedBox(width: 4),
+//                 Text(
+//                   _isSimulating
+//                       ? 'محاكاة جارية... ${_simulationProgress.toInt()}%'
+//                       : _lastLocationUpdateTime != null
+//                           ? 'آخر تحديث: ${_formatTime(_lastLocationUpdateTime!)}'
+//                           : 'جاري التحديث...',
+//                   style: TextStyle(
+//                     fontSize: 10,
+//                     color: _isSimulating ? Colors.orange : Colors.grey[600],
+//                     fontWeight:
+//                         _isSimulating ? FontWeight.bold : FontWeight.normal,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildStatItem(
+//       IconData icon, String value, String label, Color color) {
+//     return Expanded(
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Icon(icon, size: 18, color: color),
+//           const SizedBox(height: 4),
+//           Text(
+//             value,
+//             style: const TextStyle(
+//               fontSize: 12,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black87,
+//             ),
+//             textAlign: TextAlign.center,
+//             maxLines: 1,
+//             overflow: TextOverflow.ellipsis,
+//           ),
+//           Text(
+//             label,
+//             style: TextStyle(
+//               fontSize: 10,
+//               color: Colors.grey[600],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   IconData _getStatusIcon() {
+//     if (_apiStatus.contains('شوارع الإسكندرية')) {
+//       return Icons.directions_car;
+//     } else if (_apiStatus.contains('تم الوصول')) {
+//       return Icons.check_circle;
+//     } else if (_apiStatus.contains('مباشر')) {
+//       return Icons.arrow_forward;
+//     } else if (_apiStatus.contains('جاري حساب')) {
+//       return Icons.refresh;
+//     } else if (_apiStatus.contains('جاهز')) {
+//       return Icons.schedule;
+//     } else {
+//       return Icons.info_outline;
+//     }
+//   }
+
+//   Color _getStatusColor() {
+//     if (_apiStatus.contains('تم الوصول')) {
+//       return Colors.green;
+//     } else if (_apiStatus.contains('شوارع الإسكندرية')) {
+//       return Colors.blue;
+//     } else if (_apiStatus.contains('مباشر')) {
+//       return Colors.orange;
+//     } else if (_apiStatus.contains('جاري حساب')) {
+//       return Colors.blue;
+//     } else if (_apiStatus.contains('جاهز')) {
+//       return Colors.grey;
+//     } else {
+//       return Colors.red;
+//     }
+//   }
+
+//   Widget _buildLoadingOverlay() {
+//     return Container(
+//       color: Colors.black.withOpacity(0.4),
+//       child: Center(
+//         child: Container(
+//           width: 180,
+//           padding: const EdgeInsets.all(20),
+//           decoration: BoxDecoration(
+//             color: Colors.white,
+//             borderRadius: BorderRadius.circular(16),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: Colors.black.withOpacity(0.2),
+//                 blurRadius: 30,
+//                 offset: const Offset(0, 10),
+//               ),
+//             ],
+//           ),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               SizedBox(
+//                 width: 40,
+//                 height: 40,
+//                 child: CircularProgressIndicator(
+//                   color: Colors.blue,
+//                   strokeWidth: 3,
+//                   backgroundColor: Colors.blue.shade100,
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
+//               const Text(
+//                 'جاري حساب المسار الفعلي',
+//                 style: TextStyle(
+//                   color: Colors.black87,
+//                   fontWeight: FontWeight.w600,
+//                   fontSize: 14,
+//                 ),
+//                 textAlign: TextAlign.center,
+//               ),
+//               const SizedBox(height: 8),
+//               const Text(
+//                 'تتبع الفني على شوارع الإسكندرية',
+//                 style: TextStyle(
+//                   color: Colors.grey,
+//                   fontSize: 12,
+//                 ),
+//                 textAlign: TextAlign.center,
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildControlButtons(bool isPortrait) {
+//     return Positioned(
+//       bottom: isPortrait ? (_isSimulating ? 150 : 100) : 20,
+//       right: 20,
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           // Zoom to fit button
+//           FloatingActionButton.small(
+            
+//             onPressed: _fitBounds,
+//             backgroundColor: Colors.blue,
+//             foregroundColor: Colors.white,
+//             elevation: 4,
+//             heroTag: 'zoomButton',
+//             tooltip: 'عرض المسار بالكامل',
+//             child: const Icon(Icons.zoom_out_map, size: 20),
+//           ),
+//           const SizedBox(height: 12),
+
+//           // Current location button
+//           if (_currentLatitude != 0 && _currentLongitude != 0)
+//             FloatingActionButton.small(
+              
+//               onPressed: () {
+//                 if (_mapController != null) {
+//                   LatLng target;
+//                   if (_isSimulating && _simulatedPosition != null) {
+//                     target = _simulatedPosition!;
+//                   } else {
+//                     target = LatLng(_currentLatitude, _currentLongitude);
+//                   }
+
+//                   _mapController!.animateCamera(
+//                     CameraUpdate.newLatLngZoom(target, 18),
+//                   );
+//                 }
+//               },
+//               backgroundColor: Colors.purple,
+//               foregroundColor: Colors.white,
+//               elevation: 4,
+//               heroTag: 'locationButton',
+//               tooltip: 'تتبع الفني',
+//               child: const Icon(Icons.my_location, size: 20),
+//             ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 
 // // ignore_for_file: unused_field
