@@ -75,7 +75,6 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
       'value': 'Recipient Destination',
       'icon': Icons.business
     },
-    // NEW: Current User Distribution
     {
       'label': 'توزيع المستخدمين',
       'value': 'Current User Distribution',
@@ -253,6 +252,15 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
     return values;
   }
 
+  // Safely reads boolean-like flags (1 / 0 / true / false / "1" / "true")
+  bool _isTrue(dynamic v) {
+    if (v == null) return false;
+    if (v is bool) return v;
+    if (v is num) return v == 1;
+    final s = v.toString().trim().toLowerCase();
+    return s == '1' || s == 'true';
+  }
+
   // ==================== Chart Data Builders ====================
 
   List<ChartData> _buildStatusDistributionData() {
@@ -426,7 +434,6 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
     }).toList();
   }
 
-  // NEW: Build Current User Distribution Data
   List<ChartData> _buildCurrentUserDistributionData() {
     final Map<String, int> userCount = {};
     for (var item in _filteredComplaints) {
@@ -469,7 +476,6 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
         return _buildComplaintSourceData();
       case 'Recipient Destination':
         return _buildRecipientDestinationData();
-      // NEW: Current User Distribution
       case 'Current User Distribution':
         return _buildCurrentUserDistributionData();
       default:
@@ -495,7 +501,6 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
         return Colors.cyan;
       case 'Recipient Destination':
         return Colors.indigo;
-      // NEW: Current User Distribution
       case 'Current User Distribution':
         return Colors.cyan;
       default:
@@ -521,7 +526,6 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
         return Icons.source;
       case 'Recipient Destination':
         return Icons.business;
-      // NEW: Current User Distribution
       case 'Current User Distribution':
         return Icons.people;
       default:
@@ -623,19 +627,12 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Improved Summary Cards
           _buildImprovedSummaryCards(),
           const SizedBox(height: 16),
-
-          // Filters
           _buildFilterBar(),
           const SizedBox(height: 16),
-
-          // Chart Selection and Display
           _buildChartSection(),
           const SizedBox(height: 16),
-
-          // Improved Data Table
           _buildImprovedDataTable(),
         ],
       ),
@@ -645,30 +642,37 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
   // ==================== IMPROVED SUMMARY CARDS ====================
 
   Widget _buildImprovedSummaryCards() {
+    const processingRepairStatuses = {
+      'جارى الاصلاح',
+      'يخص الشركة',
+      'يخص المالك',
+      'لا يخص الشركة',
+      'يلزم استخراج تصريح',
+    };
+
     final total = _filteredComplaints.length;
+
+    final finished =
+        _filteredComplaints.where((e) => _isTrue(e['isFinished'])).length;
+
+    final deleted =
+        _filteredComplaints.where((e) => _isTrue(e['isDeleted'])).length;
+
+    final tracked =
+        _filteredComplaints.where((e) => _isTrue(e['isTracked'])).length;
+
+    // FIX: "open" = not finished and not deleted
+    // (previously it matched every complaint because of the priority-status checks)
     final open = _filteredComplaints
-        .where((e) =>
-            e['isFinished'] == 0 ||
-            e['complaintStatus'] == 'عالى الأهمية' ||
-            e['complaintStatus'] == 'متوسط الأهمية' ||
-            e['complaintStatus'] == 'عادى') 
+        .where((e) => !_isTrue(e['isFinished']) && !_isTrue(e['isDeleted']))
         .length;
+
+    // FIX: "processing" = open complaints that have a processing repair status
     final processing = _filteredComplaints
         .where((e) =>
-            e['complaintRepairStatus'] == 'جارى الاصلاح' ||
-            e['complaintRepairStatus'] == 'يخص الشركة' ||
-            e['complaintRepairStatus'] == 'يخص المالك' ||
-            e['complaintRepairStatus'] == 'لا يخص الشركة' ||
-            e['complaintRepairStatus'] == 'يلزم استخراج تصريح')
-        .length;
-    final deleted = _filteredComplaints
-        .where((e) => e['isDeleted'] == 1 || e['isDeleted'] == true)
-        .length;
-    final finished = _filteredComplaints
-        .where((e) => e['isFinished'] == 1 || e['isFinished'] == true)
-        .length;
-    final tracked = _filteredComplaints
-        .where((e) => e['isTracked'] == 1 || e['isTracked'] == true)
+            !_isTrue(e['isFinished']) &&
+            !_isTrue(e['isDeleted']) &&
+            processingRepairStatuses.contains(e['complaintRepairStatus']))
         .length;
 
     final cards = [
@@ -1505,7 +1509,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
             ),
             const SizedBox(height: 16),
 
-            // Table with improved styling
+            // Table
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade200),
@@ -1616,7 +1620,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                               ),
                             ),
                           ),
-                          // الرقم
+                          // رقم البلاغ
                           DataCell(
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1683,7 +1687,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                               ),
                             ),
                           ),
-                          // الحالة - with color coding
+                          // الحالة
                           DataCell(
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1710,7 +1714,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                               ),
                             ),
                           ),
-                          // الخطورة - with color coding
+                          // الخطورة
                           DataCell(
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1788,7 +1792,7 @@ class _ComplaintsReportDashboardState extends State<ComplaintsReportDashboard>
                               ),
                             ),
                           ),
-                          // currentUsername
+                          // المستخدم
                           DataCell(
                             Container(
                               padding: const EdgeInsets.symmetric(

@@ -1252,11 +1252,12 @@ class AddressToCoordinatesState extends State<AddressToCoordinates> {
               tooltip: "الادارة والاعدادت",
               iconSize: 30,
               hoverColor: Colors.yellow,
-              icon: const Icon(
+              //TODO: VISIBILITY OF ADMIN BUTTON
+              icon: CacheHelper.getData(key: 'username') == 'admin' ? const Icon(
                 Icons.miscellaneous_services,
                 color: Colors.indigo,
                 // size: 30,
-              ),
+              ) : SizedBox.shrink(),
               onPressed: () {
                 // Navigating to the Manage system Screen
                 context.go('/manage-system'); // TODO: ADD MANAGE SYSTEM ROUTE
